@@ -5,6 +5,7 @@ module particle_types
         REAL(p) :: pos(Ndim)
         REAL(p) :: vel(Ndim)
         REAL(p) :: force(Ndim)
+        REAL(p) :: mass
     end type particle_type
 
 end module particle_types

@@ -97,7 +97,7 @@ frame_count=0
             echo
 
             # Output plot command
-            echo "splot '-' using 2:3:4:1 \
+            echo "splot '-' using 1:2:3 \
                   with points palette pointsize 3 pointtype 7 \
                   title '$comment - Frame $frame_count'"
 

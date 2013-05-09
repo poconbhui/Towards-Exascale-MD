@@ -25,13 +25,16 @@ module serial
         procedure(two_particle_interface) :: compare_func
         procedure(two_particle_interface) :: merge_func
 
+        type(particle_type) :: tmp_particle
         INTEGER :: i, j
 
         do i=1, num_particles
             do j=1, num_particles
                 if(i .EQ. j) cycle
 
-                call compare_func(particles(i), particles(j))
+                tmp_particle = particles(i)
+                call compare_func(tmp_particle, particles(j))
+                call merge_func(particles(i), tmp_particle)
             end do
         end do
     end subroutine pair_operation
