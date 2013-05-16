@@ -29,6 +29,8 @@ particle_types.mod: global_variables.mod
 distribution_types.mod: particle_types.mod
 integration.mod: particle_types.mod
 
+serial.mod: distribution.mod
+
 
 
 #
