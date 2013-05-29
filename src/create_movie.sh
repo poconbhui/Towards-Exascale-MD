@@ -11,6 +11,21 @@
 # delay is the time delay between frames
 # frame_skip is the number of output frames to skip
 
+# If no args, output usage
+if [[ -z "$@" ]]; then
+    echo "Usage: $(basename $0) input range [delay [frameskip]]"
+    echo
+    echo "         input: filename or \"-\" for stdin"
+    echo
+    echo "         range: Set the gnuplot ranges to [-range:range]"
+    echo
+    echo "         delay: The delay in seconds between frame outputs"
+    echo
+    echo "     frameskip: The number of frames to skip between outputs"
+    echo
+    exit
+fi
+
 input="$1"
 shift
 
@@ -51,17 +66,25 @@ frame_count=0
 #   ...
 #
 # Process into format
+#   splot - ...
 #   index1 x y z
 #   index2 x y z
 #   ...
+#   e
 #
 #
+#   splot - ...
 #   index1 x y z
 #   index2 x y z
 #   ...
+#   e
 
 
+#
 # Create plotfile
+#
+
+# Bracket concatenates all output for piping to a single input
 {
     # Define plot parameters
     echo "
@@ -73,14 +96,14 @@ frame_count=0
     # set output '$moviefile'
     "
 
-    # Generate appropriate pipe
+    # Generate appropriate pipe for input data
     cat "$input"  |
 
     # Strip initial whitespace
     sed 's/^\ *//' |
 
     # Expect first line of sequence to contain only number of particles
-    while read i; do
+    while read num_particles; do
 
         # Expect second line to contain comment
         read comment
@@ -101,24 +124,28 @@ frame_count=0
                   with points palette pointsize 3 pointtype 7 \
                   title '$comment - Frame $frame_count'"
 
+            #
             # Output plot data
+            #
 
             # Loop over the given number of particles
-            for n in $(seq 1 $i); do
+            for i in $(seq 1 $num_particles); do
                 # Read particle line
-                read l
+                read position
 
                 # Output particle data
-                echo $l
+                echo $position
             done
 
+            # Tell gnuplot data is finished
             echo e
 
             sleep $delay
         else
             # Read the given number of particles
-            for n in $(seq 1 $i); do read l; done
+            for i in $(seq 1 $num_particles); do read position; done
         fi
     done
 
+# Output plotting data to gnuplot
 } | gnuplot
