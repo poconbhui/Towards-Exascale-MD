@@ -1,5 +1,5 @@
-Exascale MD
------------
+Towards Exascale MD
+-------------------
 
 This a dissertation project for the MSc. HPC in the University of Edinburgh run by EPCC.
 
