@@ -34,7 +34,7 @@ test: $(tests)
 # Compile executables from object files
 #
 %: %.o
-	gfortran -o $@ $^
+	gfortran -o $@ $^ $(FT_INCLUDES)
 
 #
 # Cleanup rules
