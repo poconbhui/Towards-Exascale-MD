@@ -4,8 +4,8 @@ module distribution
     private
 
     public :: distribution_type, &
-              one_particle_interface, &
-              two_particle_interface
+              one_particle_function, &
+              two_particle_function
 
     type distribution_type
         contains
@@ -18,20 +18,22 @@ module distribution
         !
         ! Interfaces of particle level subroutines
         !
-        subroutine one_particle_interface(p1)
+        function one_particle_function(p1)
             use particle_types
             implicit none
 
-            type(particle_type), intent(inout) :: p1
-        end subroutine one_particle_interface
+            type(particle_type), intent(in) :: p1
+            type(particle_type) :: one_particle_function
+        end function one_particle_function
 
-        subroutine two_particle_interface(p1, p2)
+        function two_particle_function(p1, p2)
             use particle_types
             implicit none
 
-            type(particle_type), intent(inout) :: p1
-            type(particle_type), intent(in)    :: p2
-        end subroutine two_particle_interface
+            type(particle_type), intent(in) :: p1
+            type(particle_type), intent(in) :: p2
+            type(particle_type) :: two_particle_function
+        end function two_particle_function
     end interface
 
     contains
@@ -42,12 +44,12 @@ module distribution
 
     subroutine pair_operation(this, compare_func, merge_func)
         class(distribution_type), intent(inout) :: this
-        procedure(two_particle_interface) :: compare_func
-        procedure(two_particle_interface) :: merge_func
+        procedure(two_particle_function) :: compare_func
+        procedure(two_particle_function) :: merge_func
     end subroutine pair_operation
 
     subroutine individual_operation(this, update_func)
         class(distribution_type), intent(inout) :: this
-        procedure(one_particle_interface) :: update_func
+        procedure(one_particle_function) :: update_func
     end subroutine individual_operation
 end module distribution

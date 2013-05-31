@@ -80,20 +80,25 @@ program MD
     end do
 
 
+
     contains
-    subroutine initialize_particles(p)
-        type(particle_type), intent(inout) :: p
+    function initialize_particles(p)
+        type(particle_type), intent(in) :: p
+        type(particle_type) :: initialize_particles
 
         ! initialize to zero
-        p = particle_type(pos=0, vel=0, force=0, mass=1)
+        initialize_particles = particle_type(pos=0, vel=0, force=0, mass=1)
 
         ! randomize position
-        call random_number(p%pos)
-    end subroutine
+        call random_number(initialize_particles%pos)
+    end function initialize_particles
 
-    subroutine print_particles(p)
-        type(particle_type), intent(inout) :: p
+    function print_particles(p)
+        type(particle_type), intent(in) :: p
+        type(particle_type) print_particles
 
         write(*,*) p%pos, p%force
-    end subroutine print_particles
+
+        print_particles = p
+    end function print_particles
 end program MD

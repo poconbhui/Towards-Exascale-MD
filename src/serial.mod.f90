@@ -40,8 +40,8 @@ module serial
 
     subroutine pair_operation(this, compare_func, merge_func)
         class(serial_distribution), intent(inout) :: this
-        procedure(two_particle_interface) :: compare_func
-        procedure(two_particle_interface) :: merge_func
+        procedure(two_particle_function) :: compare_func
+        procedure(two_particle_function) :: merge_func
 
         type(particle_type) :: tmp_particle
         INTEGER :: i, j
@@ -51,21 +51,22 @@ module serial
             do j=1, this%num_particles
                 if(i .EQ. j) cycle
 
-                tmp_particle = this%particles(i)
-                call compare_func(tmp_particle, this%particles(j))
-                call merge_func(this%particles(i), tmp_particle)
+                tmp_particle = compare_func( &
+                    this%particles(i), this%particles(j) &
+                )
+                this%particles(i) = merge_func(this%particles(i), tmp_particle)
             end do
         end do
     end subroutine pair_operation
 
     subroutine individual_operation(this, update_func)
         class(serial_distribution), intent(inout) :: this
-        procedure(one_particle_interface) :: update_func
+        procedure(one_particle_function) :: update_func
 
         INTEGER :: i
 
         do i=1, this%num_particles
-            call update_func(this%particles(i))
+            this%particles(i) = update_func(this%particles(i))
         end do
     end subroutine individual_operation
         

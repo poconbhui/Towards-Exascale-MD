@@ -13,16 +13,26 @@ module integration
         dt = time_step
     end subroutine integration_init
 
-    subroutine verlet_integrate_pt1(p)
-        type(particle_type), intent(inout) :: p
+    function verlet_integrate_pt1(p)
+        type(particle_type), intent(in) :: p
+        type(particle_type) :: verlet_integrate_pt1
 
-        p%pos = p%pos + p%vel*dt + 0.5 * (p%force/p%mass) * dt * dt
-        p%vel = p%vel + 0.5 * (p%force/p%mass) * dt
-    end subroutine verlet_integrate_pt1
+        verlet_integrate_pt1 = p
+        verlet_integrate_pt1%pos = verlet_integrate_pt1%pos &
+            + verlet_integrate_pt1%vel*dt &
+            + 0.5 * ( &
+                verlet_integrate_pt1%force/verlet_integrate_pt1%mass &
+            ) * dt * dt
+        verlet_integrate_pt1%vel = verlet_integrate_pt1%vel &
+            + 0.5 * (verlet_integrate_pt1%force/verlet_integrate_pt1%mass) * dt
+    end function verlet_integrate_pt1
 
-    subroutine verlet_integrate_pt2(p)
-        type(particle_type), intent(inout) :: p
+    function verlet_integrate_pt2(p)
+        type(particle_type), intent(in) :: p
+        type(particle_type) :: verlet_integrate_pt2
 
-        p%vel = p%vel + 0.5 * (p%force/p%mass) * dt
-    end subroutine verlet_integrate_pt2
+        verlet_integrate_pt2 = p
+        verlet_integrate_pt2%vel = verlet_integrate_pt2%vel &
+            + 0.5 * (verlet_integrate_pt2%force/verlet_integrate_pt2%mass) * dt
+    end function verlet_integrate_pt2
 end module integration

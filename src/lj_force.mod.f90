@@ -6,9 +6,11 @@ module LJ_force
     REAL(p) :: del=1, eps=1
 
     contains
-    subroutine LJ_compare(p1, p2)
-        type(particle_type), intent(inout) :: p1
+    function LJ_compare(p1, p2)
+        type(particle_type), intent(in) :: p1
         type(particle_type), intent(in)    :: p2
+
+        type(particle_type) :: LJ_compare
 
         REAL(p) :: d(Ndim)
         REAL(p) :: r
@@ -24,13 +26,17 @@ module LJ_force
 
         force = -24*eps * ( 2*(del**12/r**13) - (del**6/r**7) ) * d_unit
 
-        p1%force = force
-    end subroutine LJ_compare
+        LJ_compare = p1
+        LJ_compare%force = force
+    end function LJ_compare
 
-    subroutine LJ_merge(p1, p2)
-        type(particle_type), intent(inout) :: p1
+    function LJ_merge(p1, p2)
+        type(particle_type), intent(in) :: p1
         type(particle_type), intent(in)    :: p2
 
-        p1%force = p1%force + p2%force
-    end subroutine LJ_merge
+        type(particle_type) :: LJ_merge
+
+        LJ_merge = p1
+        LJ_merge%force = p1%force + p2%force
+    end function LJ_merge
 end module LJ_force

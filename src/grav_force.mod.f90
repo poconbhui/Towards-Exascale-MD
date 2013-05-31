@@ -6,15 +6,20 @@ module grav_force
     REAL(p) :: G=1
 
     contains
-    subroutine grav_init(p1)
-        type(particle_type), intent(inout) :: p1
+    function grav_init(p1)
+        type(particle_type), intent(in) :: p1
 
-        p1%force = 0
-    end subroutine grav_init
+        type(particle_type) :: grav_init
 
-    subroutine grav_compare(p1, p2)
-        type(particle_type), intent(inout) :: p1
-        type(particle_type), intent(in)    :: p2
+        grav_init = p1
+        grav_init%force = 0
+    end function grav_init
+
+    function grav_compare(p1, p2)
+        type(particle_type), intent(in) :: p1
+        type(particle_type), intent(in) :: p2
+
+        type(particle_type) :: grav_compare
 
         REAL(p) :: d(Ndim)
         REAL(p) :: r
@@ -30,13 +35,17 @@ module grav_force
 
         force = G*p1%mass*p2%mass / r**2 * d_unit
 
-        p1%force = force
-    end subroutine grav_compare
+        grav_compare = p1
+        grav_compare%force = force
+    end function grav_compare
 
-    subroutine grav_merge(p1, p2)
-        type(particle_type), intent(inout) :: p1
+    function grav_merge(p1, p2)
+        type(particle_type), intent(in) :: p1
         type(particle_type), intent(in)    :: p2
 
-        p1%force = p1%force + p2%force
-    end subroutine grav_merge
+        type(particle_type) :: grav_merge
+
+        grav_merge = p1
+        grav_merge%force = p1%force + p2%force
+    end function grav_merge
 end module grav_force
