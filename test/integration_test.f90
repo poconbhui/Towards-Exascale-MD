@@ -65,7 +65,7 @@ program integration_test
             return
         end if
 
-        call verlet_integrate_pt1(test_particle)
+        test_particle = verlet_integrate_pt1(test_particle)
 
         !
         ! Generate centripital force
@@ -73,24 +73,10 @@ program integration_test
         call spring_force(test_particle)
 
 
-        call verlet_integrate_pt2(test_particle)
+        test_particle = verlet_integrate_pt2(test_particle)
     end do
 
     contains
-    subroutine centripital_force(particle)
-        type(particle_type), intent(inout) :: particle
-
-        REAL(p) :: d(Ndim)
-        REAL(p) :: d_unit(Ndim)
-        REAL(p) :: r
-
-        d = -particle%pos
-        r = sqrt(sum(d*d))
-        d_unit = d/r
-
-        particle%force = particle%mass * particle%vel**2 / r * d_unit
-    end subroutine centripital_force
-
     subroutine spring_force(particle)
         type(particle_type), intent(inout) :: particle
 
@@ -99,9 +85,7 @@ program integration_test
 
         k = 1
 
-        do i=1, Ndim
-            particle%force(i) = -k*particle%pos(i)
-        end do
+        particle%force = -k*particle%pos
     end subroutine spring_force
 
 end program integration_test
