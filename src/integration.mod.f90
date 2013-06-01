@@ -1,6 +1,6 @@
 module integration
     use global_variables
-    use particle_types
+    use particle_type
     implicit none
 
     private :: dt
@@ -14,8 +14,8 @@ module integration
     end subroutine integration_init
 
     function verlet_integrate_pt1(p)
-        type(particle_type), intent(in) :: p
-        type(particle_type) :: verlet_integrate_pt1
+        type(particle), intent(in) :: p
+        type(particle) :: verlet_integrate_pt1
 
         verlet_integrate_pt1 = p
         verlet_integrate_pt1%pos = verlet_integrate_pt1%pos &
@@ -28,8 +28,8 @@ module integration
     end function verlet_integrate_pt1
 
     function verlet_integrate_pt2(p)
-        type(particle_type), intent(in) :: p
-        type(particle_type) :: verlet_integrate_pt2
+        type(particle), intent(in) :: p
+        type(particle) :: verlet_integrate_pt2
 
         verlet_integrate_pt2 = p
         verlet_integrate_pt2%vel = verlet_integrate_pt2%vel &

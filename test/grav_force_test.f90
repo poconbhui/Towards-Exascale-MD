@@ -1,6 +1,6 @@
 program grav_force_test
-    use particle_types
-    use distribution
+    use particle_type
+    use abstract_distribution_type
     use grav_force
     use force_test
     implicit none

@@ -1,25 +1,25 @@
 module grav_force
     use global_variables
-    use particle_types
+    use particle_type
     implicit none
 
     REAL(p) :: G=1
 
     contains
     function grav_init(p1)
-        type(particle_type), intent(in) :: p1
+        type(particle), intent(in) :: p1
 
-        type(particle_type) :: grav_init
+        type(particle) :: grav_init
 
         grav_init = p1
         grav_init%force = 0
     end function grav_init
 
     function grav_compare(p1, p2)
-        type(particle_type), intent(in) :: p1
-        type(particle_type), intent(in) :: p2
+        type(particle), intent(in) :: p1
+        type(particle), intent(in) :: p2
 
-        type(particle_type) :: grav_compare
+        type(particle) :: grav_compare
 
         REAL(p) :: d(Ndim)
         REAL(p) :: r
@@ -40,10 +40,10 @@ module grav_force
     end function grav_compare
 
     function grav_merge(p1, p2)
-        type(particle_type), intent(in) :: p1
-        type(particle_type), intent(in)    :: p2
+        type(particle), intent(in) :: p1
+        type(particle), intent(in)    :: p2
 
-        type(particle_type) :: grav_merge
+        type(particle) :: grav_merge
 
         grav_merge = p1
         grav_merge%force = p1%force + p2%force

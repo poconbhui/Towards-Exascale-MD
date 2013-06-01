@@ -1,6 +1,6 @@
 module force_test
-    use particle_types
-    use distribution
+    use particle_type
+    use abstract_distribution_type
     use test
     implicit none
 
@@ -11,15 +11,15 @@ module force_test
         procedure(two_particle_function) :: compare
         procedure(two_particle_function) :: merge
 
-        type(particle_type) :: test_particle
-        type(particle_type) :: p1, p2
+        type(particle) :: test_particle
+        type(particle) :: p1, p2
 
         !
         ! Describe init
         !
         call describe(name // "#init")
 
-        test_particle = particle_type(pos=1, vel=1, force=1, mass=1)
+        test_particle = particle(pos=1, vel=1, force=1, mass=1)
 
         test_particle = init(test_particle)
 
@@ -44,8 +44,8 @@ module force_test
         ! Expect only force to change
         call describe(name // "#compare force changing")
 
-        p1 = init(particle_type(pos=1, vel=1, force=1, mass=1))
-        p2 = init(particle_type(pos=0, vel=1, force=1, mass=1))
+        p1 = init(particle(pos=1, vel=1, force=1, mass=1))
+        p2 = init(particle(pos=0, vel=1, force=1, mass=1))
 
         test_particle = compare(p1, p2)
 
@@ -66,8 +66,8 @@ module force_test
         ! Expect idempotency
         call describe(name // "#compare idempotency")
 
-        p1 = init(particle_type(pos=1, vel=1, force=1, mass=1))
-        p2 = init(particle_type(pos=0, vel=1, force=1, mass=1))
+        p1 = init(particle(pos=1, vel=1, force=1, mass=1))
+        p2 = init(particle(pos=0, vel=1, force=1, mass=1))
 
         test_particle = compare(p1, p2)
         p1            = compare(p1, p2)
@@ -88,8 +88,8 @@ module force_test
         ! Expect idempotency upon repeated application to output variable
         call describe(name // "#compare recursive idempotency")
 
-        p1 = init(particle_type(pos=1, vel=1, force=1, mass=1))
-        p2 = init(particle_type(pos=0, vel=1, force=1, mass=1))
+        p1 = init(particle(pos=1, vel=1, force=1, mass=1))
+        p2 = init(particle(pos=0, vel=1, force=1, mass=1))
 
         p1 = compare(p1, p2)
         test_particle = p1

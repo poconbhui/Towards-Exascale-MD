@@ -1,7 +1,7 @@
 program integration_test
     use global_variables
     use integration
-    use particle_types
+    use particle_type
     implicit none
 
     REAL(p), parameter :: PI = 3.14159265
@@ -12,7 +12,7 @@ program integration_test
     INTEGER :: total_steps
     INTEGER :: current_step
 
-    type(particle_type) :: test_particle
+    type(particle) :: test_particle
     REAL(p) :: initial_position(Ndim)
 
     call random_seed
@@ -22,7 +22,7 @@ program integration_test
     !
     ! Initialize test particle
     !
-    test_particle = particle_type(pos=initial_position, vel=0, force=0, mass=1)
+    test_particle = particle(pos=initial_position, vel=0, force=0, mass=1)
 
     !
     ! Initialize integration module
@@ -77,15 +77,15 @@ program integration_test
     end do
 
     contains
-    subroutine spring_force(particle)
-        type(particle_type), intent(inout) :: particle
+    subroutine spring_force(ptcl)
+        type(particle), intent(inout) :: ptcl
 
         REAL(p) :: k
         INTEGER :: i
 
         k = 1
 
-        particle%force = -k*particle%pos
+        ptcl%force = -k*ptcl%pos
     end subroutine spring_force
 
 end program integration_test

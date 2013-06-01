@@ -1,17 +1,24 @@
 
-FT_INCLUDES=-I../src -J../src
+# Look in src for .mod files
+FT_INCLUDES=-I../src
 
 #
 # Make targets
 #
 .PHONY: all
 all: $(programs)
-	if [[ -z "$^" ]];then cd src; make all; fi
+	$(if $^ ,, cd src; make all)
 
 .PHONY: test
-test: $(tests)
-	if [[ -z "$^" ]];then cd test; make test; fi; \
-	for i in $^; do echo $$i; ./$$i; done
+tests_execute=$(patsubst %, %_execute, $(tests))
+test: $(tests_execute)
+	$(if $^ ,, make all; cd test; make test)
+
+#
+# Execute executable
+#
+%_execute: %
+	./$<
 
 
 #
@@ -26,6 +33,7 @@ test: $(tests)
 #
 %.mod.o: %.mod.f90 %.mod
 	gfortran -c -o $@ $< $(FT_INCLUDES)
+
 %.o: %.f90
 	gfortran -c -o $@ $< $(FT_INCLUDES)
 

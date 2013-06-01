@@ -1,16 +1,25 @@
 module LJ_force
     use global_variables
-    use particle_types
+    use particle_type
     implicit none
 
     REAL(p) :: del=1, eps=1
 
     contains
-    function LJ_compare(p1, p2)
-        type(particle_type), intent(in) :: p1
-        type(particle_type), intent(in)    :: p2
+    function LJ_init(p)
+        type(particle), intent(in) :: p
 
-        type(particle_type) :: LJ_compare
+        type(particle) :: LJ_init
+
+        LJ_init = p
+        LJ_init%force = 0
+    end function LJ_init
+
+    function LJ_compare(p1, p2)
+        type(particle), intent(in) :: p1
+        type(particle), intent(in)    :: p2
+
+        type(particle) :: LJ_compare
 
         REAL(p) :: d(Ndim)
         REAL(p) :: r
@@ -31,10 +40,10 @@ module LJ_force
     end function LJ_compare
 
     function LJ_merge(p1, p2)
-        type(particle_type), intent(in) :: p1
-        type(particle_type), intent(in)    :: p2
+        type(particle), intent(in) :: p1
+        type(particle), intent(in)    :: p2
 
-        type(particle_type) :: LJ_merge
+        type(particle) :: LJ_merge
 
         LJ_merge = p1
         LJ_merge%force = p1%force + p2%force
