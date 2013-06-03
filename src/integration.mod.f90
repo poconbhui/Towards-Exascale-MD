@@ -3,8 +3,12 @@ module integration
     use particle_type
     implicit none
 
-    private :: dt
-    REAL(p) :: dt
+
+    !
+    ! The timestep to be used in the integration
+    !
+    real(p), private :: dt
+
 
     contains
     subroutine integration_init(time_step)
@@ -13,9 +17,12 @@ module integration
         dt = time_step
     end subroutine integration_init
 
-    function verlet_integrate_pt1(p)
-        type(particle), intent(in) :: p
+    PURE function verlet_integrate_pt1(p, i)
         type(particle) :: verlet_integrate_pt1
+
+        type(particle), intent(in) :: p
+        integer, intent(in) :: i
+
 
         verlet_integrate_pt1 = p
         verlet_integrate_pt1%pos = verlet_integrate_pt1%pos &
@@ -27,9 +34,12 @@ module integration
             + 0.5 * (verlet_integrate_pt1%force/verlet_integrate_pt1%mass) * dt
     end function verlet_integrate_pt1
 
-    function verlet_integrate_pt2(p)
-        type(particle), intent(in) :: p
+    PURE function verlet_integrate_pt2(p, i)
         type(particle) :: verlet_integrate_pt2
+
+        type(particle), intent(in) :: p
+        integer, intent(in) :: i
+
 
         verlet_integrate_pt2 = p
         verlet_integrate_pt2%vel = verlet_integrate_pt2%vel &

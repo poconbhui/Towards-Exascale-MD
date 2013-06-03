@@ -21,7 +21,7 @@ module force_test
 
         test_particle = particle(pos=1, vel=1, force=1, mass=1)
 
-        test_particle = init(test_particle)
+        test_particle = init(test_particle, 1)
 
         call expect("Position should be unchanged", &
             ALL(test_particle%pos .EQ. 1) &
@@ -44,8 +44,8 @@ module force_test
         ! Expect only force to change
         call describe(name // "#compare force changing")
 
-        p1 = init(particle(pos=1, vel=1, force=1, mass=1))
-        p2 = init(particle(pos=0, vel=1, force=1, mass=1))
+        p1 = init(particle(pos=1, vel=1, force=1, mass=1), 1)
+        p2 = init(particle(pos=0, vel=1, force=1, mass=1), 2)
 
         test_particle = compare(p1, p2)
 
@@ -66,8 +66,8 @@ module force_test
         ! Expect idempotency
         call describe(name // "#compare idempotency")
 
-        p1 = init(particle(pos=1, vel=1, force=1, mass=1))
-        p2 = init(particle(pos=0, vel=1, force=1, mass=1))
+        p1 = init(particle(pos=1, vel=1, force=1, mass=1), 1)
+        p2 = init(particle(pos=0, vel=1, force=1, mass=1), 2)
 
         test_particle = compare(p1, p2)
         p1            = compare(p1, p2)
@@ -88,8 +88,8 @@ module force_test
         ! Expect idempotency upon repeated application to output variable
         call describe(name // "#compare recursive idempotency")
 
-        p1 = init(particle(pos=1, vel=1, force=1, mass=1))
-        p2 = init(particle(pos=0, vel=1, force=1, mass=1))
+        p1 = init(particle(pos=1, vel=1, force=1, mass=1), 1)
+        p2 = init(particle(pos=0, vel=1, force=1, mass=1), 2)
 
         p1 = compare(p1, p2)
         test_particle = p1

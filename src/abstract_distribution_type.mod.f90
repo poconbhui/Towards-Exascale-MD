@@ -1,3 +1,13 @@
+!
+! MODULE abstract_distribution_type
+!
+! Module provides the abstract_distribution type, an abstract class
+! to be extended by all distributions.
+!
+! Module provides interfaces for functions accepted by abstract_distribution
+! methods.
+!
+
 module abstract_distribution_type
     implicit none
 
@@ -10,59 +20,95 @@ module abstract_distribution_type
     public :: global_reduce_function
     public :: print_particle_function
 
-
+    !
+    ! TYPE abstract_distribution
+    !
+    ! abstract_distribution type is an abstract type specifying a minimum
+    ! functionality that must be provided by distribution types.
+    !
+    ! A distribution type is expected to extend this type and be run as
+    ! an instance. Methods described here accept an instance of
+    ! abstract_distribution passed to them implicitly.
+    !
     type, abstract :: abstract_distribution
     contains
-        procedure(init_subroutine), deferred &
-            :: init
-        procedure(pair_operation_subroutine), deferred &
+        procedure(pair_operation_subroutine), pass, deferred &
             :: pair_operation
-        procedure(individual_operation_subroutine), deferred &
+        procedure(individual_operation_subroutine), pass, deferred &
             :: individual_operation
-        procedure(global_map_reduce_function), deferred &
+        procedure(global_map_reduce_subroutine), pass, deferred &
             :: global_map_reduce
-        procedure(print_particles_subroutine), deferred &
+        procedure(print_particles_subroutine), pass, deferred &
             :: print_particles
-        procedure(print_string_subroutine), deferred &
+        procedure(print_string_subroutine), pass, deferred &
             :: print_string
     end type abstract_distribution
 
 
     abstract interface
         !
-        ! Interfaces of particle level subroutines
+        ! Interfaces for functions accepted by abstract_distribution methods.
         !
-        function one_particle_function(p1)
+        PURE function one_particle_function(p1, i)
             use particle_type
             implicit none
+
+            type(particle) :: one_particle_function
 
             type(particle), intent(in) :: p1
-            type(particle) :: one_particle_function
+            integer, intent(in) :: i
         end function one_particle_function
 
-        function two_particle_function(p1, p2)
+        PURE function two_particle_function(p1, p2)
             use particle_type
             implicit none
+
+            type(particle) :: two_particle_function
 
             type(particle), intent(in) :: p1
             type(particle), intent(in) :: p2
-            type(particle) :: two_particle_function
         end function two_particle_function
 
-
-        subroutine init_subroutine(this, particle_count)
-            import abstract_distribution
+        PURE function global_map_function(p1)
+            use particle_type
+            use global_variables
             implicit none
 
-            class(abstract_distribution), intent(out) :: this
-            integer, intent(in) :: particle_count
-        end subroutine init_subroutine
+            real(p) :: global_map_function
+
+            type(particle), intent(in) :: p1
+        end function global_map_function
+
+        PURE function global_reduce_function(d1, d2)
+            use global_variables
+            implicit none
+
+            real(p) :: global_reduce_function
+
+            real(p), intent(in) :: d1
+            real(p), intent(in) :: d2
+        end function global_reduce_function
+
+        PURE subroutine print_particle_function(p, i, string)
+            use particle_type
+            implicit none
+
+            type(particle), intent(in) :: p
+            integer, intent(in) :: i
+            character(len=*), intent(out) :: string
+        end subroutine print_particle_function
+
+
+        !
+        ! Interfaces for methods of abstract_distribution type
+        !
 
         subroutine pair_operation_subroutine(this, compare_func, merge_func)
             import abstract_distribution
             implicit none
 
             class(abstract_distribution), intent(inout) :: this
+
             procedure(two_particle_function) :: compare_func
             procedure(two_particle_function) :: merge_func
         end subroutine pair_operation_subroutine
@@ -72,51 +118,23 @@ module abstract_distribution_type
             implicit none
 
             class(abstract_distribution), intent(inout) :: this
+
             procedure(one_particle_function) :: update_func
         end subroutine individual_operation_subroutine
 
-        function global_map_function(p1)
-            use particle_type
-            use global_variables
-            implicit none
-
-            type(particle), intent(in) :: p1
-
-            real(p) :: global_map_function
-        end function global_map_function
-
-        function global_reduce_function(d1, d2)
-            use global_variables
-            implicit none
-
-            real(p), intent(in) :: d1
-            real(p), intent(in) :: d2
-
-            real(p) :: global_reduce_function
-        end function global_reduce_function
-
-        function global_map_reduce_function(this, map, reduce, reduce_init)
+        subroutine global_map_reduce_subroutine(this, map, reduce, reduce_value)
             use global_variables
             import abstract_distribution
             implicit none
 
             class(abstract_distribution), intent(inout) :: this
+
             procedure(global_map_function) :: map
             procedure(global_reduce_function) :: reduce
-            real(p) :: reduce_init
-
-            real(p) :: global_map_reduce_function
+            real(p), intent(inout) :: reduce_value
             
-        end function global_map_reduce_function
+        end subroutine global_map_reduce_subroutine
 
-        function print_particle_function(p)
-            use particle_type
-            implicit none
-
-            type(particle), intent(in) :: p
-            character(len=*) :: print_particle_function
-        end function print_particle_function
-            
         subroutine print_particles_subroutine(this, print_func)
             import abstract_distribution
             implicit none
@@ -134,4 +152,5 @@ module abstract_distribution_type
         end subroutine print_string_subroutine
 
     end interface
+
 end module abstract_distribution_type

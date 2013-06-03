@@ -65,7 +65,7 @@ program integration_test
             return
         end if
 
-        test_particle = verlet_integrate_pt1(test_particle)
+        test_particle = verlet_integrate_pt1(test_particle, 1)
 
         !
         ! Generate centripital force
@@ -73,7 +73,7 @@ program integration_test
         call spring_force(test_particle)
 
 
-        test_particle = verlet_integrate_pt2(test_particle)
+        test_particle = verlet_integrate_pt2(test_particle, 1)
     end do
 
     contains

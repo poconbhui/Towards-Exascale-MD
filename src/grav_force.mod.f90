@@ -6,26 +6,29 @@ module grav_force
     REAL(p) :: G=1
 
     contains
-    function grav_init(p1)
-        type(particle), intent(in) :: p1
-
+    PURE function grav_init(p1, i)
         type(particle) :: grav_init
+
+        type(particle), intent(in) :: p1
+        integer, intent(in) :: i
+
 
         grav_init = p1
         grav_init%force = 0
     end function grav_init
 
-    function grav_compare(p1, p2)
+    PURE function grav_compare(p1, p2)
+        type(particle) :: grav_compare
+
         type(particle), intent(in) :: p1
         type(particle), intent(in) :: p2
 
-        type(particle) :: grav_compare
 
         REAL(p) :: d(Ndim)
         REAL(p) :: r
         REAL(p) :: d_unit(Ndim)
-
         REAL(p) :: force(Ndim)
+
 
         d = p2%pos - p1%pos
         r = sqrt(sum(d*d))
@@ -39,11 +42,12 @@ module grav_force
         grav_compare%force = force
     end function grav_compare
 
-    function grav_merge(p1, p2)
+    PURE function grav_merge(p1, p2)
+        type(particle) :: grav_merge
+
         type(particle), intent(in) :: p1
         type(particle), intent(in)    :: p2
 
-        type(particle) :: grav_merge
 
         grav_merge = p1
         grav_merge%force = p1%force + p2%force

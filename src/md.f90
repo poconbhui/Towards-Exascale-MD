@@ -15,9 +15,15 @@ program MD
     integer :: particle_count = 10
 
     !
+    ! Command line parsing
+    !
+    integer :: argc
+    character(len=20), dimension(:), allocatable :: argv
+
+    !
     ! Distribution parameters
     !
-    character(len=30) :: distribution_name = "SERIAL"
+    character(len=30) :: distribution_name = "serial"
 
     !
     ! Distribution variables
@@ -30,6 +36,19 @@ program MD
     !
     real(p) :: current_time
     character(len=80) :: string
+    integer :: i
+
+
+    !
+    ! Parse command line arguments
+    !
+    argc = command_argument_count()
+    allocate(argv(argc))
+    do i=0, argc
+        call get_command_argument(i, argv(i))
+    end do
+
+    if(argc .GT. 0) distribution_name = argv(1)
 
 
     !
@@ -50,9 +69,12 @@ program MD
 
     ! Select distribution module
     select case(distribution_name)
-        case("SERIAL")
+        case("serial")
             serial_dist = serial_distribution(particle_count)
             dist => serial_dist
+
+        case default
+            write(*,*) "No such distribution type"
     end select
 
     ! Initialize integration
@@ -87,21 +109,20 @@ program MD
 
 
 
-    contains
+contains
 
     !
     ! Initialization functions
     !
 
-    function initialize_particles(p)
-        type(particle), intent(in) :: p
+    PURE function initialize_particles(p, i)
         type(particle) :: initialize_particles
 
-        ! initialize to zero
-        initialize_particles = particle(pos=0, vel=0, force=0, mass=1)
+        type(particle), intent(in) :: p
+        integer, intent(in) :: i
 
-        ! randomize position
-        call random_number(initialize_particles%pos)
+
+        initialize_particles = particle(pos=i, vel=0, force=0, mass=1)
     end function initialize_particles
 
 
@@ -112,25 +133,26 @@ program MD
     function particle_count_string()
         character(len=80) :: particle_count_string
 
+
         write(particle_count_string, *) particle_count
     end function particle_count_string
 
     function current_time_string()
         character(len=80) :: current_time_string
+
+
         write(current_time_string, *) "Time: ", current_time
     end function current_time_string
 
-    function print_particle(p)
+    PURE subroutine print_particle(p, i, string)
         type(particle), intent(in) :: p
-        character(len=80) :: print_particle
+        integer, intent(in) :: i
+        character(len=*), intent(out) :: string
 
-        character(len=100) :: tmp_string
 
-        write(tmp_string,*) p%pos
-        tmp_string = adjustl(tmp_string)
-
-        print_particle = tmp_string
-    end function print_particle
+        write(string,*) p%pos
+        string = adjustl(string)
+    end subroutine print_particle
 
 
     !

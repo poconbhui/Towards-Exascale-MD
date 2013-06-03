@@ -1,6 +1,8 @@
 
 # Look in src for .mod files
 FT_INCLUDES=-I../src
+FC = mpif90
+
 
 #
 # Make targets
@@ -14,6 +16,7 @@ tests_execute=$(patsubst %, %_execute, $(tests))
 test: $(tests_execute)
 	$(if $^ ,, make all; cd test; make test)
 
+
 #
 # Execute executable
 #
@@ -25,29 +28,40 @@ test: $(tests_execute)
 # Module compilation rules
 #
 %.mod: %.mod.f90
-	gfortran -fsyntax-only $< $(FT_INCLUDES)
+	$(FC) -fsyntax-only $< $(FT_INCLUDES)
 
 
 #
 # Fortran compilation rules
 #
 %.mod.o: %.mod.f90 %.mod
-	gfortran -c -o $@ $< $(FT_INCLUDES)
+	$(FC) -c -o $@ $< $(FT_INCLUDES)
 
 %.o: %.f90
-	gfortran -c -o $@ $< $(FT_INCLUDES)
+	$(FC) -c -o $@ $< $(FT_INCLUDES)
 
 
 #
 # Compile executables from object files
 #
 %: %.o
-	gfortran -o $@ $^ $(FT_INCLUDES)
+	$(FC) -o $@ $^ $(FT_INCLUDES)
+
 
 #
 # Cleanup rules
 #
-clean_cmd = rm src/*.o src/*.mod test/*.o test/*.mod
+temps = *.o *.mod
+.PHONY: clean_temps
+clean_temps:
+	-rm *.o *.mod
+.PHONY: clean_programs
+clean_programs: clean_temps
+	-rm $(programs)
+.PHONY: clean_tests
+clean_tests: clean_temps
+	-rm $(tests)
+.PHONY: clean
 clean:
-	@ echo $(clean_cmd)
-	-@ $(clean_cmd) 2>/dev/null || true
+	$(if $(programs), make clean_programs, cd src && make clean_programs)
+	$(if $(tests), make clean_tests, cd test && make clean_tests)
