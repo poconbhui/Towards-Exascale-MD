@@ -11,7 +11,11 @@ module replicated_distribution_type
 
     type, EXTENDS(abstract_distribution) :: replicated_distribution
         integer, private :: num_particles
-        type(particle), private, allocatable :: particles(:)
+
+        real(p), private, allocatable :: particle_pos(:,:)
+        real(p), private, allocatable :: particle_vel(:,:)
+        real(p), private, allocatable :: particle_force(:,:)
+        real(p), private, allocatable :: particle_mass(:)
 
         integer, private :: rank
         integer, private :: nprocs
@@ -26,6 +30,10 @@ module replicated_distribution_type
         procedure :: print_string
 
         procedure :: sync_particles
+
+        procedure, private :: get_particle
+        procedure, private :: set_particle
+        procedure, private :: get_chunk_data
     end type replicated_distribution
     interface replicated_distribution
         module procedure constructor
@@ -40,21 +48,24 @@ contains
         call constructor%init(particle_count, comm)
     end function constructor
 
-    subroutine init(this, particle_count, comm)
+    subroutine init(this, num_particles, comm)
         class(replicated_distribution), intent(out) :: this
-        integer, intent(in) :: particle_count
+        integer, intent(in) :: num_particles
         integer, intent(in) :: comm
 
         integer :: ierror
 
 
-        this%num_particles = particle_count
+        this%num_particles = num_particles
         this%comm = comm
 
         call MPI_Comm_rank(comm, this%rank, ierror)
         call MPI_Comm_size(comm, this%nprocs, ierror)
 
-        allocate(this%particles(this%num_particles))
+        allocate(this%particle_pos(Ndim,num_particles))
+        allocate(this%particle_vel(Ndim,num_particles))
+        allocate(this%particle_force(Ndim,num_particles))
+        allocate(this%particle_mass(num_particles))
     end subroutine init
 
     subroutine pair_operation(this, compare_func, merge_func)
@@ -64,28 +75,31 @@ contains
 
         integer :: i_size, i_start, i_end
         type(particle) :: tmp_particle
+        type(particle) :: particle_i, particle_j
         integer :: i, j
+        integer :: ierror
 
 
-        ! Cheating for the moment
-        ! i_size = ceiling(real(this%num_particles)/this%nprocs)
-        ! i_start = this%rank*i_size + 1
-        ! i_end   = (this%rank+1)*i_size
-        !
-        ! if(i_end .GT. this%num_particles) i_end = this%num_particles
+        call this%get_chunk_data(this%rank, i_size, i_start, i_end)
 
-        i_start=1
-        i_end = this%num_particles
+        ! Cheat for the moment
+        !i_start=1
+        !i_end = this%num_particles
 
 
         do i=i_start, i_end
             do j=1, this%num_particles
                 if(i .EQ. j) cycle
 
+                call this%get_particle(i, particle_i)
+                call this%get_particle(j, particle_j)
+
                 tmp_particle = compare_func( &
-                    this%particles(i), this%particles(j) &
+                    particle_i, particle_j &
                 )
-                this%particles(i) = merge_func(this%particles(i), tmp_particle)
+                call this%set_particle( &
+                    i, merge_func(particle_i, tmp_particle) &
+                )
             end do
         end do
 
@@ -96,11 +110,13 @@ contains
         class(replicated_distribution), intent(inout) :: this
         procedure(one_particle_function) :: update_func
 
+        type(particle) :: particle_i
         integer :: i
 
 
         do i=1, this%num_particles
-            this%particles(i) = update_func(this%particles(i), i)
+            call this%get_particle(i, particle_i)
+            call this%set_particle(i, update_func(particle_i, i))
         end do
     end subroutine individual_operation
 
@@ -110,11 +126,13 @@ contains
         procedure(global_reduce_function) :: reduce
         real(p), intent(inout) :: reduce_value
 
+        type(particle) :: particle_i
         integer :: i
 
 
         do i=1, this%num_particles
-            reduce_value = reduce( reduce_value, map(this%particles(i)) )
+            call this%get_particle(i, particle_i)
+            reduce_value = reduce( reduce_value, map(particle_i) )
         end do
     end subroutine
 
@@ -123,12 +141,14 @@ contains
         procedure(print_particle_function) :: print_func
 
         character(len=80) :: string
+        type(particle) :: particle_i
         integer :: i
 
 
         if(this%rank .EQ. 0) then
             do i=1, this%num_particles
-                call print_func(this%particles(i), i, string)
+                call this%get_particle(i, particle_i)
+                call print_func(particle_i, i, string)
                 write(*,'(A)') string
             end do
         end if
@@ -148,6 +168,101 @@ contains
     subroutine sync_particles(this)
         class(replicated_distribution), intent(inout) :: this
 
+        integer :: ierror
+        integer :: rank
+        integer :: chunk_size, chunk_start, chunk_end
+
+
+        do rank=0, this%nprocs-1
+            call this%get_chunk_data(rank, chunk_size, chunk_start, chunk_end)
+
+            ! Sync positions
+            call MPI_Bcast( &
+                this%particle_pos(:,chunk_start:chunk_end), &
+                size(this%particle_pos,1)*chunk_size, &
+                MPI_REAL_P, &
+                rank, &
+                this%comm, &
+                ierror &
+            )
+
+            ! Sync velocities
+            call MPI_Bcast( &
+                this%particle_vel(:,chunk_start:chunk_end), &
+                size(this%particle_vel,1)*chunk_size, &
+                MPI_REAL_P, &
+                rank, &
+                this%comm, &
+                ierror &
+            )
+
+            ! Sync forces
+            call MPI_Bcast( &
+                this%particle_force(:,chunk_start:chunk_end), &
+                size(this%particle_force,1)*chunk_size, &
+                MPI_REAL_P, &
+                rank, &
+                this%comm, &
+                ierror &
+            )
+
+            ! Sync masses
+            call MPI_Bcast( &
+                this%particle_mass(chunk_start:chunk_end), &
+                chunk_size, &
+                MPI_REAL_P, &
+                rank, &
+                this%comm, &
+                ierror &
+            )
+        end do
+
     end subroutine sync_particles
+
+    ! Get chunk size and boundary data for process i
+    subroutine get_chunk_data(this, i, chunk_size, chunk_start, chunk_end)
+        class(replicated_distribution), intent(inout) :: this
+        integer, intent(in) :: i
+        integer, intent(out) :: chunk_size
+        integer, intent(out) :: chunk_start
+        integer, intent(out) :: chunk_end
+
+        
+        ! Get basic sizes
+        chunk_size = ceiling(real(this%num_particles)/this%nprocs)
+        chunk_start = i*chunk_size + 1
+        chunk_end = (i+1)*chunk_size
+
+        ! Fix sizes
+        if(chunk_end .GT. this%num_particles) chunk_end = this%num_particles
+        chunk_size = chunk_end - chunk_start + 1
+    end subroutine get_chunk_data
+
+
+    subroutine get_particle(this, i, p)
+        class(replicated_distribution), intent(inout) :: this
+        integer, intent(in) :: i
+        type(particle), intent(out) :: p
+
+
+        p = particle( &
+            pos=this%particle_pos(:,i), &
+            vel=this%particle_vel(:,i), &
+            force=this%particle_force(:,i), &
+            mass=this%particle_mass(i) &
+        )
+    end subroutine get_particle
+
+    subroutine set_particle(this, i, p)
+        class(replicated_distribution), intent(inout) :: this
+        integer, intent(in) :: i
+        type(particle), intent(in) :: p
+
+
+        this%particle_pos(:,i) = p%pos
+        this%particle_vel(:,i) = p%vel
+        this%particle_force(:,i) = p%force
+        this%particle_mass(i) = p%mass
+    end subroutine set_particle
 
 end module replicated_distribution_type
