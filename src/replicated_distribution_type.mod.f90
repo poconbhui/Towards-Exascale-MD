@@ -53,14 +53,17 @@ contains
         integer, intent(in) :: num_particles
         integer, intent(in) :: comm
 
+        integer :: comm_dup
         integer :: ierror
 
 
-        this%num_particles = num_particles
-        this%comm = comm
+        call MPI_Comm_dup(comm, comm_dup, ierror)
 
-        call MPI_Comm_rank(comm, this%rank, ierror)
-        call MPI_Comm_size(comm, this%nprocs, ierror)
+        this%num_particles = num_particles
+        this%comm = comm_dup
+
+        call MPI_Comm_rank(comm_dup, this%rank, ierror)
+        call MPI_Comm_size(comm_dup, this%nprocs, ierror)
 
         allocate(this%particle_pos(Ndim,num_particles))
         allocate(this%particle_vel(Ndim,num_particles))
@@ -77,15 +80,11 @@ contains
         type(particle) :: tmp_particle
         type(particle) :: particle_i, particle_j
         integer :: i, j
+
         integer :: ierror
 
 
         call this%get_chunk_data(this%rank, i_size, i_start, i_end)
-
-        ! Cheat for the moment
-        !i_start=1
-        !i_end = this%num_particles
-
 
         do i=i_start, i_end
             do j=1, this%num_particles
@@ -159,9 +158,7 @@ contains
         character(len=*), intent(in) :: string
 
 
-        if(this%rank .EQ. 0) then
-            write(*,'(A)') string
-        end if
+        if(this%rank .EQ. 0) write(*,'(A)') string
     end subroutine print_string
 
 
