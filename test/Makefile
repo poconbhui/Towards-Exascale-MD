@@ -3,7 +3,8 @@ tests = \
 	grav_force_test \
 	lj_force_test \
 	serial_distribution_type_test \
-	replicated_distribution_type_test
+	replicated_distribution_type_test \
+	domain_distribution_type_test
 
 include ../Makefile
 
@@ -53,3 +54,12 @@ replicated_distribution_type_test.o: \
 	../src/replicated_distribution_type.mod
 replicated_distribution_type_test_execute: replicated_distribution_type_test
 	mpiexec -n 4 ./replicated_distribution_type_test
+
+domain_distribution_type_test: \
+	$(distribution_test_mod_o) \
+	../src/domain_distribution_type.mod.o
+domain_distribution_type_test.o: \
+	$(distribution_test_mod) \
+	../src/domain_distribution_type.mod
+domain_distribution_type_test_execute: domain_distribution_type_test
+	mpiexec -n 4 ./domain_distribution_type_test
