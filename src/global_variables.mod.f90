@@ -4,8 +4,7 @@ module global_variables
 
     integer, parameter :: dp = kind(0.0d0)
     integer, parameter :: p = dp
-    integer, parameter :: MPI_REAL_P = MPI_DOUBLE
-
+    integer, parameter :: MPI_REAL_P = MPI_DOUBLE_PRECISION
 
     integer, parameter :: Ndim = 3
 end module global_variables
