@@ -1,7 +1,7 @@
 
 # Look in src for .mod files
 FT_INCLUDES=-I../src
-#FT_FLAGS=-Wall
+FT_FLAGS=-Wall -Wno-unused-dummy-argument
 FC = mpif90
 
 
