@@ -1,6 +1,7 @@
 
 # Look in src for .mod files
 FT_INCLUDES=-I../src
+#FT_FLAGS=-Wall
 FC = mpif90
 
 
@@ -28,24 +29,24 @@ test: $(tests_execute)
 # Module compilation rules
 #
 %.mod: %.mod.f90
-	$(FC) -fsyntax-only $< $(FT_INCLUDES)
+	$(FC) -fsyntax-only $< $(FT_INCLUDES) $(FT_FLAGS)
 
 
 #
 # Fortran compilation rules
 #
 %.mod.o: %.mod.f90 %.mod
-	$(FC) -c -o $@ $< $(FT_INCLUDES)
+	$(FC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
 
 %.o: %.f90
-	$(FC) -c -o $@ $< $(FT_INCLUDES)
+	$(FC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
 
 
 #
 # Compile executables from object files
 #
 %: %.o
-	$(FC) -o $@ $^ $(FT_INCLUDES)
+	$(FC) -o $@ $^ $(FT_INCLUDES) $(FT_FLAGS)
 
 
 #
