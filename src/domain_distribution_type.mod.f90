@@ -9,24 +9,12 @@ module domain_distribution_type
 
     public :: domain_distribution
 
-    type :: particle_list
-        integer, allocatable :: id(:)
-        real(p), allocatable :: pos(:,:)
-        real(p), allocatable :: vel(:,:)
-        real(p), allocatable :: force(:,:)
-        real(p), allocatable :: mass(:)
-    contains
-        procedure get_particle
-        procedure set_particle
-        procedure resize
-    end type
-
     type, EXTENDS(abstract_distribution) :: domain_distribution
         integer, private :: num_particles
+        integer, private :: num_local_particles
         real(p), private :: domain_size(Ndim)
 
-        integer, private :: num_local_particles
-        type(particle_list), private :: particles
+        type(particle), private, allocatable :: particles(:)
 
         integer, private :: rank
         integer, private :: nprocs
@@ -65,7 +53,6 @@ contains
 
         integer :: chunk_size
         integer :: comm_dup
-        integer :: i
 
         integer :: ierror
 
@@ -88,11 +75,7 @@ contains
                 - ((this%rank+1)*chunk_size - num_particles)
         end if
 
-        call this%particles%resize(this%num_local_particles)
-
-        do i=1, this%num_local_particles
-            this%particles%id(i) = this%rank*chunk_size + i
-        end do
+        allocate(this%particles(this%num_local_particles))
     end subroutine init
 
     subroutine pair_operation(this, compare_func, merge_func)
@@ -101,10 +84,9 @@ contains
         procedure(two_particle_function) :: merge_func
 
         integer :: num_foreign_particles=0
-        type(particle_list) :: foreign_list
+        type(particle), allocatable :: foreign_list(:)
 
         type(particle) :: tmp_particle
-        type(particle) :: particle_i, particle_j
         integer :: rank
         integer :: i, j
 
@@ -116,16 +98,13 @@ contains
 
             do i=1, this%num_local_particles
                 do j=1, num_foreign_particles
-                    if(this%particles%id(i) .EQ. foreign_list%id(j)) cycle
-
-                    call this%particles%get_particle(i, particle_i)
-                    call foreign_list%get_particle(j, particle_j)
+                    if(rank .EQ. this%rank .AND. i .EQ. j) cycle
 
                     tmp_particle = compare_func( &
-                        particle_i, particle_j &
+                        this%particles(i), foreign_list(j) &
                     )
-                    call this%particles%set_particle( &
-                        i, merge_func(particle_i, tmp_particle) &
+                    this%particles(i) = merge_func( &
+                        this%particles(i), tmp_particle &
                     )
                 end do
             end do
@@ -137,15 +116,17 @@ contains
         class(domain_distribution), intent(inout) :: this
         procedure(one_particle_function) :: update_func
 
-        type(particle) :: particle_i
+        integer :: chunk_size
+        integer :: chunk_start
+
         integer :: i
 
 
+        chunk_size = ceiling(real(this%num_particles)/this%nprocs)
+        chunk_start = this%rank*chunk_size+1
+
         do i=1, this%num_local_particles
-            call this%particles%get_particle(i, particle_i)
-            call this%particles%set_particle( &
-                i, update_func(particle_i, this%particles%id(i)) &
-            )
+            this%particles(i) = update_func(this%particles(i), chunk_start-1+i)
         end do
     end subroutine individual_operation
 
@@ -156,18 +137,17 @@ contains
         real(p), intent(inout) :: reduce_value
 
         real(p) :: tmp_reduce_value
-        type(particle) :: particle_i
         integer :: i
 
         integer :: ierror
 
 
         do i=1, this%num_local_particles
-            call this%particles%get_particle(i, particle_i)
-            reduce_value = reduce( reduce_value, map(particle_i) )
+            reduce_value = reduce( reduce_value, map(this%particles(i)) )
         end do
 
         tmp_reduce_value = reduce_value
+
         call MPI_Allreduce( &
             tmp_reduce_value, reduce_value, 1, &
             MPI_REAL_P, MPI_SUM, this%comm, &
@@ -180,19 +160,28 @@ contains
         procedure(print_particle_function) :: print_func
 
         character(len=80) :: string
-        type(particle) :: particle_i
         integer :: i
 
+        integer :: chunk_size
+        integer :: chunk_start
+
         integer :: rank
+
         integer :: ierror
 
+
+        chunk_size = ceiling(real(this%num_particles)/this%nprocs)
+        chunk_start = this%rank*chunk_size+1
 
         do rank=0, this%nprocs-1
             call MPI_Barrier(this%comm, ierror)
             if(rank .EQ. this%rank) then
                 do i=1, this%num_local_particles
-                    call this%particles%get_particle(i, particle_i)
-                    call print_func(particle_i, this%particles%id(i), string)
+                    call print_func( &
+                        this%particles(i), &
+                        chunk_start-1+i, &
+                        string &
+                    )
                     write(*,'(A)') string
                 end do
             end if
@@ -213,11 +202,15 @@ contains
     )
         class(domain_distribution), intent(inout) :: this
         integer, intent(in) :: rank
-        type(particle_list), intent(inout) :: foreign_list
+        type(particle), allocatable, intent(inout) :: foreign_list(:)
         integer, intent(out) :: foreign_list_size
+
+        integer :: MPI_particle
 
         integer :: ierror
 
+
+        call generate_MPI_particle(MPI_particle)
 
         foreign_list_size = 0
         if(rank .EQ. this%rank) foreign_list_size = this%num_local_particles
@@ -226,92 +219,18 @@ contains
             foreign_list_size, 1, MPI_INTEGER, rank, this%comm, ierror &
         )
 
-        call foreign_list%resize(foreign_list_size)
+        if(allocated(foreign_list)) deallocate(foreign_list)
+        allocate(foreign_list(foreign_list_size))
 
         if(rank .EQ. this%rank) then
-            foreign_list%id = this%particles%id
-            foreign_list%pos = this%particles%pos
-            foreign_list%vel = this%particles%vel
-            foreign_list%force = this%particles%force
-            foreign_list%mass = this%particles%mass
+            foreign_list = this%particles
         end if
 
         call MPI_Bcast( &
-            foreign_list%id, foreign_list_size, MPI_INTEGER, &
+            foreign_list, foreign_list_size, MPI_particle, &
             rank, this%comm, ierror &
         )
-
-        call MPI_Bcast( &
-            foreign_list%pos, Ndim*foreign_list_size, MPI_REAL_P, &
-            rank, this%comm, ierror &
-        )
-
-        call MPI_Bcast( &
-            foreign_list%vel, Ndim*foreign_list_size, MPI_REAL_P, &
-            rank, this%comm, ierror &
-        )
-
-        call MPI_Bcast( &
-            foreign_list%force, Ndim*foreign_list_size, MPI_REAL_P, &
-            rank, this%comm, ierror &
-        )
-
-        call MPI_Bcast( &
-            foreign_list%mass, foreign_list_size, MPI_REAL_P, &
-            rank, this%comm, ierror &
-        )
-
     end subroutine get_foreign_list
 
-
-    subroutine get_particle(this, i, p)
-        class(particle_list), intent(inout) :: this
-        integer, intent(in) :: i
-        type(particle), intent(out) :: p
-
-
-        p = particle( &
-            pos=this%pos(:,i), &
-            vel=this%vel(:,i), &
-            force=this%force(:,i), &
-            mass=this%mass(i) &
-        )
-    end subroutine get_particle
-
-    subroutine set_particle(this, i, p)
-        class(particle_list), intent(inout) :: this
-        integer, intent(in) :: i
-        type(particle), intent(in) :: p
-
-
-        this%pos(:,i) = p%pos
-        this%vel(:,i) = p%vel
-        this%force(:,i) = p%force
-        this%mass(i) = p%mass
-    end subroutine set_particle
-
-
-    subroutine resize(this, num_particles)
-        class(particle_list), intent(inout) :: this
-        integer, intent(in) :: num_particles
-
-
-        if(allocated(this%id)) then
-            deallocate( &
-                this%id, &
-                this%pos, &
-                this%vel, &
-                this%force, &
-                this%mass &
-            )
-        end if
-
-        allocate(this%id(num_particles))
-        allocate(this%pos(Ndim,num_particles))
-        allocate(this%vel(Ndim,num_particles))
-        allocate(this%force(Ndim,num_particles))
-        allocate(this%mass(num_particles))
-
-    end subroutine resize
 
 end module domain_distribution_type
