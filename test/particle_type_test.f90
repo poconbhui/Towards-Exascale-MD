@@ -12,7 +12,6 @@ program particle_type_test
     integer :: rank
     integer :: nprocs
 
-    integer :: i
     integer :: ierror
 
 

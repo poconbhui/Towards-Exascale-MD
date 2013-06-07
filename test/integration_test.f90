@@ -29,7 +29,7 @@ program integration_test
     !
     call integration_init(time_step)
 
-    total_steps = total_time/time_step
+    total_steps = int(total_time/time_step)
     do current_step=0, total_steps
         if( sqrt(sum((test_particle%pos - &
             initial_position*cos(current_step*time_step))**2)) &
@@ -81,7 +81,7 @@ program integration_test
         type(particle), intent(inout) :: ptcl
 
         REAL(p) :: k
-        INTEGER :: i
+
 
         k = 1
 

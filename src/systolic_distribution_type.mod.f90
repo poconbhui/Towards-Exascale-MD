@@ -83,14 +83,11 @@ contains
         procedure(two_particle_function) :: merge_func
 
         integer :: chunk_size, chunk_start, chunk_end
-        integer :: foreign_rank
 
         type(particle) :: tmp_particle
         integer :: i, j
 
         integer :: pulse
-        integer :: ierror
-
 
 
         this%foreign_particles = this%particles
@@ -173,7 +170,6 @@ contains
         integer :: chunk_end
 
         character(len=80) :: string
-        type(particle) :: particle_i
         integer :: i
         integer :: rank
 
@@ -186,7 +182,6 @@ contains
         do rank=0, this%nprocs
             call MPI_Barrier(this%comm, ierror)
             if(this%rank .EQ. rank) then
-                write(*,*) "RANK", rank
                 do i=1, this%num_local_particles
                     call print_func(this%particles(i), chunk_start-1+i, string)
                     write(*,'(A)') string
@@ -208,13 +203,12 @@ contains
     subroutine do_systolic_pulse(this)
         class(systolic_distribution), intent(inout) :: this
 
-        integer :: ierror
         integer :: chunk_size, chunk_start, chunk_end
 
         integer :: send_request
         integer :: recv_request
 
-        integer :: i
+        integer :: ierror
 
 
         call this%get_chunk_data(0, chunk_size, chunk_start, chunk_end)

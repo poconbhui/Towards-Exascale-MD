@@ -81,8 +81,6 @@ contains
         type(particle) :: particle_i, particle_j
         integer :: i, j
 
-        integer :: ierror
-
 
         call this%get_chunk_data(this%rank, i_size, i_start, i_end)
 

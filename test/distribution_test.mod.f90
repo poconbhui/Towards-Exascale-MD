@@ -93,7 +93,7 @@ contains
 
         call expect( &
             "pair_operation should compare all particles &
-            with all other particles",&
+            &with all other particles",&
             reduction_value .EQ. x*(num_particles-1) &
         )
     end subroutine distribution_module_test

@@ -108,8 +108,6 @@ contains
         integer :: rank
         integer :: i, j
 
-        integer :: ierror
-
 
         do rank=0, this%nprocs-1
             call this%get_foreign_list( &

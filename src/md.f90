@@ -35,7 +35,6 @@ program MD
     ! Temporary variables
     !
     real(p) :: current_time
-    character(len=80) :: string
     integer :: i
 
 
