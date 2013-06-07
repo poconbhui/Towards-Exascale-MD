@@ -21,7 +21,7 @@ program domain_distribution_test
 
     call distribution_module_test(dist, num_particles)
 
-    call MPI_Finalize
+    call MPI_Finalize(ierr)
 
 contains
     PURE subroutine print_particle(pi, i, string)
