@@ -1,15 +1,22 @@
 tests = \
+	particle_type_test \
 	integration_test \
 	grav_force_test \
 	lj_force_test \
 	serial_distribution_type_test \
 	replicated_distribution_type_test \
-	domain_distribution_type_test
+	domain_distribution_type_test \
+	systolic_distribution_type_test 
 
 include ../Makefile
 
 ../src/%:
 	cd ../src && make $*
+
+particle_type_test: ../src/particle_type.mod.o test.mod.o
+particle_type_test.o: ../src/particle_type.mod test.mod
+particle_type_test_execute: particle_type_test
+	mpiexec -n 4 ./particle_type_test
 
 integration_test: ../src/integration.mod.o
 integration_test.o: ../src/integration.mod
@@ -63,3 +70,12 @@ domain_distribution_type_test.o: \
 	../src/domain_distribution_type.mod
 domain_distribution_type_test_execute: domain_distribution_type_test
 	mpiexec -n 4 ./domain_distribution_type_test
+
+systolic_distribution_type_test: \
+	$(distribution_test_mod_o) \
+	../src/systolic_distribution_type.mod.o
+systolic_distribution_type_test.o: \
+	$(distribution_test_mod) \
+	../src/systolic_distribution_type.mod
+systolic_distribution_type_test_execute: systolic_distribution_type_test
+	mpiexec -n 4 ./systolic_distribution_type_test
