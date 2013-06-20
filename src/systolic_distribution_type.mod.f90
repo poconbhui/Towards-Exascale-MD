@@ -8,6 +8,7 @@ module systolic_distribution_type
     private
 
     public :: systolic_distribution
+    public :: new_systolic_distribution
 
     type, EXTENDS(abstract_distribution) :: systolic_distribution
         integer, private :: num_particles
@@ -35,18 +36,16 @@ module systolic_distribution_type
         procedure, private :: do_systolic_pulse
         procedure, private :: get_chunk_data
     end type systolic_distribution
-    interface systolic_distribution
-        module procedure constructor
-    end interface systolic_distribution
 
 contains
-    function constructor(particle_count, comm)
-        type(systolic_distribution) :: constructor
+    function new_systolic_distribution(particle_count, comm)
+        type(systolic_distribution) :: new_systolic_distribution
+
         integer, intent(in) :: particle_count
         integer, intent(in) :: comm
 
-        call constructor%init(particle_count, comm)
-    end function constructor
+        call new_systolic_distribution%init(particle_count, comm)
+    end function new_systolic_distribution
 
     subroutine init(this, num_particles, comm)
         class(systolic_distribution), intent(inout) :: this

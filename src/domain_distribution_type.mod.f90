@@ -8,6 +8,7 @@ module domain_distribution_type
     private
 
     public :: domain_distribution
+    public :: new_domain_distribution
 
     type, EXTENDS(abstract_distribution) :: domain_distribution
         integer, private :: num_particles
@@ -32,29 +33,25 @@ module domain_distribution_type
         procedure, private :: get_foreign_list
         procedure :: balance_lists
     end type domain_distribution
-    interface domain_distribution
-        module procedure constructor
-    end interface domain_distribution
-
 contains
-    function constructor(num_particles, domain_size, initial_distribution, comm)
-        type(domain_distribution) :: constructor
+    function new_domain_distribution( &
+      num_particles, domain_size, initial_distribution, comm &
+    )
+        type(domain_distribution) :: new_domain_distribution
+
         integer, intent(in) :: num_particles
         real(p), intent(in) :: domain_size(Ndim)
         procedure(one_particle_function) :: initial_distribution
         integer, intent(in) :: comm
 
 
-        call constructor%init( &
-            num_particles, domain_size, initial_distribution, &
-            comm &
+        call new_domain_distribution%init( &
+            num_particles, domain_size, initial_distribution, comm &
         )
-    end function constructor
+    end function new_domain_distribution
 
     subroutine init( &
-        this, &
-        num_particles, domain_size, initial_distribution, &
-        comm &
+        this, num_particles, domain_size, initial_distribution, comm &
     )
         class(domain_distribution), intent(out) :: this
         integer, intent(in) :: num_particles

@@ -12,7 +12,7 @@ program serial_distribution_test
 
 
     num_particles = 10
-    dist = serial_distribution(num_particles)
+    dist = new_serial_distribution(num_particles)
 
     call distribution_module_test(dist, num_particles)
 

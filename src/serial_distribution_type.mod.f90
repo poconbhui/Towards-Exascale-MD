@@ -7,6 +7,7 @@ module serial_distribution_type
     private
 
     public :: serial_distribution
+    public :: new_serial_distribution
 
     type, EXTENDS(abstract_distribution) :: serial_distribution
         integer, private :: num_particles
@@ -20,17 +21,14 @@ module serial_distribution_type
         procedure :: print_particles
         procedure :: print_string
     end type serial_distribution
-    interface serial_distribution
-        module procedure constructor
-    end interface serial_distribution
 
 contains
-    function constructor(particle_count)
-        type(serial_distribution) :: constructor
+    function new_serial_distribution(particle_count)
+        type(serial_distribution) :: new_serial_distribution
         integer :: particle_count
 
-        call constructor%init(particle_count)
-    end function constructor
+        call new_serial_distribution%init(particle_count)
+    end function new_serial_distribution
 
     subroutine init(this, particle_count)
         class(serial_distribution), intent(out) :: this

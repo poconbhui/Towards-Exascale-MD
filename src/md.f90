@@ -1,3 +1,21 @@
+module ops
+  use global_variables
+  use particle_type
+  implicit none
+
+contains
+    PURE subroutine print_particle(p, i, string)
+        type(particle), intent(in) :: p
+        integer, intent(in) :: i
+        character(len=*), intent(out) :: string
+
+
+        write(string,*) p%pos
+        string = adjustl(string)
+    end subroutine print_particle
+
+end module ops
+
 program MD
     use global_variables
     use particle_type
@@ -5,6 +23,7 @@ program MD
     use abstract_distribution_type
     use serial_distribution_type
     use grav_force
+    use ops
     implicit none
 
     !
@@ -69,7 +88,7 @@ program MD
     ! Select distribution module
     select case(distribution_name)
         case("serial")
-            serial_dist = serial_distribution(particle_count)
+            serial_dist = new_serial_distribution(particle_count)
             dist => serial_dist
 
         case default
@@ -84,7 +103,7 @@ program MD
     !
     ! Initialize particles
     !
-    call dist%individual_operation(initialize_particles)
+    !call dist%individual_operation(initialize_particles)
 
 
     !
@@ -143,35 +162,4 @@ contains
         write(current_time_string, *) "Time: ", current_time
     end function current_time_string
 
-    PURE subroutine print_particle(p, i, string)
-        type(particle), intent(in) :: p
-        integer, intent(in) :: i
-        character(len=*), intent(out) :: string
-
-
-        write(string,*) p%pos
-        string = adjustl(string)
-    end subroutine print_particle
-
-
-    !
-    ! Consistency test functions
-    !
-
-    function map(p1)
-        type(particle), intent(in) :: p1
-
-        real(p) :: map
-
-        map = 2
-    end function map
-
-    function reduce(d1, d2)
-        real(p), intent(in) :: d1
-        real(p), intent(in) :: d2
-
-        real(p) :: reduce
-
-        reduce = d1 + d2
-    end function reduce
 end program MD

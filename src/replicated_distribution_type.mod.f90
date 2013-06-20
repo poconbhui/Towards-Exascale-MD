@@ -8,6 +8,7 @@ module replicated_distribution_type
     private
 
     public :: replicated_distribution
+    public :: new_replicated_distribution
 
     type, EXTENDS(abstract_distribution) :: replicated_distribution
         integer, private :: num_particles
@@ -29,18 +30,15 @@ module replicated_distribution_type
         procedure, private :: sync_particles
         procedure, private :: get_chunk_data
     end type replicated_distribution
-    interface replicated_distribution
-        module procedure constructor
-    end interface replicated_distribution
 
 contains
-    function constructor(particle_count, comm)
-        type(replicated_distribution) :: constructor
+    function new_replicated_distribution(particle_count, comm)
+        type(replicated_distribution) :: new_replicated_distribution
         integer, intent(in) :: particle_count
         integer, intent(in) :: comm
 
-        call constructor%init(particle_count, comm)
-    end function constructor
+        call new_replicated_distribution%init(particle_count, comm)
+    end function new_replicated_distribution
 
     subroutine init(this, num_particles, comm)
         class(replicated_distribution), intent(out) :: this

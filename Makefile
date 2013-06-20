@@ -1,8 +1,9 @@
 
 # Look in src for .mod files
 FT_INCLUDES=-I../src
-FT_FLAGS=-Wall -Wno-unused-dummy-argument
-FC = mpif90
+FT_FLAGS=#-Wall -Wno-unused-dummy-argument
+FT_COMPILE_MODULE=-c #-fsyntax-only
+FC = ftn #mpif90
 
 
 #
@@ -14,7 +15,7 @@ all: $(programs)
 
 .PHONY: test
 tests_execute=$(patsubst %, %_execute, $(tests))
-test: $(tests_execute)
+test: $(tests) $(tests_execute)
 	$(if $^ ,, make all; cd test; make test)
 
 
@@ -29,7 +30,7 @@ test: $(tests_execute)
 # Module compilation rules
 #
 %.mod: %.mod.f90
-	$(FC) -fsyntax-only $< $(FT_INCLUDES) $(FT_FLAGS)
+	$(FC) $(FT_COMPILE_MODULE) $< $(FT_INCLUDES) $(FT_FLAGS)
 
 
 #
@@ -45,7 +46,7 @@ test: $(tests_execute)
 #
 # Compile executables from object files
 #
-%: %.o
+%: %.f90
 	$(FC) -o $@ $^ $(FT_INCLUDES) $(FT_FLAGS)
 
 

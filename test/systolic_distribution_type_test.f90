@@ -15,7 +15,7 @@ program systolic_distribution_test
     call MPI_Init(ierr)
 
     num_particles = 10
-    dist = systolic_distribution(num_particles, MPI_COMM_WORLD)
+    dist = new_systolic_distribution(num_particles, MPI_COMM_WORLD)
 
     call distribution_module_test(dist, num_particles)
 
