@@ -1,13 +1,6 @@
+include ../Makefile.in
+
 programs = md
-
-sources = $(wildcard *.f90)
-objects = $(patsubst %.f90, %.o, $(sources))
-
-
-include ../Makefile
-
-md_execute: md
-	echo "HELLO"
 
 
 #
