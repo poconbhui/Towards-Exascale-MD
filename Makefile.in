@@ -1,0 +1,57 @@
+# Look in src for .mod files
+FT_INCLUDES=-I../src
+FT_FLAGS=#-Wall -Wno-unused-dummy-argument
+FT_COMPILE_MODULE=-c #-fsyntax-only
+FC = ftn #mpif90
+
+
+#
+# Make targets
+#
+.PHONY: all
+all: $(programs)
+	 $(if $^,, $(if $(programs), make $(programs)))
+
+
+#
+# Module compilation rules
+#
+%.mod: %.mod.f90
+	$(FC) $(FT_COMPILE_MODULE) $< $(FT_INCLUDES) $(FT_FLAGS)
+
+
+#
+# Fortran compilation rules
+#
+%.mod.o: %.mod.f90 %.mod
+	$(FC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
+
+%.o: %.f90
+	$(FC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
+
+
+#
+# Compile executables from object files
+#
+%: %.f90
+	$(FC) -o $@ $^ $(FT_INCLUDES) $(FT_FLAGS)
+
+
+#
+# Cleanup rules
+#
+temps = *.o *.mod
+.PHONY: clean_temps
+clean_temps:
+	@echo rm *.o *.mod
+	-@rm *.o *.mod 2>/dev/null 1>/dev/null; true
+.PHONY: clean_programs
+clean_programs: clean_temps
+	@$(if $(programs), echo rm $(programs))
+	-@$(if $(programs), rm $(programs) 2>/dev/null 1>/dev/null; true)
+.PHONY: clean_tests
+clean_tests: clean_temps
+	@$(if $(tests), echo rm $(tests))
+	-@$(if $(tests), rm $(tests) 2>/dev/null 1>/dev/null; true)
+.PHONY: clean
+clean: clean_programs clean_tests clean_temps
