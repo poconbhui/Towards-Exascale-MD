@@ -1,4 +1,5 @@
 program integration_test
+    use test_suite
     use global_variables
     use integration
     use particle_type
@@ -76,7 +77,11 @@ program integration_test
         test_particle = verlet_integrate_pt2(test_particle, 1)
     end do
 
-    contains
+
+    call exit(end_test())
+
+
+contains
     subroutine spring_force(ptcl)
         type(particle), intent(inout) :: ptcl
 

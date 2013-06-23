@@ -1,7 +1,7 @@
 module domain_distribution_test_funcs
     use particle_type
     use global_variables
-    use test
+    use test_suite
     use mpi
     implicit none
 
@@ -75,7 +75,7 @@ program domain_distribution_test
     use distribution_test
     use domain_distribution_type
     use global_variables
-    use test
+    use test_suite
     use mpi
     use domain_distribution_test_funcs
     implicit none
@@ -83,9 +83,9 @@ program domain_distribution_test
 
     type(domain_distribution) :: dist
 
-
     real(p) :: test_value(2)
 
+    integer :: exit_value
     integer :: ierr
 
 
@@ -112,7 +112,9 @@ program domain_distribution_test
     call test_list_balancing
 
 
+    exit_value = end_test()
     call MPI_Finalize(ierr)
+    call exit(exit_value)
 
 contains
     subroutine test_list_balancing

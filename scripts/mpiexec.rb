@@ -8,9 +8,11 @@ module MpiExec
 
   def run(*args)
     # Sanitize options
-    options = args.last.is_a?(Hash) ? args.last : {}
+    options = args.last.is_a?(Hash) ? args.pop : {}
 
     options[:cores] ||= 1
+
+    args << options
 
     # Get appropriate mpiexec command
     case MpiExec.mpienv

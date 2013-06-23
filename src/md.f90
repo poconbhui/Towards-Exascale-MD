@@ -62,7 +62,7 @@ program MD
     !
     argc = command_argument_count()
     allocate(argv(argc))
-    do i=0, argc
+    do i=1, argc
         call get_command_argument(i, argv(i))
     end do
 

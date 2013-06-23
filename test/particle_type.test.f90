@@ -2,7 +2,7 @@ program particle_type_test
     use global_variables
     use particle_type
     use mpi
-    use test
+    use test_suite
     implicit none
 
     type(particle) :: test_particle
@@ -12,6 +12,7 @@ program particle_type_test
     integer :: rank
     integer :: nprocs
 
+    integer :: exit_value
     integer :: ierror
 
 
@@ -52,5 +53,9 @@ program particle_type_test
     call expect("%mass should be 1", test_particle%mass .EQ. 1)
 
 
+    exit_value = end_test()
     call MPI_Finalize(ierror)
+    call exit(exit_value)
+
+
 end program particle_type_test

@@ -1,25 +1,24 @@
-program systolic_distribution_test
-    use particle_type
+program serial_distribution_test
     use distribution_test
-    use systolic_distribution_type
+    use test_suite
+    use particle_type
+    use abstract_distribution_type
+    use serial_distribution_type
     use global_variables
-    use mpi
     implicit none
 
-
     integer :: num_particles
-    type(systolic_distribution) :: dist
-    integer :: ierr
+    type(serial_distribution):: dist
 
-
-    call MPI_Init(ierr)
 
     num_particles = 10
-    dist = new_systolic_distribution(num_particles, MPI_COMM_WORLD)
+    dist = new_serial_distribution(num_particles)
 
     call distribution_module_test(dist, num_particles)
 
-    call MPI_Finalize(ierr)
+
+    call exit(end_test())
+
 
 contains
     PURE subroutine print_particle(pi, i, string)
@@ -28,7 +27,6 @@ contains
         character(len=*), intent(out) :: string
 
 
-        write(string,*) i, pi%pos(1), pi%vel(1)
+        write(string,*) i, pi%pos(i), pi%vel(i)
     end subroutine print_particle
-
-end program systolic_distribution_test
+end program serial_distribution_test

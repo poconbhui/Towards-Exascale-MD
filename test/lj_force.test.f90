@@ -1,4 +1,5 @@
 program lj_force_test
+    use test_suite
     use particle_type
     use abstract_distribution_type
     use lj_force

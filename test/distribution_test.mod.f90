@@ -1,5 +1,5 @@
 module distribution_test
-    use test
+    use test_suite
     use abstract_distribution_type
     use particle_type
     use global_variables

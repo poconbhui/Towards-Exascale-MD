@@ -1,7 +1,7 @@
 module force_test
     use particle_type
     use abstract_distribution_type
-    use test
+    use test_suite
     implicit none
 
     contains
