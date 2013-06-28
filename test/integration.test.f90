@@ -63,7 +63,8 @@ program integration_test
                        ))
             write(*,*)
 
-            return
+            call expect("Motion should follow solution", .FALSE.)
+            call exit(end_test())
         end if
 
         test_particle = verlet_integrate_pt1(test_particle, 1)
