@@ -31,7 +31,7 @@ all: $(programs)
 #
 # Fortran compilation rules
 #
-%.mod.o: %.mod.f90 %.mod
+%.mod.o: %.mod.f90
 	$(FC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
 
 %.o: %.f90
