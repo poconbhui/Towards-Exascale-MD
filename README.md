@@ -39,7 +39,7 @@ To compile and test everything, the following procedure may be used:
     > ./scripts/run_tests.rb
 
 
-### Banchmarking ###
+### Benchmarking ###
 
 Appropriate benchmarks have not yet been decided, but are being planned out.
 
