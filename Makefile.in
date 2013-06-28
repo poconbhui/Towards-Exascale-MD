@@ -44,6 +44,13 @@ all: $(programs)
 
 
 #
+# Compile executables from object files
+#
+%: %.f90
+	$(FC) -o $@ $^ $(FT_INCLUDES) $(FT_FLAGS)
+
+
+#
 # Module compilation rules
 #
 %.mod: %.mod.f90
@@ -57,11 +64,6 @@ all: $(programs)
 	$(FC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
 
 
-#
-# Compile executables from object files
-#
-%: %.f90
-	$(FC) -o $@ $^ $(FT_INCLUDES) $(FT_FLAGS)
 
 
 #
