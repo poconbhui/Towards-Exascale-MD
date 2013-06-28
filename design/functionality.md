@@ -27,7 +27,7 @@
 
 * Data gathering and updating will require individual particle mapping and
   reducing. It will also require full system maps/reductions. Templating would
-  be super nice for the system wide map/reduce. As we don't have this,
+  be super nice for the system wide map/reduce. As we do not have this,
   we restrict data types to arrays of reals.
   For system wide map/reduce, a function accepting a particle and an array
   length and outputting an array of that length
