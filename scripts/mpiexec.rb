@@ -1,9 +1,9 @@
 module MpiExec
-  def self.mpienv
-    @mpienv ||= ENV["mpienv"] || "default"
+  def self.mpiexec
+    @mpiexec ||= ENV["mpiexec"] || "default"
   end
-  def self.mpienv=(val)
-    @mpienv = val
+  def self.mpiexec=(val)
+    @mpiexec = val
   end
 
   def run(*args)
@@ -15,8 +15,8 @@ module MpiExec
     args << options
 
     # Get appropriate mpiexec command
-    case MpiExec.mpienv
-      when "cray"
+    case MpiExec.mpiexec
+      when "aprun"
         shell_command = aprun(*args)
       else
         shell_command = mpiexec(*args)

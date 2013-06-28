@@ -8,8 +8,15 @@
 #
 
 
-# Setup compile flags for specified compiler
+#
+# Setup compile flags for specified compiler.
 # -I../src is used to look in src for .mod files.
+#
+# This takes FC from your environment variables. If you specify
+# FC as ftn, the current configuration assumes you are using crayftn.
+# Otherwise, it is assumed that you are using mpif90, and sets flags for
+# use with gfortran.
+#
 ifeq ($(FC), ftn)
     FT_INCLUDES=-I../src
     FT_FLAGS=

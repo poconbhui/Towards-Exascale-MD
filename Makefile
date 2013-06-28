@@ -1,3 +1,8 @@
+#
+# Before using Makefile, be sure you've set environment variables in
+# config.sh to match the mpi compiler and executor on your system.
+#
+
 # Define subdirectories containing programs to be compiled.
 SUBDIRS=src test bench
 
