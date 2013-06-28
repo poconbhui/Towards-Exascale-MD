@@ -1,30 +1,44 @@
+include ../Makefile.in
+
 ../src/%:
 	make -C ../src $*
 
-include ../Makefile.in
 
-programs = serial.bench
+programs = calculation_only.bench
 
-bench_suite.mod.o = bench_suite.mod.o
-bench_suite.mod = bench_suite.mod
+bench_suite.mod.o = \
+	../src/global_variables.mod.o \
+        ../src/particle_type.mod.o \
+        bench_suite.mod.o
+bench_suite.mod = \
+	../src/global_variables.mod \
+        ../src/particle_type.mod \
+        bench_suite.mod
 
 distribution_type.mod= \
 	../src/global_variables.mod \
 	../src/particle_type.mod \
 	../src/abstract_distribution_type.mod
 distribution_type.mod.o= \
+	../src/global_variables.mod.o \
 	../src/particle_type.mod.o \
 	../src/abstract_distribution_type.mod.o
 
-serial.bench: \
+calculation_only.bench: \
 	$(bench_suite.mod.o) \
 	$(distribution_type.mod.o) \
 	../src/grav_force.mod.o \
 	../src/integration.mod.o \
-	../src/serial_distribution_type.mod.o
-serial.bench.o: \
+	../src/serial_distribution_type.mod.o \
+        ../src/replicated_distribution_type.mod.o \
+        ../src/domain_distribution_type.mod.o \
+        ../src/systolic_distribution_type.mod.o
+calculation_only.bench.o: \
 	$(bench_suite.mod.o) \
 	$(distribution_type.mod) \
 	../src/grav_force.mod \
 	../src/integration.mod \
-	../src/serial_distribution_type.mod
+	../src/serial_distribution_type.mod \
+        ../src/replicated_distribution_type.mod \
+        ../src/domain_distribution_type.mod \
+        ../src/systolic_distribution_type.mod

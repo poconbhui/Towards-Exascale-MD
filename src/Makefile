@@ -6,7 +6,7 @@ programs = md
 #
 # Executable object dependencies
 #
-md: particle_type.mod.o abstract_distribution_type.mod.o serial_distribution_type.mod.o lj_force.mod.o grav_force.mod.o integration.mod.o
+md: global_variables.mod.o particle_type.mod.o abstract_distribution_type.mod.o serial_distribution_type.mod.o lj_force.mod.o grav_force.mod.o integration.mod.o
 #md.o: global_variables.mod particle_type.mod abstract_distribution_type.mod serial_distribution_type.mod lj_force.mod grav_force.mod integration.mod
 
 #
