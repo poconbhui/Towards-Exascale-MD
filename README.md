@@ -41,9 +41,7 @@ To compile and test everything, the following procedure may be used:
 
 ### Banchmarking ###
 
-To date, appropriate benchmarks have not quite been decided yet.
-Currently, strong scaling and weak scaling benchmark specifications
-are being drawn up.
+Appropriate benchmarks have not yet been decided, but are being planned out.
 
 Difficulties exist in defining appropriate weak scaling benchmarks
 for an algorithm that scales as N^2.
