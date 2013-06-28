@@ -28,10 +28,12 @@ module MpiExec
   end
 
   def aprun(program, options)
+    hector_max_cores_per_node = 32
+
     cores = options[:cores]
 
     cores_per_node = options[:cores_per_node] || options[:cores]
-    cores_per_node = [ 24, options[:cores] ].min
+    cores_per_node = [ hector_max_cores_per_node, options[:cores] ].min
 
     "aprun -n #{cores} -N #{cores_per_node} #{program}"
   end
