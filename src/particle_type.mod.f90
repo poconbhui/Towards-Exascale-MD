@@ -73,11 +73,11 @@ contains
         !
         ! Find byte displacement of arrays from start of derived type
         !
-        call MPI_Address(test_particle,       addresses(1), ierror)
-        call MPI_Address(test_particle%pos,   addresses(2), ierror)
-        call MPI_Address(test_particle%vel,   addresses(3), ierror)
-        call MPI_Address(test_particle%force, addresses(4), ierror)
-        call MPI_Address(test_particle%mass,  addresses(5), ierror)
+        call MPI_Get_address(test_particle,       addresses(1), ierror)
+        call MPI_Get_address(test_particle%pos,   addresses(2), ierror)
+        call MPI_Get_address(test_particle%vel,   addresses(3), ierror)
+        call MPI_Get_address(test_particle%force, addresses(4), ierror)
+        call MPI_Get_address(test_particle%mass,  addresses(5), ierror)
 
         do i=1, num_params
             displacements(i) = addresses(i+1) - addresses(1)

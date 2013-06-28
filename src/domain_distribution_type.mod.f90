@@ -1,3 +1,9 @@
+! MODULE domain_distribution_type
+!
+! Module provides the domain_distribution type.
+! This is a domain decomposed implementation of an
+! abstract_distribution.
+!
 module domain_distribution_type
     use abstract_distribution_type
     use particle_type
@@ -7,22 +13,39 @@ module domain_distribution_type
 
     private
 
+    ! Exported types
     public :: domain_distribution
+
+    ! Exported functions
     public :: new_domain_distribution
 
+
+    ! TYPE domain_distribution
+    !
+    ! The domain_distribution type splits the particle list up
+    ! across processors based on the current position of the particle.
+    ! Particles that are spatially close should be on a close processor.
+    !
     type, EXTENDS(abstract_distribution) :: domain_distribution
+        ! Particle list sizes
         integer, private :: num_particles
         integer, private :: num_local_particles
+
+        ! Domain size
         real(p), private :: domain_size(Ndim)
 
+        ! Particle lists
         integer, private, allocatable :: particle_ids(:)
         type(particle), private, allocatable :: particles(:)
 
+        ! MPI data
         integer, private :: rank
         integer, private :: nprocs
         integer, private :: comm
 
     contains
+
+        ! Methods inherited from abstract_distribution
         procedure :: init
         procedure :: pair_operation
         procedure :: individual_operation
@@ -30,10 +53,20 @@ module domain_distribution_type
         procedure :: print_particles
         procedure :: print_string
 
+        ! Functions for getting particle lists from other processors
+        ! and migrating particles between processors.
         procedure, private :: get_foreign_list
         procedure :: balance_lists
+        procedure, private :: get_rank_by_particle
     end type domain_distribution
+
 contains
+
+
+    ! FUNCTION new_domain_distribution
+    !
+    ! Return a new initialized domain_distribution
+    !
     function new_domain_distribution( &
       num_particles, domain_size, initial_distribution, comm &
     )
@@ -50,6 +83,17 @@ contains
         )
     end function new_domain_distribution
 
+
+    ! SUBROUTINE init
+    !
+    ! Initialize the domain_distribution.
+    !
+    ! initial_distribution is somewhat important so the lists are
+    ! already relatively well balanced before any particles need to
+    ! be migrated. If, for example, the position of particles were
+    ! initially set to 0, process 0 may end up with the entire list.
+    ! This may not be desirable.
+    !
     subroutine init( &
         this, num_particles, domain_size, initial_distribution, comm &
     )
@@ -104,7 +148,7 @@ contains
             tmp_particle = particle(pos=0, vel=0, force=0, mass=1)
             tmp_particle = initial_distribution(tmp_particle, i)
 
-            if( get_rank_by_particle(this, tmp_particle) .EQ. this%rank) then
+            if( this%get_rank_by_particle(tmp_particle) .EQ. this%rank) then
                 chunk_size = chunk_size + 1
 
                 call resize_particles(this, chunk_size)
@@ -118,7 +162,15 @@ contains
 
     end subroutine init
 
-    ! Define decomposition pattern
+
+    ! FUNCTION get_rank_by_particle
+    !
+    ! Accepts a particle and returns a processor number.
+    !
+    ! This function defines the decomposition pattern.
+    ! By passing a particle to this function, the domain_distribution
+    ! can tell which processor a given particle should be resident on.
+    !
     function get_rank_by_particle(this, pi)
         integer :: get_rank_by_particle
 
@@ -136,6 +188,16 @@ contains
         end if
     end function get_rank_by_particle
 
+
+    ! SUBROUTINE resize_particles
+    !
+    ! This subroutine resizes the list of local particles.
+    !
+    ! Attempts have been made to reduce the frequency with thich
+    ! the list must be reallocated. Generally, a reallocation will
+    ! occur if the requested size is a factor of 2 out from the
+    ! currently allocated size.
+    !
     subroutine resize_particles(this, new_size_in)
         class(domain_distribution), intent(inout) :: this
         integer, intent(in) :: new_size_in
@@ -199,6 +261,13 @@ contains
         end if
     end subroutine resize_particles
 
+
+    ! SUBROUTINE pair_operation
+    ! Extended from abstract_distribution
+    !
+    ! This subroutine initially performs a list balancing and
+    ! then goes about comparing particles.
+    !
     subroutine pair_operation(this, compare_func, merge_func)
         class(domain_distribution), intent(inout) :: this
         procedure(two_particle_function) :: compare_func
@@ -211,6 +280,8 @@ contains
         integer :: rank
         integer :: i, j
 
+
+        call this%balance_lists
 
         do rank=0, this%nprocs-1
             call this%get_foreign_list( &
@@ -233,6 +304,13 @@ contains
         end do
     end subroutine pair_operation
 
+
+    ! SUBROUTINE individual_operation
+    ! Extended from abstract_distribution
+    !
+    ! This subroutine performs the update_func on the local list
+    ! of particles.
+    !
     subroutine individual_operation(this, update_func)
         class(domain_distribution), intent(inout) :: this
         procedure(one_particle_function) :: update_func
@@ -253,6 +331,12 @@ contains
         end do
     end subroutine individual_operation
 
+
+    ! SUBROUTINE global_map_reduce
+    !
+    ! This performs the map/reduce over the local list of particles
+    ! and then reduces values across all processors.
+    !
     subroutine global_map_reduce(this, map, reduce, reduce_value)
         class(domain_distribution), intent(inout) :: this
         procedure(global_map_function) :: map
@@ -278,6 +362,13 @@ contains
         )
     end subroutine global_map_reduce
 
+
+    ! SUBROUTINE print_particles
+    ! Extended from abstract_distribution
+    !
+    ! This routine has all processes print their list of particles.
+    ! The order of particle output is not guaranteed.
+    !
     subroutine print_particles(this, print_func)
         class(domain_distribution), intent(inout) :: this
         procedure(print_particle_function) :: print_func
@@ -312,6 +403,12 @@ contains
         call MPI_Barrier(this%comm, ierror)
     end subroutine print_particles
 
+
+    ! SUBROUTINE print_string
+    ! Extended from abstract_distribution
+    !
+    ! Process 0 outputs the requested string.
+    !
     subroutine print_string(this, string)
         class(domain_distribution), intent(inout) :: this
         character(len=*), intent(in) :: string
@@ -320,6 +417,15 @@ contains
         if(this%rank .EQ. 0) write(*,'(A)') string
     end subroutine print_string
 
+
+    ! SUBROUTINE get_foreign_list
+    !
+    ! This subroutine gets the list of particles resident on process rank
+    ! and copies it into foreign_list.
+    !
+    ! Currently, it is expected that all processes call this
+    ! simultaneously with the same value for rank.
+    !
     subroutine get_foreign_list( &
         this, rank, foreign_list, foreign_list_size &
     )
@@ -355,6 +461,12 @@ contains
         )
     end subroutine get_foreign_list
 
+
+    ! SUBROUTINE balance_lists
+    !
+    ! This subroutine updates the particle lists on all processors
+    ! according to where get_rank_from_particle says they should be.
+    !
     subroutine balance_lists(this)
         class(domain_distribution), intent(inout) :: this
 
@@ -386,7 +498,7 @@ contains
         send_sizes = 0
         send_index_list = -1
         do i=1, this%num_local_particles
-            rank = get_rank_by_particle(this, this%particles(i))
+            rank = this%get_rank_by_particle(this%particles(i))
             send_sizes(rank+1) = send_sizes(rank+1) + 1
             send_index_list(rank+1, send_sizes(rank+1)) = i
         end do
@@ -403,11 +515,13 @@ contains
 
 
             if(rank .EQ. this%rank) then
+                ! Resize local arrays to receiving sizes
                 call resize_particles(this, sum(send_sizes))
                 this%num_local_particles = sum(send_sizes)
             end if
 
 
+            ! Allocate send buffers.
             if(allocated(send_particle_ids)) then
                 deallocate(send_particle_ids, send_particles)
             end if
@@ -415,6 +529,7 @@ contains
             allocate(send_particles(send_sizes(rank+1)))
 
 
+            ! Copy particles to send buffers
             send_particle_ids(1:send_sizes(rank+1)) = old_particle_ids( &
                 send_index_list(rank+1,1:send_sizes(rank+1)) &
             )
@@ -423,6 +538,7 @@ contains
             )
 
 
+            ! Send/receive particle lists
             call MPI_Gatherv( &
                 send_particle_ids, send_sizes(rank+1), MPI_INTEGER, &
                 this%particle_ids, recv_sizes, num_to_off(recv_sizes), &
@@ -430,8 +546,6 @@ contains
                 rank, this%comm, &
                 ierror &
             )
-
-
             call MPI_Gatherv( &
                 send_particles, send_sizes(rank+1), MPI_particle, &
                 this%particles, recv_sizes, num_to_off(recv_sizes), &
@@ -443,6 +557,7 @@ contains
         end do
 
     contains
+        ! Return a sum scan across sizes, minus the first element.
         PURE function num_to_off(sizes)
             integer, intent(in) :: sizes(:)
             integer :: num_to_off(size(sizes))
@@ -458,6 +573,5 @@ contains
             end do
         end function num_to_off
     end subroutine balance_lists
-
 
 end module domain_distribution_type

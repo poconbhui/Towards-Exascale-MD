@@ -84,6 +84,7 @@ contains
         end do
 
         call this%sync_particles
+
     end subroutine pair_operation
 
     subroutine individual_operation(this, update_func)
@@ -119,6 +120,8 @@ contains
         character(len=80) :: string
         integer :: i
 
+
+        call this%sync_particles
 
         if(this%rank .EQ. 0) then
             do i=1, this%num_particles

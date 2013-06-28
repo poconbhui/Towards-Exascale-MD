@@ -1,4 +1,3 @@
-!
 ! MODULE abstract_distribution_type
 !
 ! Module provides the abstract_distribution type, an abstract class
@@ -7,39 +6,140 @@
 ! Module provides interfaces for functions accepted by abstract_distribution
 ! methods.
 !
-
 module abstract_distribution_type
     implicit none
 
     private
 
+    ! Exported types
     public :: abstract_distribution
+
+    ! Exported interfaces
     public :: one_particle_function
     public :: two_particle_function
     public :: global_map_function
     public :: global_reduce_function
     public :: print_particle_function
 
-    !
+
     ! TYPE abstract_distribution
     !
-    ! abstract_distribution type is an abstract type specifying a minimum
-    ! functionality that must be provided by distribution types.
+    ! A distribution type is an abstraction for defining a list of
+    ! particles and a set of operators that accept functions and
+    ! apply them to the list of particles.
     !
-    ! A distribution type is expected to extend this type and be run as
-    ! an instance. Methods described here accept an instance of
+    ! The list of particles is manipulated and data is gathered from it
+    ! exclusively through the use of these operators.
+    !
+    ! abstract_distribution type is an abstract type specifying a minimum
+    ! functionality that must be provided by distribution types. It is
+    ! generally used as an interface for distribution types, and as
+    ! a class for pointers and function arguments when the exact
+    ! distribution type to be used is not known in advance.
+    !
+    ! Distribution types are expected to extend this type and be run as
+    ! instances. Methods described here accept an instance of
     ! abstract_distribution passed to them implicitly.
     !
     type, abstract :: abstract_distribution
+
     contains
+
+
+        ! SUBROUTINE pair_operation(this, compare_func, merge_func)
+        !
+        ! This function should effectively implement a list comparison
+        ! algorithm for resident particles.
+        !
+        ! The algorithm should be equivalent to:
+        !
+        ! do i=1, particle_list_size
+        !   do j=1, particle_list_size
+        !     if(i .EQ. j) cycle
+        !     
+        !     particle(i) = merge_func( &
+        !       particle(i), compare_func(particle(i), particle(j)) &
+        !     )
+        !   end do
+        ! end do
+        !
+        ! compare_func and merge_func should be idempotent.
+        ! Further, the values of the particles that compare_func changes
+        ! should be expected to be junk values upon entry.
+        ! merge_func should only alter values altered by compare_func.
+        ! It should not be expected that compare_func is run for a given
+        ! pair only once, and no particular ordering should be assumed.
+        ! It should not be assumed that the algorithm outlined above will
+        ! be implemented as outlined, or even run only once per invocation.
+        !
         procedure(pair_operation_subroutine), pass, deferred &
             :: pair_operation
+
+
+        ! SUBROUTINE individual_operation(this, update_func)
+        !
+        ! This subroutine will effectively apply update_func to
+        ! every particle in the particle list.
+        !
+        ! It should effectively implement the following:
+        !
+        ! do i=1, particle_list_size
+        !   particle(i) = update_func(particle(i), i)
+        ! end do
+        !
         procedure(individual_operation_subroutine), pass, deferred &
             :: individual_operation
+
+
+        ! SUBROUTINE global_map_reduce(map, reduce, value)
+        !
+        ! This subroutine will perform a map/reduce operation over
+        ! the list of particles.
+        !
+        ! This subroutine is expected to be used to extract data from
+        ! the list of particles out to the main program.
+        !
+        ! The value argument when passed in will be used as the initial
+        ! value for the reduce operation. When the map/reduce operation
+        ! is complete, value will contain the resulting value.
+        !
+        ! global_map_reduce should effectively implement the following:
+        !
+        ! do i=1, particle_list_size
+        !   value = reduce( value, map(particle(i)) )
+        ! end do
+        !
         procedure(global_map_reduce_subroutine), pass, deferred &
             :: global_map_reduce
+
+
+        ! SUBROUTINE print_particles(print_sub)
+        !
+        ! This function prints out a string for every particle in the
+        ! list, as returned by print_sub.
+        !
+        ! The subroutine print_sub should accept a particle and return
+        ! a string. The subroutine will then print this to screen.
+        !
+        ! It should effectively implement the following:
+        !
+        ! do i=1, particle_list_size
+        !   call print_sub(particle(i), i, particle_string)
+        !   write(*,*) particle_string
+        ! end do
+        !
         procedure(print_particles_subroutine), pass, deferred &
             :: print_particles
+
+
+        ! SUBROUTINE print_string(string)
+        !
+        ! This subroutine outputs a given string.
+        !
+        ! It should effectively implement the following:
+        !
+        ! write(*,*) string
+        !
         procedure(print_string_subroutine), pass, deferred &
             :: print_string
     end type abstract_distribution
@@ -105,6 +205,7 @@ module abstract_distribution_type
 
         subroutine pair_operation_subroutine(this, compare_func, merge_func)
             import abstract_distribution
+            import two_particle_function
             implicit none
 
             class(abstract_distribution), intent(inout) :: this
@@ -115,6 +216,7 @@ module abstract_distribution_type
 
         subroutine individual_operation_subroutine(this, update_func)
             import abstract_distribution
+            import one_particle_function
             implicit none
 
             class(abstract_distribution), intent(inout) :: this
@@ -125,6 +227,8 @@ module abstract_distribution_type
         subroutine global_map_reduce_subroutine(this, map, reduce, reduce_value)
             use global_variables
             import abstract_distribution
+            import global_map_function
+            import global_reduce_function
             implicit none
 
             class(abstract_distribution), intent(inout) :: this
@@ -137,6 +241,7 @@ module abstract_distribution_type
 
         subroutine print_particles_subroutine(this, print_func)
             import abstract_distribution
+            import print_particle_function
             implicit none
 
             class(abstract_distribution), intent(inout) :: this
