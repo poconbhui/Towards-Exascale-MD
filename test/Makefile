@@ -25,10 +25,8 @@ force_test.mod: $(force_test.mod)
 force_test.mod.o: $(force_test.mod.o)
 
 grav_force.test: ../src/grav_force.mod.o $(force_test.mod.o)
-grav_force.test.o: ../src/grav_force.mod $(force_test.mod)
 
 lj_force.test: ../src/lj_force.mod.o $(force_test.mod.o)
-lj_force.test.o: ../src/lj_force.mod $(force_test.mod)
 
 
 distribution_test.mod = \
