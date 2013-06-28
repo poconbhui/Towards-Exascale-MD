@@ -4,7 +4,7 @@ SUBDIRS=src test bench
 # Make targets
 #
 .PHONY: all
-all: src
+all: $(SUBDIRS)
 
 .PHONY: $(SUBDIRS)
 $(SUBDIRS):
