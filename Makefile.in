@@ -24,7 +24,7 @@ ifeq ($(FC), ftn)
 else
     FT_INCLUDES=-I../src
     FT_FLAGS=-Wall -Wno-unused-dummy-argument
-    FT_COMPILE_MODULE=-fsyntax-only
+    FT_COMPILE_MODULE=-c
     FC = mpif90
 endif
 
@@ -54,7 +54,7 @@ all: $(programs)
 # Module compilation rules
 #
 %.mod: %.mod.f90
-	$(FC) $(FT_COMPILE_MODULE) $< $(FT_INCLUDES) $(FT_FLAGS)
+	$(FC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
 
 
 #
