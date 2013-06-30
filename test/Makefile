@@ -1,7 +1,8 @@
 include ../Makefile.in
 
-../src/%:
-	make -C ../src $*
+../src/%.o: ../src/%.f90
+	make -C ../src $@
+
 
 programs = \
 	particle_type.test \

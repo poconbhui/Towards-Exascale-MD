@@ -1,7 +1,7 @@
 include ../Makefile.in
 
-../src/%:
-	make -C ../src $*
+../src/%.o: ../src/%.f90
+	make -C ../src $@
 
 
 programs = calculation_only.bench
