@@ -1,0 +1,39 @@
+%
+% Objectives
+%
+\subsection{Objectives}
+
+In particular, we are interested in three distribution schemes:
+A replicated distribution scheme,
+a domain decomposed distribution scheme,
+a systolic loop distribution scheme.
+%
+We will explore the implementation and optimization of these three schemes
+along with their suitability for evaluating both long and short range forces.
+%
+These implementations will be evaluated on performance in terms of the
+minimum time to solution.
+%
+As useful systems may be simulated with
+fixed numbers of particles,
+we are not particularly interested in the weak scaling performance of
+the system.
+%
+As such, we will focus on strong scaling results for 4 system sizes:
+$10^4$ particles, $10^5$ particles, $10^6$ particles and $10^7$ particles.
+%
+For each optimization performed or change made, it will be studied
+in the context of these benchmarks.
+
+We will focus as well on the errors produced by a particular approximation.
+This will be done by comparing results to
+a scheme using a direct solution of the equations of motion
+where feasible.
+%
+For this, it may be necessary to perform calculations using several
+different time steps to accurately judge the errors introduced.
+%
+However, as we are limited on time, it may not be possible to generate
+reliable enough statistics to make any hard conclusions.
+%
+We may only compare implementations.
