@@ -61,8 +61,7 @@ Indeed, beyond ensuring our numerical integrator and time steps provide
 reasonable results for our simulation, they will be outside the scope
 of this discussion.
 
-If the number of steps taken not to be optimized,
-the next area to turn our attention is
+The next area of interest is
 the calculation of intermolecular forces that happens on each step.
 %
 An initial look at the calculation of intermolecular forces suggests
@@ -73,15 +72,6 @@ In this dissertation, we will be interested in tackling the calculation
 of these forces.
 %
 Approximations exist providing solutions that scale as $\bigO{N}$.
-%
-However, these introduce errors which, as discussed,
-may significantly alter the trajectory of the system and come with
-their own limitations on system sizes, either due to the physics involved or
-the computer memory required to implement them.
-%
-If one is interested only in sampling the phase space of the system
-to determine some thermodynamic properties, then these approximations
-may be perfectly acceptible.
 %
 Here, however, we are interested primarily in studying the direct
 solutions to these equations of motions, and the study of parallel schemes

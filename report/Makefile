@@ -1,17 +1,47 @@
 pdflatex=pdflatex
+subdirs = introduction background methodology
+
 
 introduction.tex = \
 	introduction/introduction.tex \
-    	introduction/preamble.tex \
-	introduction/molecular_dynamics.tex \
-	introduction/objectives.tex
+    	introduction/preamble.tex
 
-report.tex = report.tex macros.tex $(introduction.tex)
+background.tex = \
+	background/background.tex \
+	background/molecular_dynamics.tex \
+	background/lennard_jones_potential.plt.tex \
+	background/equations_of_motion.tex
 
+methodology.tex = \
+	methodology/methodology.tex \
+	methodology/preamble.tex
+
+report.tex = \
+	report.tex \
+	macros.tex \
+	$(introduction.tex) \
+	$(background.tex) \
+	$(methodology.tex)
+
+
+# Compile report
 report.pdf: $(report.tex)
 	$(pdflatex) report.tex
 
+
+# Compile plots into latex includable format
+%.plt.tex: %.plt
+#	# Compile .plt.eps and .plt.tex files
+	gnuplot $<
+#	# Compile .plt.pdf file
+	epstopdf $*.plt.eps
+#	# Correct .plt.tex file to allow .plt.pdf file to be referenced as .plt
+	sed -i 's#{$<}#[type=pdf,ext=.pdf,read=.pdf]{$<}#' $@
+
+# Clean up
 .PHONY: clean
+clean_exts = .aux .log .pdf .plt.eps .plt.tex
+clean_all=$(foreach dir, $(subdirs), $(addprefix $(dir)/*, $(clean_exts)))
 clean:
-	@echo rm *.aux *.log *.pdf
-	@rm *.aux *.pdf *.log 2>/dev/null; true
+	@echo rm $(clean_all)
+	@rm $(clean_all) 2>/dev/null; true
