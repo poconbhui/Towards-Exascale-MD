@@ -1,0 +1,101 @@
+% introduction/preamble
+%
+% Preamble
+%
+
+
+The world around us contains
+a rich assortment of molecular systems
+in highly complex arramgements.
+%
+With a deeper understanding of these molecular systems,
+they may be used in novel applications
+such as the development of new drugs,
+the understanding of protein folding and
+genetic engineering.
+%
+There are many tools to study these systems,
+from molecular modelling by solving energy minimization problems,
+to molecular dynamics by integrating equations of motion.
+%
+Each of these tools is useful for deriving some information on
+the system being modelled and each has their difficulties and limitations.
+%
+Here, we are interested primarily in molecular dynamics.
+
+Molecular dynamics (MD) aims to gather information
+about a molecular system by simulating the time evolution of
+that system.
+%
+By doing this, it is possible to to gather
+spatial and temporal information for the system.
+%
+Compare this to static modelling which may gather only spatial information.
+%
+As the system is allowed to run naturally, rather than being "solved",
+MD also avoids the multiple minimum problems
+sometimes present in molecular modelling.
+%
+However, it presents significant new problems.
+
+The timescale at which atomic forces manifest compared to the timescale at
+which properties of a molecular system may emerge requires an MD simulation
+takes very many very short time steps.
+%
+This in itself introduces a significant amount of challenge to computations.
+%
+As a classical molecular system can be considered a chaotic one, we see
+that any significant error introduced as a result of increasing time steps
+may result in vastly different results in a simulation.
+%
+Therefore, great care must be taken when choosing time steps, and indeed
+a numerical integrator, that it does not introduce so much error to a
+simulation as to render it an unreliable source of information.
+%
+Some schemes attempt to address this issue by using different time steps
+for phenomenon that occur on different time scales within the same simulation.
+%
+However, these won't be discussed here.
+%
+Indeed, beyond ensuring our numerical integrator and time steps provide
+reasonable results for our simulation, they will be outside the scope
+of this discussion.
+
+The next area of interest is
+the calculation of intermolecular forces that happens on each step.
+%
+An initial look at the calculation of intermolecular forces suggests
+a problem whose solution time scales as $\bigO{N^2}$, where $N$ is the
+number of particles in the system.
+%
+In this dissertation, we will be interested in tackling the calculation
+of these forces.
+%
+Approximations exist providing solutions that scale as $\bigO{N}$.
+%
+Here, however, we are interested primarily in studying the direct
+solutions to these equations of motions, and the study of parallel schemes
+which calculate them.
+
+In this dissertation we will
+\begin{itemize}
+\item
+    Study 3 parallelization schemes: replicated data, domain distribution
+    and the systolic loop.
+
+\item
+    We will attempt to optimize these schemes as much as possible
+    and evaluate their performance by looking at strong scaling
+    data for each of them on system sizes of $10^4$, $10^5$, $10^6$ and
+    $10^7$ particles. In all cases, or most important metric is the minimum
+    time to solution, regardless of the number of cores used.
+
+\item
+    As the obvious route for optimizing the domain distributed case is to
+    truncate short range forces, we will use short range forces in all
+    parallelization schemes.
+
+\item
+    We will ignore the case of periodic boundary conditions to
+    simplify this study.
+\end  {itemize}
