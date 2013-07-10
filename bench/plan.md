@@ -1,10 +1,6 @@
 Test ideas
 ----------
 * Strong scaling
-* Weak scaling
-* Maximum system size
-** Particle count - Covered by weak scaling?
-** Core count - Covered by weak/strong scaling?
 * Long range forces - Grav
 * Short range forces - LJ
 
@@ -36,7 +32,7 @@ Initial system sizes
 
 * 10^5 particles runs in ~20 seconds.
 
-* 100,000 particles.
+* 10^6 particles.
 ** Serial distribution: 10^6 particles ~ 1413s (~23m)
 
 * 10^7 untested.
@@ -52,7 +48,4 @@ Strong Scaling
 
 Weak Scaling
 ============
-* Start on one core.
-* Start with given initial system size.
-* Increase core count as 2^n. Increase system size as 2^n.
-* Really more suitable for an O(n) algorithm...
+* Useful for testing MPI overheads as core count increases.
