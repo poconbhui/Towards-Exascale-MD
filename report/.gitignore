@@ -2,6 +2,7 @@
 *.pdf
 *.aux
 *.log
+*.toc
 
 # Image stuff
 *.plt.eps

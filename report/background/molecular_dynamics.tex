@@ -1,15 +1,13 @@
-% introduction/molecular_dynamics.tex
 %
 % Molecular Dynamics
 %
 \subsection{Molecular Dynamics}
 
-% General information
-
 Here, we consider only classical MD simulations.
 %
 A classical MD simulation is performed by
-solving the Newtonian equations of motion for a molecular system.
+solving the Newtonian equations of motion for
+a molecular system.
 %
 As there are typically more than 3 bodies interacting in the simulation,
 it is not possible to solve these equations analytically.
@@ -19,16 +17,16 @@ The system must be solved numerically.
 The numerical solutions to the equations of motion
 typically integrate over a timestep $h$.
 %
-To simulate the system for a time $t$, one must perform $t/h$ steps.
+To simulate the system for a time $t$,
+one must perform $t/h$ steps.
 %
-An initial attempt at solving the equations of motion yield a set of equations
-requiring $\bigO{N^2}$ steps to solve for each time step.
+An initial attempt at solving the equations of motion yield
+a set of equations requiring $\bigO{N^2}$ steps to solve
+for each time step.
 %
-Some approximations may lead to equations that may be solved in $\bigO{N}$
-steps, at the cost of reduced accuracy.
-
-
-% Pieces of an MD code
+Some approximations may lead to equations that may be
+solved in $\bigO{N}$ steps,
+at the cost of reduced accuracy.
 
 An MD simulation typically consists of three parts:
 a particle distribution scheme,
@@ -41,8 +39,8 @@ the parts we will be most interested in here.
 In particular, the potential particle distribution schemes possible
 tend to be limited by the force finding scheme in use.
 %
-The particle distribution scheme also dictates how the force update scheme
-may be parallelized.
+The particle distribution scheme also dictates
+how the force update scheme may be parallelized.
 %
 In this study, we use the velocity Verlet integration scheme.
 
@@ -51,92 +49,165 @@ setting up the particle distribution,
 simulating the system until it comes to thermodynamic equilibrium and
 taking measurements of the system.
 
+The timescale at which atomic forces manifest compared to
+the timescale at which properties of a molecular system may emerge
+requires an MD simulation takes very many very short time steps.
+%
+This in itself introduces a significant amount of challenge to computations.
+%
+As a classical molecular system can be considered a chaotic one,
+we see that any significant error introduced as a result of
+increasing time steps may result in
+vastly different results in a simulation.
+%
+Therefore, great care must be taken when choosing time steps, and
+indeed a numerical integrator,
+that it does not introduce so much error to a simulation as to render it
+an unreliable source of information.
+%
+Some schemes attempt to address this issue by
+using different time steps for phenomenon that occur on
+different time scales within the same simulation.
+%
+However, these won’t be discussed here.
+%
+Indeed, beyond ensuring our numerical integrator and time steps provide
+reasonable results for our simulation,
+they will be outside the scope of this discussion.
 
+
+The next area of interest is
+the calculation of intermolecular forces that happens on each step.
 %
-% Potentials
+An initial look at the calculation of intermolecular forces suggests
+a problem whose solution time scales as $\bigO{N^2}$,
+where $N$ is the number of particles in the system.
 %
+In this dissertation, we will be interested in
+tackling the calculation of these forces.
+%
+Approximations exist providing solutions that scale as $\bigO{N}$.
+%
+Here, however, we are interested primarily in
+studying the direct solutions to these equations of motions,
+and the study of parallel schemes which calculate them.
+
+
 \subsubsection{Potentials}
 
-In an MD simulation, each particle will experience a potential as a result
-of its position relative to every other particle.
+In an MD simulation, each particle will experience
+a potential as a result of its position relative to every other particle.
 %
-The gradient of that potential will then determine the force felt by
-that particle.
+The gradient of that potential then determines
+the force felt by that particle.
 %
-In a classical MD simulation, we choose an approximation of a real
-potential.
+In a classical MD simulation, we choose an approximation of a real potential.
+This can be represented as a sum of potentials
+which take account of interactions between increasing numbers of particles
+\begin{align}
+    V =&   \sum_{i=1}^N \sum_{j=1}^N V_2(\vec{x}_i, \vec{x}_j)
+    \\ & + \sum_{i=1}^N \sum_{j=1}^N \sum_{k=1}^N
+            V_3(\vec{x}_i, \vec{x}_j, \vec{x}_k)
+    \\ & + \sum_{i=1}^N \sum_{j=1}^N \sum_{k=1}^N \sum_{l=1}^N
+            V_3(\vec{x}_i, \vec{x}_j, \vec{x}_k, \vec{x}_l)
+    \\ & + ...
+\end  {align}
+where $V$ is the potential,
+$N$ is the number of particles,
+$x_i$ is the position of particle $i$ and
+$V_n$ is the $n$ body potential.
 %
-In this dissertation, we will consider only the two body Lennard-Jones potential
+Often, the contribution of the $V_{n+1}$ term will be
+much smaller than the $V_{n}$ term.
+%
+As a result, the potential may be approximated to the first few terms.
+
+
+\begin{figure}
+    \input{background/lennard_jones_potential.plt}
+    \caption{The Lennard-Jones Potential with $\epsilon = 1$ and $\delta = 1$}
+\end  {figure}
+%
+In this dissertation, we will consider only the two body term.
+For this, we will use the Lennard-Jones potential
 \begin{equation}
-    V_{LJ}(r) = 4\epsilon{} \left[
+    V_{LJ}(r) = 4\epsilon \left[
         \left( \frac{\delta}{r} \right)^{12}
         - \left( \frac{\delta}{r} \right)^{6}
     \right]
 \end  {equation}
 where $V_{LJ}(r)$ is the Lennard-Jones potential as
 a function of the distance $r$,
-$r$ is the distance,
+$r$ is the distance between two bodies,
 $\epsilon$ is the depth of the potential well and
-$\delta$ is the distance at which the potential switches from being
-attractive to repulsive.
+$\delta$ is the distance at which
+the potential switches from being attractive to repulsive.
+Typically, $\epsilon$ and $\delta$ are determined for a system by
+fitting them to experimental data.
 %
-Typically, $\epsilon$ and $\delta$ are determined for a system
-by fitting them to experimental data.
+Due to the simplicity of this potential,
+it is well studied and there exists good data on
+reasonable values for $\epsilon$ and $\delta$ for
+different molecular systems.
 
-\begin{figure}
-    \input{background/lennard_jones_potential.plt.tex}
-    \caption{The Lennard-Jones Potential with $\epsilon=1$ and $\delta=1$}
-\end  {figure}
-
-
-
-
+The Lennard-Jones potential is a short range potential.
 %
-% Limitations
+That is, after a certain distance,
+the potential rapidly tends towards zero.
 %
+This is useful for force evaluation methods that
+ignore interactions between distant bodies to
+reduce the number of calculations performed.
+%
+The distance at which the potential may be cut off is important
+as it sets a lower limit on how many
+particles must be compared in a molecular system.
+
+
 \subsubsection{Limitations}
 
 Classical MD simulations do not account for quantum effects,
 and as such make some false predictions.
 %
 For example, A quantum approach would yield
-a different distribution of molecular vibrational frequencies
-to a classical approach.
+a different distribution of
+molecular vibrational frequencies to a classical approach.
 %
-Typically, a classical simulation will yield incorrect results where
-dealing with high speeds or low temperatures.
+Typically, a classical simulation will yield incorrect results
+where dealing with high speeds or low temperatures.
 %
 This limits the areas where it may be used for study.
 
-
-% Some caveats and limitations
-
-There are several potential issues regarding
-accuracy in MD simulations.
+There are several potential issues regarding accuracy in MD simulations.
 %
-An N body system is a chaotic one.
+An $N$ body system is a chaotic one.
 %
-As a result, a small changes in accuracy may lead to largely different results.
+As a result, a small changes in accuracy may lead to
+largely different results.
 %
-Errors may be introduced by the numerical integration scheme used,
+Errors may be introduced by
+the numerical integration scheme used,
 the time step used and
 approximations of the forces used.
 %
-While a final answer may not be accurate, the simulation may still be useful.
+While a final answer may not be accurate,
+the simulation may still be useful.
 %
-The system may be used to derive information on thermodynamic variables
-or to simulate general trends.
+The system may be used to derive information on
+thermodynamic variables or to simulate general trends.
 
 
 MD calculations tend to be computationally intense.
 %
 This intensity derives both from
 the number of time steps required to derive useful data and
-the time required to evaluate the force term on each step.
+the number of operations required to evaluate the force term on each step.
 %
-As a result, the sizes of systems in use today tends to be in
-the millions.
+As a result, the sizes of the largest systems studied today
+tends to be in the millions.
 %
-While this number varies, and different methods of evaluating forces
-yield different scaling factors, there still appears to be an upper limit
-on the number of particles that can currently be simulated.
+While this number varies,
+and different methods of evaluating forces yield
+different scaling factors,
+there still appears to be an upper limit on
+the number of particles that can currently be simulated.
