@@ -17,15 +17,23 @@
 # Otherwise, it is assumed that you are using mpif90, and sets flags for
 # use with gfortran.
 #
-ifeq ($(FC), ftn)
+ifeq ($(FC_env), cray)
     FT_INCLUDES=-I../src
     FT_FLAGS=
     FT_COMPILE_MODULE=-c
-else
+    FC=ftn
+endif
+ifeq ($(FC_env), gcc)
     FT_INCLUDES=-I../src
     FT_FLAGS=-Wall -Wno-unused-dummy-argument
     FT_COMPILE_MODULE=-c
     FC = mpif90
+endif
+ifeq ($(FC_env), pgi)
+    FT_INCLUDES=-I../src
+    FT_FLAGS=
+    FT_COMPILE_MODULE=-c
+    FC=mpif90
 endif
 
 

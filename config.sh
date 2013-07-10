@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-export mpiexec="aprun"
+export mpiexec="mpiexec"
 
-export FC="ftn"
+export FC_env="pgi"
 
 exec "$@"
