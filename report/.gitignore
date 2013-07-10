@@ -1,3 +1,15 @@
+# Latex stuff
 *.pdf
 *.aux
 *.log
+
+# Image stuff
+*.plt.eps
+*.plt.tex
+
+# Latexmk stuff
+*.fdb_latexmk
+*.fls
+
+# Vim stuff
+*.swp

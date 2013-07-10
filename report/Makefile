@@ -1,4 +1,4 @@
-pdflatex=pdflatex
+pdflatex=./latexmk.pl -pdf
 subdirs = introduction background methodology
 
 
@@ -30,13 +30,13 @@ report.pdf: $(report.tex)
 
 
 # Compile plots into latex includable format
-%.plt.tex: %.plt
+%.plt.tex: %.plt.gnu
 #	# Compile .plt.eps and .plt.tex files
 	gnuplot $<
 #	# Compile .plt.pdf file
 	epstopdf $*.plt.eps
 #	# Correct .plt.tex file to allow .plt.pdf file to be referenced as .plt
-	sed -i 's#{$<}#[type=pdf,ext=.pdf,read=.pdf]{$<}#' $@
+	sed -i 's#{$*.plt}#[type=pdf,ext=.pdf,read=.pdf]{$*.plt}#' $@
 
 # Clean up
 .PHONY: clean
