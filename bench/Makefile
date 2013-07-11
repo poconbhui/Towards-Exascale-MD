@@ -1,4 +1,4 @@
-include ../Makefile.in
+include ../scripts/Makefile.inc
 
 ../src/%.o: ../src/%.f90
 	make -C ../src $@

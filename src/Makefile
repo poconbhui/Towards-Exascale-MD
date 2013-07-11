@@ -1,4 +1,4 @@
-include ../Makefile.in
+include ../scripts/Makefile.inc
 
 programs = md
 

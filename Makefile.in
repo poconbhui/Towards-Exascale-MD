@@ -1,92 +1,48 @@
 #
-# Makefile.in
-#
-# This Makefile contains generic rules, useful for Makefiles
-# used throughout this project.
-#
-# It is designed to be included at the top of a Makefile.
+# Before using Makefile, be sure you've set environment variables in
+# config.sh to match the mpi compiler and executor on your system.
 #
 
+# Define subdirectories containing programs to be compiled.
+SUBDIRS=src test bench
 
 #
-# Setup compile flags for specified compiler.
-# -I../src is used to look in src for .mod files.
-#
-# This takes FC from your environment variables. If you specify
-# FC as ftn, the current configuration assumes you are using crayftn.
-# Otherwise, it is assumed that you are using mpif90, and sets flags for
-# use with gfortran.
-#
-ifeq ($(FC_env), cray)
-    FT_INCLUDES=-I../src
-    FT_FLAGS=
-    FT_COMPILE_MODULE=-c
-    FC=ftn
-endif
-ifeq ($(FC_env), gcc)
-    FT_INCLUDES=-I../src
-    FT_FLAGS=-Wall -Wno-unused-dummy-argument
-    FT_COMPILE_MODULE=-c
-    FC = mpif90
-endif
-ifeq ($(FC_env), pgi)
-    FT_INCLUDES=-I../src
-    FT_FLAGS=
-    FT_COMPILE_MODULE=-c
-    FC=mpif90
-endif
-
-
-#
-# Make all programs
-#
-# Since Makefile.in is included at the top of a file, it is
-# likely $(programs) isn't set when this target is generated.
-# The workaround here is to call make again and compile the
-# targets in $(programs) explicitly.
+# Target all compiled all programs in all SUBDIRS using target all.
 #
 .PHONY: all
-all: $(programs)
-#$(if $^,, $(if $(programs), make $(programs)))
-	$(MAKE) $(programs)
+all: config/exec.sh $(SUBDIRS)
 
 
 #
-# Compile executables from object files
+# Get FC, MPIFC, mpiexec from the environment, or use defaults.
+# Defaults: gfortran, mpif90, mpiexec
 #
-%: %.f90
-	$(FC) -o $@ $^ $(FT_INCLUDES) $(FT_FLAGS)
-
-
-#
-# Module compilation rules
-#
-%.mod: %.mod.f90
-	$(FC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
-
-
-#
-# Fortran compilation rules
-#
-%.o: %.f90
-	$(FC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
+FC=@FC@
+MPIFC:=@MPIFC@
+mpiexec:=@mpiexec@
 
 
 
+.PHONY: $(SUBDIRS)
+$(SUBDIRS):
+	$(MAKE) -C $@ all
 
 #
-# Cleanup rules
+# Run unit tests
 #
-temps = *.o *.mod
-.PHONY: clean_temps
-clean_temps:
-	@echo rm *.o *.mod
-	-@rm *.o *.mod 2>/dev/null 1>/dev/null; true
+.PHONY: run_test
+run_test:
+	./scripts/exec.sh ./scripts/run_tests.rb
 
-.PHONY: clean_programs
-clean_programs: clean_temps
-	@$(if $(programs), echo rm $(programs))
-	-@$(if $(programs), rm $(programs) 2>/dev/null 1>/dev/null; true)
+#
+# Run make clean in all SUBDIRS.
+#
+clean:
+	$(foreach DIR, $(SUBDIRS), $(MAKE) -C $(DIR) clean;)
 
-.PHONY: clean
-clean: clean_programs clean_temps
+#
+# Run clean. Remove compiled templates
+#
+distclean: clean
+	rm scripts/exec.sh
+	rm Makefile

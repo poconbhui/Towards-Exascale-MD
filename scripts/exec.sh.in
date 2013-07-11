@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+export FC=@FC@
+export MPIFC=@MPIFC@
+export mpiexec=@mpiexec@
+
+exec "$@"

@@ -1,0 +1,89 @@
+#
+# Makefile.in
+#
+# This Makefile contains generic rules, useful for Makefiles
+# used throughout this project.
+#
+# It is designed to be included at the top of a Makefile.
+#
+
+
+#
+# Setup compile flags for specified compiler.
+# -I../src is used to look in src for .mod files.
+#
+# This takes FC from your environment variables. If you specify
+# FC as ftn, the current configuration assumes you are using crayftn.
+# Otherwise, it is assumed that you are using mpif90, and sets flags for
+# use with gfortran.
+#
+ifeq ($(FC), crayftn)
+    FT_INCLUDES=-I../src
+    FT_FLAGS=
+    FT_COMPILE_MODULE=-c
+endif
+ifeq ($(FC), gfortran)
+    FT_INCLUDES=-I../src
+    FT_FLAGS=-Wall -Wno-unused-dummy-argument
+    FT_COMPILE_MODULE=-c
+endif
+ifeq ($(FC), pgf90)
+    FT_INCLUDES=-I../src
+    FT_FLAGS=
+    FT_COMPILE_MODULE=-c
+endif
+
+
+#
+# Make all programs
+#
+# Since Makefile.in is included at the top of a file, it is
+# likely $(programs) isn't set when this target is generated.
+# The workaround here is to call make again and compile the
+# targets in $(programs) explicitly.
+#
+.PHONY: all
+all: $(programs)
+#$(if $^,, $(if $(programs), make $(programs)))
+	$(MAKE) $(programs)
+
+
+#
+# Compile executables from object files
+#
+%: %.f90
+	$(MPIFC) -o $@ $^ $(FT_INCLUDES) $(FT_FLAGS)
+
+
+#
+# Module compilation rules
+#
+%.mod: %.mod.f90
+	$(MPIFC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
+
+
+#
+# Fortran compilation rules
+#
+%.o: %.f90
+	$(MPIFC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
+
+
+
+
+#
+# Cleanup rules
+#
+temps = *.o *.mod
+.PHONY: clean_temps
+clean_temps:
+	@echo rm *.o *.mod
+	-@rm *.o *.mod 2>/dev/null 1>/dev/null; true
+
+.PHONY: clean_programs
+clean_programs: clean_temps
+	@$(if $(programs), echo rm $(programs))
+	-@$(if $(programs), rm $(programs) 2>/dev/null 1>/dev/null; true)
+
+.PHONY: clean
+clean: clean_programs clean_temps
