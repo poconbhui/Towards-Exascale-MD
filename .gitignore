@@ -6,4 +6,4 @@
 
 *.swp
 
-./Makefile
+/Makefile
