@@ -10,33 +10,61 @@ scaling issues of some classical Molecular Dynamics (MD) algorithms.
 Usage
 -----
 
-### config.sh ###
 
-First, configure `config.sh` to whatever is most appropriate for your system.
 
-The `mpiexec` environment variable determines which mpi execution program
-will be used in scripts in the `scripts/` directory. For example, setting
-`mpiexec=aprun` will use aprun to execute mpi code. Details of implementation
-can be found in `scripts/mpiexec.rb`.
+### Quick Start ###
+On Morar:
+    ./configure.rb --FC=pgf90 --MPIFC=mpif90 --mpiexec=mpiexec
+    make all
+    make run_test
 
-The `FC` environment variable determines which fortran compiler will be
-used in Makefiles. Details can be found in `Makefile.in`. Setting
-`FC=ftn` will assume the cray compiler is being used. Otherwise, it is assumed
-that `mpif90` with `gfortran` is being used.
+On Hector:
+    ./configure.rb --FC=crayftn --MPIFC=ftn --mpiexec=aprun
+    make all
+    bolt -n 4 -s make run_test
 
-`config.sh` may be used in two ways: Either as `./config.sh ./my_program args`,
-or alternatively as `source ./config.sh; ./my_program args`. The source method
-can be used once in a shell to set the appropriate environment variables
-and need never be used again.
+
+
+### configure.rb ###
+
+To configure the package, run
+`./configure.rb --FC=gfortran --MPIFC=mpif90 --mpiexec=mpiexec`.
+
+The `FC` option may be set to whatever underlying compiler you are using.
+Currently, only `gfortran`, `pgf90` and `crayftn` are supported.
+This may be expanded by editing `scripts/Makefile.inc.in`.
+
+This option is used for determining which flags to pass to the `MPIFC`
+compiler.
+There is no current limitation on the MPI compiler used, assuming
+it passes arguments directly to the underlying compiler.
+
+Use `mpiexec` to specify the MPI execution program to be used.
+Currently, only `mpiexec` and `aprun` are supported.
+This may be expanded by editing `scripts/mpiexec.rb`.
+
+
+### Running scripts ###
+
+Scripts in the `scripts/` directory rely on certain environment variables
+being set.
+The `configure.rb` scripts generates `scripts/exec.sh` which can be used
+to set up these variables.
+A user may either run a script using `./scripts/exec.sh ./scripts/...`
+or using `source ./scripts/exec.sh; ./scripts/...`.
+The latter will add the necessary environment variables to your shell
+so `sctiprs/exec.sh` doesn't need to be used every time a script is used.
+
 
 
 ### Compilation and Testing ###
 
 To compile and test everything, the following procedure may be used:
 
-    > source ./config.sh
+    > ./configure.rb
     > make all
-    > ./scripts/run_tests.rb
+    > make run_test
+
 
 
 ### Benchmarking ###
