@@ -7,6 +7,9 @@
 # It is designed to be included at the top of a Makefile.
 #
 
+FC=@FC@
+MPIFC=@MPIFC@
+
 
 #
 # Setup compile flags for specified compiler.
@@ -44,7 +47,6 @@ endif
 #
 .PHONY: all
 all: $(programs)
-#$(if $^,, $(if $(programs), make $(programs)))
 	$(MAKE) $(programs)
 
 

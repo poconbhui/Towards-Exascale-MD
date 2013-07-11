@@ -10,17 +10,7 @@ SUBDIRS=src test bench
 # Target all compiled all programs in all SUBDIRS using target all.
 #
 .PHONY: all
-all: config/exec.sh $(SUBDIRS)
-
-
-#
-# Get FC, MPIFC, mpiexec from the environment, or use defaults.
-# Defaults: gfortran, mpif90, mpiexec
-#
-FC=@FC@
-MPIFC:=@MPIFC@
-mpiexec:=@mpiexec@
-
+all: $(SUBDIRS)
 
 
 .PHONY: $(SUBDIRS)
@@ -45,4 +35,4 @@ clean:
 #
 distclean: clean
 	rm scripts/exec.sh
-	rm Makefile
+	rm scripts/Makefile.inc

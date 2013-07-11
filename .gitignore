@@ -5,5 +5,3 @@
 *.bench
 
 *.swp
-
-/Makefile
