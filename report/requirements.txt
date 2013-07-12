@@ -1,0 +1,7 @@
+Need: Introduction to molecular systems, MD
+Need: Justification for studying N^2 systems
+Need: Justification for not taking O(N) approach
+Need: The directions we will be searching in
+Need: A methodology and metrics
+Need: Data
+Need: Analysis and conclusions.
