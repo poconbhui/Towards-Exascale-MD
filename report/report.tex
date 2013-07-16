@@ -1,6 +1,6 @@
 %\includeonly{introduction/introduction}
 
-\documentclass[12pt]{article}
+\documentclass[12pt, a4paper]{article}
 
 \author{P\'{a}draig \'{O} Conbhu\'{\i}}
 \title{Towards Exascale Molecular Dynamics}
@@ -9,14 +9,22 @@
 
 \usepackage{amsmath}
 \usepackage{parskip}
+\usepackage{graphics}
 \usepackage{graphicx}
+
+\usepackage{epcc}
 
 \begin{document}
 
-\maketitle
+\makeEPCCtitle
+\thispagestyle{empty}
 \pagebreak
-\tableofcontents
 
+\pagenumbering{roman}
+\tableofcontents
+\pagebreak
+
+\pagenumbering{arabic}
 \include{introduction/introduction}
 \include{background/background}
 \include{methodology/methodology}
