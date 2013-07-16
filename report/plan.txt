@@ -1,13 +1,18 @@
 # Introduction to molecular systems, MD
 
 ## Introduction ##
-Introduce Molecular systems.
-Introduce usefulness of modelling molecular systems.
-Introduce other modelling methods (eg Monte Carlo, Molecular Modeling, MD).
-Introduce usefulness of MD.
-Introduce very basic problem
+What is a Molecular system?
+Why is modelling molecular systems useful?
+What modelling methods are there?
 
-Introduce what we will be doing here.
+What is MD?
+Why is MD useful?
+
+What is the basic MD problem?
+Why is truncation bad?
+Why so we want to look at direct solutions?
+
+What will we be doing here?
 
 ## Background ##
 ### MD ###
@@ -25,8 +30,13 @@ If it necessarily conforms to these, is it still a valid simulation?
 
 What is a potential?
 How do potentials differ for different systems?
-What is the Lennard-Jones potential useful for?
-What are the equations of motion for the LJ potential?
+What are the equations of motion for a 2-body potential?
+What is the Velocity Verlet integration scheme?
+What is the error in the VV scheme?
+
+What is the Lennard-Jones potential?
+What is the LJ potential useful for?
+What are the equations of motion for the LJ potential under VV?
 How do these equations affect our time to solution?
 
 What is the importance of the effective length of our potentials?

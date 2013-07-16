@@ -3,16 +3,10 @@
 %
 \subsection{Molecular Dynamics}
 
-%
-% Plan:
-%
-% What exactly is an MD simulation?
-% What bits do we need to make a simulation?
-% What do we need to do with those bits to get data?
-%
 
 Here, we consider only classical MD simulations.
 %
+%Q: What exactly is an MD simulation?
 A classical MD simulation is performed by
 solving the Newtonian equations of motion for
 a molecular system.
@@ -23,6 +17,8 @@ it is not possible to solve these equations analytically.
 The system must be solved numerically.
 
 
+%
+%Q: What bits do we need to make a simulation?
 A parallel MD simulation typically consists of three parts:
 a particle distribution scheme,
 a force evaluation scheme and
@@ -34,34 +30,32 @@ the parts we will be most interested in here.
 In this study, we use the velocity Verlet integration scheme.
 
 
+%
+%Q: What do we need to do with those bits to get data?
 An MD simulation typically consists of three phases:
 setting up the particle distribution,
 simulating the system until it comes to thermodynamic equilibrium and
 taking measurements of the system.
 
 
-
 %
-% Plan:
-% What physical constraints does an MD simulation conform to?
-% Can we use these to tell anything about our simulation?
-% What does the conformance to these tell us about our simulation?
-% If it necessarily conforms to these, is it still a valid simulation?
-%
-
+%Q: What physical constraints does an MD simulation conform to?
 An MD system,
 assuming homogeneity of time,
 homogeneity of space and
 isotropy of space
 should conserve energy, linear momentum and angular momentum.
 %
+%Q: Can we use these to tell anything about our simulation?
 Measurements of these values can be used to
 determine the ``health'' of a simulation.
 %
+%Q: What does the conformance to these tell us about our simulation?
 If any of these values change over the course of a simulation,
 it is an indicator that either the system is unphysical or
 significant numerical error is creeping into the simulation.
 %
+%Q: If it necessarily conforms to these, is it still a valid simulation?
 However, simply because these symmetries are conserved does not mean
 the simulation is producing a correct result.
 %
@@ -74,14 +68,7 @@ the system it supposes to model.
 \subsection{Equations Of Motion}
 
 %
-% Plan:
-% What is a potential?
-% How do potentials differ for different systems?
-% What is the Lennard-Jones potential useful for?
-% What are the equations of motion for the LJ potential?
-% How do these equations affect our time to solution?
-%
-
+%Q: What is a potential?
 In a molecular system, each particle will generate a potential field
 which permeates throughout the system.
 %
@@ -90,6 +77,7 @@ A given particle will have a potential energy as a sum of these fields.
 The gradient of that potential energy then determines
 the force felt by that particle.
 %
+%Q: How do potentials differ for different systems?
 The exact form of the potential depends on the system being studied.
 %
 Systems studied using Coulomb interactions, for example,
@@ -104,33 +92,8 @@ Several intermolecular and intramolecular forces may
 calculated in a simulation to more accurately model underlying behaviours.
 
 
-In this dissertation, we will consider the two body Lennard-Jones potential
-\begin{equation}
-    V_{LJ}(r) = 4\epsilon \left[
-        \left( \frac{\delta}{r} \right)^{12}
-        - \left( \frac{\delta}{r} \right)^{6}
-    \right]
-\end  {equation}
-where $V_{LJ}(r)$ is the Lennard-Jones potential as
-a function of the distance $r$,
-$r$ is the distance between two bodies,
-$\epsilon$ is the depth of the potential well and
-$\delta$ is the distance at which
-the potential switches from being attractive to repulsive.
-Typically, $\epsilon$ and $\delta$ are determined for a system by
-fitting them to experimental data.
 %
-Due to the simplicity of this potential,
-it is well studied and there exists good data on
-reasonable values for $\epsilon$ and $\delta$ for
-different molecular systems.
-%
-\begin{figure}
-    \input{background/lennard_jones_potential.plt}
-    \caption{The Lennard-Jones Potential with $\epsilon = 1$ and $\delta = 1$}
-\end  {figure}
-
-
+%Q: What are the equations of motion for a 2-body potential?
 The Hamiltonian for a system of $N$ bodies
 interacting under a 2-body potential can be written
 \begin{equation}
@@ -156,9 +119,14 @@ We may then derive the equations of motion
 \end  {equation}
 
 
-Using the Velocity Verlet integration scheme with a time step $h$,
-we have the discretized of the equations of motion
+%
+%Q: What is the Velocity Verlet integration scheme?
+The equations of motion may be discretized and solved numerically
+by using an appropriate integration scheme.
+The integration scheme used in this dissertation is
+the Velocity Verlet scheme
 \begin{align}
+\label{eqn:velocity_verlet_scheme}
     \vec{v}_i(t + \tfrac{1}{2} h) &=
         \vec{v}_i(t) + \tfrac{1}{2}\vec{a}_i h
     \\
@@ -179,7 +147,45 @@ $m_i$ is the mass of body $i$,
 $\vec{a}_i(t)$ is the acceleration of body $i$ at time $t$,
 $\vec{x}_i(t)$ is the position of body $i$ at time $t$ and
 $V$ and $N$ are as described above.
+%
+%Q:What is the error in the VV scheme?
+The local error for this scheme is $\bigO{h^4}$ while the local error
+is $\bigO{h^3}$.
 
+
+%
+%Q: What is the Lennard-Jones potential?
+In this dissertation, we will consider the two body Lennard-Jones potential
+\begin{equation}
+    V_{LJ}(r) = 4\epsilon \left[
+        \left( \frac{\delta}{r} \right)^{12}
+        - \left( \frac{\delta}{r} \right)^{6}
+    \right]
+\end  {equation}
+where $V_{LJ}(r)$ is the Lennard-Jones potential as
+a function of the distance $r$,
+$r$ is the distance between two bodies,
+$\epsilon$ is the depth of the potential well and
+$\delta$ is the distance at which
+the potential switches from being attractive to repulsive.
+Typically, $\epsilon$ and $\delta$ are determined for a system by
+fitting them to experimental data.
+%
+%Q: What is the LJ potential useful for?
+The Lennard-Jones is useful for modelling simple particle interactions.
+%
+Due to the simplicity of this potential,
+it is well studied and there exists good data on
+reasonable values for $\epsilon$ and $\delta$ for
+different molecular systems.
+%
+\begin{figure}
+    \input{background/lennard_jones_potential.plt}
+    \caption{The Lennard-Jones Potential with $\epsilon = 1$ and $\delta = 1$}
+\end  {figure}
+
+%
+%Q: What are the equations of motion for the LJ potential under VV?
 Using the Lennard Jones potential, we can write
 \begin{equation}
     V(\vec{x}_i(t), \vec{x}_j(t)) = V_{LJ}(|\vec{x}_i(t) - \vec{x}_j(t)|)
@@ -192,7 +198,9 @@ $r_{ij} = |\vec{r}_{ij}|$, $\hat{r}_{ij} = \frac{\vec{r}_{ij}}{r_{ij}}$
         + \frac{6}{r_{ij}} \left( \frac{\delta}{r_{ij}} \right)^{6}
     \right]
 \end  {equation}
-which may be used in the discretized equations above.
+which may be used in \EQN{eqn:velocity_verlet_scheme} to describe
+the discretized equations of motion of $N$ bodies interacting under the
+Lennard-Jones potential.
 
 
 %

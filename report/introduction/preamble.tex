@@ -4,15 +4,7 @@
 %
 
 %
-% Plan:
-%
-% Introduce Molecular systems.
-% Introduce usefulness of modelling molecular systems.
-% Introduce other modelling methods (eg Monte Carlo, Molecular Modeling, MD).
-% Introduce usefulness of MD.
-% Introduce very basic problem
-%
-
+%Q: What is a Molecular system?
 The world around us contains
 a rich assortment of molecular systems in
 highly complex arramgements.
@@ -20,12 +12,14 @@ highly complex arramgements.
 The way molecules in these systems interact determine various properties
 of the system such as heat capacity, structure, rigidity, reactivity.
 %
+%Q: Why is modelling molecular systems useful?
 With a deeper understanding of these molecular systems,
 they may be used in novel applications such as
 the development of new drugs,
 the understanding of protein folding and
 genetic engineering.
 %
+%Q: What modelling methods are there?
 There are many tools to study these systems,
 from molecular modelling by solving energy minimization problems,
 to molecular dynamics by integrating equations of motion.
@@ -36,21 +30,26 @@ each has their difficulties and limitations.
 %
 Here, we are interested primarily in molecular dynamics.
 
+%Q: What is MD?
 Molecular dynamics (MD) aims to
 gather information about a molecular system by
 simulating the time evolution of that system.
 %
+%Q: Why is MD useful?
 By doing this, it is possible to
 gather spatial and temporal information for the system.
 %
 Compare this to static modelling which may gather only spatial information.
 %
-As the system is allowed to run naturally, rather than being ”solved”,
+As the system is allowed to run naturally, rather than being solved,
 MD also avoids the multiple minimum problems
 sometimes present in molecular modelling.
 %
 However, it presents significant new problems.
 
+
+%
+%Q: What is the basic MD problem?
 A classical MD simulation determines
 the force on each particle as a result of
 every other particle in the system.
@@ -67,11 +66,33 @@ Each of these represent a unique difficulty.
 Here, we are interested mainly in the force calculation.
 
 
+There are many approaches taken to reduce the time complexity of
+the $\bigO{N^2}$ term.
 %
-% Plan:
+This is often done by truncating the effective length of intermolecular
+forces, leading to $\bigO{N}$ algorithms.
 %
-% Introduce what we will be doing here.
+%Q: Why is truncation bad?
+These trade accuracy for improved complexity.
 %
+Furthermore, the truncation necessary to achieve an efficient implementation
+may be shorter than can be justified for a realistic simulation.
+%
+Rather than taking this route, we would like to explore implementations
+of direct solutions to the $\bigO{N^2}$ algorithms.
+%
+%Q: Why so we want to look at direct solutions?
+By finding good direct solutions, it may be possible to use longer force
+truncations without worrying about simulation sizes.
+%
+Future HPC architectures are expected to be many core systems.
+%
+Where core count is not a limitation, we would like to see how well
+the overall time to solution for $\bigO{N^2}$ algorithms can be scaled.
+
+
+%
+%Q: What will we be doing here?
 In this dissertation we will
 \begin{itemize}
 \item
@@ -80,8 +101,8 @@ In this dissertation we will
     non-periodic boundary conditions.
 
 \item
-    Study 3 parallelization schemes:
-    replicated data, domain distribution and the systolic loop.
+    Study 2 parallelization schemes:
+    replicated data and the systolic loop.
 
 \item
     Attempt to optimize these schemes and
