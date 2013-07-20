@@ -10,7 +10,7 @@ background.tex = \
 	background/background.tex \
 	background/molecular_dynamics.tex \
 	background/lennard_jones_potential.plt.tex \
-	background/equations_of_motion.tex
+	background/parallel_schemes.tex
 
 methodology.tex = \
 	methodology/methodology.tex \

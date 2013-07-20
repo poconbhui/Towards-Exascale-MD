@@ -19,6 +19,7 @@ What will we be doing here?
 What exactly is an MD simulation?
 What bits do we need to make a simulation?
 What do we need to do with those bits to get data?
+Why do we need the system to reach thermodynamic equilibrium?
 
 What physical constraints does an MD simulation conform to?
 Can we use these to tell anything about our simulation?
@@ -33,6 +34,8 @@ How do potentials differ for different systems?
 What are the equations of motion for a 2-body potential?
 What is the Velocity Verlet integration scheme?
 What is the error in the VV scheme?
+What is the time to solution for the VV scheme?
+What time step do we need for the VV scheme?
 
 What is the Lennard-Jones potential?
 What is the LJ potential useful for?
@@ -46,24 +49,20 @@ When we shrink our system sizes, what are the effects?
 What happens if we have periodic systems?
 
 
-#### Approximations and Sensitivity ####
-
-Where can we cut corners?
-How small can a time step be?
-What do we actually have to evaluate for the forces?
-What happens when we cut corners?
-How sensitive are our results to these cuts?
-
-If our chaotic system is wrong, why are results still useful?
-If we know our system is wrong, why look at exact solutions?
-Is it useful to study exact solutions to the 2-body potential?
-Why not just take the approximation if we're already making approximations?
-
-
 
 ### Force Parallelization ###
 
 Can we parallelize the force calculation?
+
+What is the replicated data scheme?
+What are the scaling challenges of replicated data?
+Why are the scaling challenges of replicated data concerning for exascale?
+
+What is the systolic loop scheme?
+What are the scaling challenges of systolic loop?
+Why are the scaling challenges of systolic loop concerning for exascale?
+
+
 Is it important for us to also distribute the data?
 What are the benefits of the
   replicated, domain distributed and systolic loop schemes?

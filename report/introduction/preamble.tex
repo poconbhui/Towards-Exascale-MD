@@ -77,18 +77,18 @@ These trade accuracy for improved complexity.
 %
 Furthermore, the truncation necessary to achieve an efficient implementation
 may be shorter than can be justified for a realistic simulation.
-%
-Rather than taking this route, we would like to explore implementations
-of direct solutions to the $\bigO{N^2}$ algorithms.
+
 %
 %Q: Why so we want to look at direct solutions?
+With truncation in place, we can liken a simulation to solving a
+large number of isolated systems with direct solutions.
+%
 By finding good direct solutions, it may be possible to use longer force
-truncations without worrying about simulation sizes.
+truncations without worrying about these isolated system sizes.
 %
-Future HPC architectures are expected to be many core systems.
-%
-Where core count is not a limitation, we would like to see how well
-the overall time to solution for $\bigO{N^2}$ algorithms can be scaled.
+As future HPC architectures are expected to be many core systems,
+we would like to see how well the overall time to solution for
+$\bigO{N^2}$ algorithms can be scaled.
 
 
 %

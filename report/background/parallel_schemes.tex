@@ -1,0 +1,159 @@
+\subsection{Parallel Schemes}
+
+%
+%Q: Can we parallelize the force calculation?
+As discussed, the velocity Verlet scheme immediately provides an algorithm for
+performing MD simulations of long ranged forces in isolated systems.
+%
+The question is, can this be parallelized?
+%
+In this dissertation, we focus on two schemes in particular:
+replicated data and systolic loops.
+
+
+
+\subsubsection{Replicated Data}
+
+%
+%Q: What is the replicated data scheme?
+In the replicated data scheme,
+the entire system of particles is replicated across all processors.
+%
+This is useful for the force update, as each particle must have a view of
+every other particle to determine its instantaneous force.
+%
+The general approach is, in $P$ replicated processes, for each processor
+to determine the force for $1/P$ of the particles.
+%
+Each process may then either update the particles whose forces it has
+determined and then share them, or share them and then update the entire
+list of particles.
+%
+In this way, it may provide an $\bigO{N^2/P}$ algorithm.
+
+%
+%Q: What are the scaling challenges of replicated data?
+Ideally, we would like to simply use $P = N^2$ processes and produce an
+$\bigO{1}$ algorithm, however, this is not possible for several reasons.
+%
+An immediate concern is that each process must have the same view of the
+system at all times.
+%
+As a result, all processes must share their updated particles at
+every time step and receive updated particles from other processes.
+%
+This results in a large amount of communications occurring very frequently,
+with a size growing as $\bigO{N}$ and as $\bigO{\log{P}}$.
+
+Further problems arising from this algorithm is that every process has
+an individual copy of the system.
+%
+For very large systems, this can stretch the memory of the system
+it is running on.
+%
+Imagining a system of particles where each particle contains double
+precision floating point (8~B) data for position, velocity, force and mass,
+amounting to 80~B per particle, a 32~GB system could hold around $10^8$
+particles.
+%
+However, if the system has around 10 cores, with the replicated scheme,
+it can now hold a maximum of around $10^7$ particles as each core will
+be holding a full system.
+%
+Further, we encounter the problem that all processes must communicate
+with every other process at every time step.
+%
+This puts global synchronization points into the simulation.
+
+%
+%Q: Why are the scaling challenges of replicated data concerning for exascale?
+These drawbacks are particularly important when considering exascale systems
+where we expect large numbers of cores per node.
+%
+As we expect memory per node to grow at a much lower rate, a replicated data
+scheme may have difficulties utilizing every core on a node.
+%
+Indeed, even in current systems, nodes are often requested and only a
+subset of cores used due to memory per core considerations in applications.
+%
+Even if all the cores in the node are utilized, global synchronization
+points do not scale well to large numbers of processes.
+
+
+
+\subsubsection{Systolic Loop}
+
+%
+%Q: What is the systolic loop scheme?
+In the systolic loop scheme, the system is split up and distributed among
+all the processes.
+%
+Force updates are performed by passing list data around a ring in pulses.
+
+Initially, a process will make a copy of its list of particles,
+and then use that to perform a partial force update on its local list.
+%
+It will then pass the copied list to the ``right'' process and
+receive a new list from the ``left'' process and use that to perform
+another partial force update on its local list.
+%
+This process continues until a process receives its own system again from
+the ``left'' process, signifying that it has at some stage received
+a copy of every list on every process.
+%
+At this point, it should have added the force contributions from
+every particle in the system to the particles in its local list.
+%
+From here, a process may update the position and velocity of these local
+particles, thereby stepping the system forward.
+%
+As we are performing an $\bigO{\left(\frac{N}{P}\right)^2}$ operation
+when comparing particles and perform this $\bigO{P}$ times, we
+get an $\bigO{N^2/P}$ algorithm.
+
+
+%
+%Q: What are the scaling challenges of systolic loop?
+As the system is distributed over a number of processes, this allows
+us to work on very large systems.
+%
+Taking the systems and figures from the previous section,
+rather than being limited to $10^7$ particles for the system,
+we are limited to $10^7$ particles per core.
+%
+As a result, we have an upper limit on particles per core, but no
+upper limit on the actual system being studied.
+%
+Further, communications between processes is more limited than the
+replicated case.
+%
+Here, we have each process communicating with only two other processes
+and sending only $N/P$ particles.
+%
+By this mechanism, we simultaneously reduce the volume of data
+being communicated between every process and
+remove a hard global synchronization
+when compared to the replicated data scheme.
+%
+However, we must perform $P$ communications.
+
+Ideally, we could set $P = N$ and have a $\bigO{1}$ operation performed
+$\bigO{P = N}$ times.
+%
+The primary limitation here is the overhead of performing the systolic
+pulses.
+%
+As communications have a given latency, we would like to reduce the number
+of communications performed.
+%
+In a systolic loop, the number of operations performed reduces with
+the square of the processes, but the communications performed scales linearly.
+%
+As such, we quickly reach a point where latency dominates over computation.
+%
+Even for very large $N$, a modest $P$ can incurr large latency overheads.
+%
+%Q: Why are the scaling challenges of systolic loop concerning for exascale?
+As increasing the number of processes to a large value
+can quickly result in calculations having significant latency,
+we see an immediate concern for exascale system.

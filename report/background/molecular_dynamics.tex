@@ -36,6 +36,19 @@ An MD simulation typically consists of three phases:
 setting up the particle distribution,
 simulating the system until it comes to thermodynamic equilibrium and
 taking measurements of the system.
+%
+%Q: Why do we need the system to reach thermodynamic equilibrium?
+The system must be allowed to reach thermodynamic equilibrium because
+the initial distribution of particles may be a statistically unlikely
+configuration.
+%
+If measurements of the system are taken before this stage, statistically
+unlikely ensembles will be sampled more frequently than they should be when
+performing measurements.
+%
+Measurements such as temperature and energy will not be representative
+of the system being studied.
+
 
 
 %
@@ -65,7 +78,7 @@ the system it supposes to model.
 
 
 
-\subsection{Equations Of Motion}
+\subsubsection{Equations Of Motion}
 
 %
 %Q: What is a potential?
@@ -151,6 +164,39 @@ $V$ and $N$ are as described above.
 %Q:What is the error in the VV scheme?
 The local error for this scheme is $\bigO{h^4}$ while the local error
 is $\bigO{h^3}$.
+%
+%Q: What is the time to solution for the VV scheme?
+As can be seen, for a 2-body potential,
+this produces an $\bigO{N^2}$ alforithm.
+
+%
+%Q: What time step do we need for the VV scheme?
+The timescale at which atomic forces manifest compared to
+the timescale at which properties of a molecular system may emerge
+requires out numerical integrator use very short steps and be run for
+a very large number of them.
+%
+This in itself introduces a significant amount of challenge to computations.
+%
+As a classical molecular system can be considered a chaotic one,
+we see that any significant error introduced as a result of
+increasing time steps may result in
+vastly different results in a simulation.
+%
+Therefore, great care must be taken when choosing time steps, and
+indeed a numerical integrator,
+that it does not introduce so much error to a simulation as to render it
+an unreliable source of information.
+%
+Some schemes attempt to address this issue by
+using different time steps for phenomenon that occur on
+different time scales within the same simulation.
+%
+However, these won’t be discussed here.
+%
+Indeed, beyond ensuring our numerical integrator and time steps provide
+reasonable results for our simulation,
+they will be outside the scope of this discussion.
 
 
 %
@@ -201,63 +247,98 @@ $r_{ij} = |\vec{r}_{ij}|$, $\hat{r}_{ij} = \frac{\vec{r}_{ij}}{r_{ij}}$
 which may be used in \EQN{eqn:velocity_verlet_scheme} to describe
 the discretized equations of motion of $N$ bodies interacting under the
 Lennard-Jones potential.
+%
+%Q: How do these equations affect our time to solution?
+One may imagine a situation where two bodies are distant enough
+that the potential difference between them is negligible compared
+to the contributions from closer bodies.
+%
+In this case, it may be possible to approximate this potential difference
+to zero, and in fact, not calculate it.
+%
+By doing this, we may reduce the time complexity of our simulation.
+%
+This process is called truncation.
 
 
+\subsubsection{Truncation of Forces}
 %
-% Plan:
+%Q: What is the importance of the effective length of our potentials?
+As can be seen from the form of the Lennard-Jones potential,
+after a given distance from a particle, the potential tends towards
+zero.
 %
-% W%hat is the importance of the effective length of our potentials?
-% W%hen we truncate our forces, what are the effects?
+This presents the opportunity to consider only interactions between
+``close'' particles.
+%
+This is achieved by setting a cutoff distance and evaluating potentials
+between particles within this distance from each other.
+%
+Several schemes for tailoring a potential to a cutoff exist, and several
+schemes for limiting calculations performed to ``close'' particles
+exist.
+%
+The Verlet List scheme, for example, involves using some bookkeeping to
+maintain lists of particles that are within the cutoff.
+%
+Typically, Verlet List implementations scale near $\bigO{N}$ with the
+number of particles in the simulation, but $\bigO{N^2}$ in memory used.
+%
+Another example is a domain distributed parallel decomposition.
+%
+Particles that are physically close are placed on processes that are ``close''.
+%
+In this manner, processes may limit communications to other close processes.
+%
+Finally, direct solutions are performed between these close particles.
+
+%
+%Q: When we truncate our forces, what are the effects?
+Overzealous truncation of forces may overly approximate the forces in play.
+%
+In particular, some molecular systems may be of interest, but the forces
+are too long ranged to allow for simulations to be performed in
+a reasonable timeframe.
 % W%here is this ok and where is it not ok?
-% W%hen we shrink our system sizes, what are the effects?
-% W%hat happens if we have periodic systems?
+
 %
+%Q: What happens if we have periodic systems?
+Truncation may be used to effectively simulate very large
+systems by implementing periodic boundary conditions, but ensuring
+that no particle interacts with the same particle twice.
+%
+With this approach, one hopes to simulate what looks like an infinite system
+without introducing periodic effects.
+%
+Of course, as we have done this by using periodic boundary conditions,
+we can not completely remove periodic effects.
+%
+%Q: When we shrink our system sizes, what are the effects?
+These periodic systems must be of a minimum size to avoid introducing
+large finite size effects.
+%
+A system will often, however, experience some finite size effects
+regardless of the system size simply because the system is not actually
+infinite.
+
+%
+%Q: What happens if we have long range potentials?
+Of course, we can't reasonably truncate our potentials if they are long ranged.
+%
+For non-periodic systems, we must directly solve the equations of motion.
+%
+Further, we must approach the problem from a very different angle if we
+are using a periodic system.
+%
+Schemes, such as Ewald summation, exist to tackle the problem.
+%
+This will not be discussed here, but it is worth noting the limitations of
+long ranged potentials and periodic systems as we are effectively using
+truncation to describe short ranged potentials in periodic systems as
+long ranged forces in many non-periodic systems.
 
 
-\subsection{Complexity, Approximations and Sensitivity}
-
-The timescale at which atomic forces manifest compared to
-the timescale at which properties of a molecular system may emerge
-requires an MD simulation takes very many very short time steps.
-%
-This in itself introduces a significant amount of challenge to computations.
-%
-As a classical molecular system can be considered a chaotic one,
-we see that any significant error introduced as a result of
-increasing time steps may result in
-vastly different results in a simulation.
-%
-Therefore, great care must be taken when choosing time steps, and
-indeed a numerical integrator,
-that it does not introduce so much error to a simulation as to render it
-an unreliable source of information.
-%
-Some schemes attempt to address this issue by
-using different time steps for phenomenon that occur on
-different time scales within the same simulation.
-%
-However, these won’t be discussed here.
-%
-Indeed, beyond ensuring our numerical integrator and time steps provide
-reasonable results for our simulation,
-they will be outside the scope of this discussion.
-
-
-The next area of interest is
-the calculation of intermolecular forces that happens on each step.
-%
-An initial look at the calculation of intermolecular forces suggests
-a problem whose solution time scales as $\bigO{N^2}$,
-where $N$ is the number of particles in the system.
-%
-In this dissertation, we will be interested in
-tackling the calculation of these forces.
-%
-Approximations exist providing solutions that scale as $\bigO{N}$.
-%
-Here, however, we are interested primarily in
-studying the direct solutions to these equations of motions,
-and the study of parallel schemes which calculate them.
+\subsubsection{Approximations and Sensitivity}
 
 Classical MD simulations do not account for quantum effects,
 and as such make some false predictions.
@@ -275,7 +356,7 @@ There are several potential issues regarding accuracy in MD simulations.
 %
 An $N$ body system is a chaotic one.
 %
-As a result, a small changes in accuracy may lead to
+As a result, a small change in accuracy may lead to
 largely different results.
 %
 Errors may be introduced by
@@ -289,18 +370,13 @@ the simulation may still be useful.
 The system may be used to derive information on
 thermodynamic variables or to simulate general trends.
 
-
-MD calculations tend to be computationally intense.
+Indeed, here, we seek to improve the time to solution for direct solutions
+to allow us to increase the cutoff distance to two-body potentials.
 %
-This intensity derives both from
-the number of time steps required to derive useful data and
-the number of operations required to evaluate the force term on each step.
+By increasing this cutoff distance, we may slightly improve the accuracy
+of our simulation.
 %
-As a result, the sizes of the largest systems studied today
-tends to be in the millions.
+However, given the system is chaotic, we will
+still get an ``incorrect'' answer.
 %
-While this number varies,
-and different methods of evaluating forces yield
-different scaling factors,
-there still appears to be an upper limit on
-the number of particles that can currently be simulated.
+We hope only to reduce this particular source of error.
