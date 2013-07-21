@@ -1,34 +1,21 @@
-%\includeonly{introduction/introduction}
+% % % % % % % % % % % % % % % % % % % %
+%                                     %
+% Towards Exascale Molecular Dynamics %
+%                                     %
+% % % % % % % % % % % % % % % % % % % %
+%          Padraig O Conbhui          %
+% % % % % % % % % % % % % % % % % % % %
 
 \documentclass[12pt, a4paper]{article}
 
-\author{P\'{a}draig \'{O} Conbhu\'{\i}}
-\title{Towards Exascale Molecular Dynamics}
-
 \input{macros}
-
-\usepackage{amsmath}
-\usepackage{parskip}
-\usepackage{graphics}
-\usepackage{graphicx}
-
-\usepackage[usenames, svgnames]{xcolor}
-\usepackage{listings}
-\lstset{frame=single, language=Fortran}
-\lstset{
-    commentstyle=\color{Blue},
-    keywordstyle=\bf \color{Green},
-    numbers=left,
-    stepnumber=1
-}
-\lstset{morecomment=[s][\color{LimeGreen}]{PURE}{\ }}
-\lstset{morecomment=[s][\color{LimeGreen}]{&}{\ }}
-\usepackage{algorithm}
-    
-
-\usepackage{epcc}
+\input{packages}
+\input{styles}
 
 \begin{document}
+
+\author{P\'{a}draig \'{O} Conbhu\'{\i}}
+\title{Towards Exascale Molecular Dynamics}
 
 \makeEPCCtitle
 \thispagestyle{empty}
