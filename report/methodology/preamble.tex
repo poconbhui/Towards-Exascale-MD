@@ -1,1 +1,337 @@
-Hello, I am a methodology
+We will outline our initial implementations of
+the replicated data and systolic loop MD codes
+along with our methods for extracting performance data from our codes.
+
+\subsection{Implementation}
+
+The code is implemented in Fortran.
+%
+In an attempt to decouple our simulation from the underlying code,
+we try to abstract our underlying
+particle distribution,
+particle comparison schemes and
+data gathering schemes
+from our numerical integrator and pair force finding scheme.
+%
+To allow for arbitrary distribution schemes to be implemented,
+we must ensure that potential redundant calculations and reductions
+across processes may be easily implemented.
+
+To this end, we implement a distribution class
+representing a distributed list of particles
+along with a set of interfaces for applying transformations over the particles.
+%
+These interfaces accept user defined functions which provide
+a mapping over particles returning partial results,
+predefined reduction operators and
+a mapping from fully reduced values back onto the particles.
+%
+This allows us to gracefully handle arbitrary user defined operations while
+leaving us free to change our underlying distribution and operations
+at will.
+%
+It also suggests a minimum number of operations we must implement,
+namely individual particle operations and particle list comparison
+operations.
+%
+We further provide an interface for printing information on the particles
+out to disk.
+%
+We are not particularly concerned with IO efficiency in this dissertation,
+so we simply print out to the screen.
+%
+An example of this is in \LST{lst:distribution_operation}.
+
+\begin{lstlisting}[
+    caption=An example MD simulation,
+    label=lst:distribution_operation,
+]
+program MD
+    ...
+
+    dist = new_distribution(...)
+
+    call dist%individual_operation(init_particles)
+
+    do while(time < end_time)
+        ! Perform first half of Velocity Verlet scheme
+        call dist%individual_operation(VV_scheme_part_1)
+
+        ! Find forces between particles due to
+        ! LJ potential
+        call dist%pair_operation(            &
+            map_force, unmap_force, dist%sum &
+        )
+
+        ! Perform second half of Velocity Verlet scheme
+        call dist%individual_operation(VV_scheme_part_2)
+
+        ! Step time forward
+        time = update_time(time)
+    end do
+
+    ! Output list of particles to screen
+    call dist%print_particles(particle_to_string)
+
+contains
+    ! An overly simplistic initialization scheme
+    PURE function init_particles(particle_i, i)
+        ...
+        init_particles = Particle(        &
+            pos=i, vel=0, mass=1, force=0 &
+        )
+    end function init_particles
+
+    ! Find the force on particle1 due to particle2
+    PURE function map_force(particle_i, particle_j)
+        ...
+        map_force = find_LJ_force_between( &
+            particle_i, particle_j           &
+        )
+    end function map_force
+
+    ! Expect all the forces to have been summed together
+    ! in the "total_force" parameter.
+    ! Apply force to the particle and return it.
+    PURE function unmap_force(particle_i, i, total_force)
+        ...
+        unmap_force = particlei
+        unmap_force%force = total_force
+    end function unmap_force
+
+    ! Accept a particle and return a string
+    ! that can be printed.
+    PURE subroutine particle_to_string( &
+        particlei, i, output_string     &
+    )
+        ...
+        write(output_string, *) particlei%pos
+    end subroutine particle_to_string
+end program MD
+\end{lstlisting}
+
+
+
+\subsection{Performance Measurement}
+
+In an MD simulation, the time for a single step is strongly dependent
+on the number of particles present.
+%
+It is also dependent on the number of parallel proceses the simulation
+is running on.
+%
+This suggests a 2D space over which we might evaluate performance.
+
+As successful MD simulations can be carried out on already well defined
+systems, we are not so interested in evaluating just how large we can
+make our simulations.
+%
+As such, we choose several fixed system sizes to test, namely
+$10^4$, $10^5$, $10^6$ and $10^7$
+particles.
+%
+The primary reason for omitting $10^8$ particles and above is that the time to
+solution unfeasibly high to test for this paper and with the resources
+at our disposal.
+
+Given these system sizes, we have 4 systems on which to plot time to solution
+versus number of processes.
+%
+As we are performing this study with many-core systems in mind,
+we are less interested in speedup than overall time to solution.
+%
+With this focus, we will simply measure time versus processes for these
+systems and pick out the fastest time to solution.
+%
+This time will then be used to measure how our time scales with
+our system size.
+
+We use a very simple model of MD to distill the very fundamental calculation
+with our implementation.
+%
+Specifically, our simulation will perform a loop consisting of two
+individual operations over our particles representing the first
+and second halves of the velocity Verlet integration scheme and one
+pair operation representing the force evaluation section of the scheme.
+%
+The loop will be run several times to extract some statistical significance
+from our timings.
+%
+In particular, for quick loops, they will be repeated until the overall
+time is comparable to 1 second.
+%
+Longer loops will be cut short if evaluation would take a long time and omitted
+from the results, however, we will aim to gather at least 10 iterations.
+
+We will perform no I/O within the simulation.
+%
+While this is not representative of a real MD code, and indeed I/O
+is itself an important factor in the performance of an MD simulation,
+we leave it outside the scope of this dscussion.
+%
+We implement I/O primarily for testing purposes.
+
+We make no pretense of performing accurate simulations in our benchmarks,
+so the entire step of allowing the system to come to
+thermal equilibrium will be ignored.
+%
+This is primarily to reduce the time required to perform a benchmark.
+%
+This is not expected to have a significant impact on performance metrics
+as we are not dealing with any particle domain specific distributions,
+so the particles having improper positions or velocities is of
+little consequence to the number of operations and communications
+performed.
+%
+It will, however, be considered when testing our software so we are
+certain our code is at least doing the work of a realistic simulation.
+
+
+\subsection{Initial Implementation}
+
+Here we outline how our two parallel schemes are implemented.
+%
+Each scheme will ingerit from a base distribution type and
+implement the methods
+``individual\_operation'',
+``pair\_operation'',
+``print\_particles'' and
+``print\_string''.
+%
+\begin{description}
+\item[individual\_operation]
+    This method will accept a function defining a mapping from
+    particles to particles.
+    This will replace each particle in the list with it's mapped
+    particle.
+
+    An example serial implementation is in
+    \LST{lst:serial_individual_operation_implementation}.
+
+    \begin{lstlisting}[
+        caption=Serial individual\_operation implementation.,
+        label=lst:serial_individual_operation_implementation,
+        gobble=8
+    ]
+        subroutine individual_operation(f)
+            ...
+            do i=1, num_particles
+                particles(i) = f(particles(i), i)
+            end do
+        end subroutine individual_operation
+    \end{lstlisting}
+    
+    This will be useful for initializing particle distributions
+    and performing integration steps.
+
+\item[pair\_operation]
+    This method will accept a function defining a mapping from two
+    particles to a value, a predefined reduction operation, and
+    a mapping from a particle and a value a new particle.
+
+    An example serial implementation is in
+    \LST{lst:serial_pair_operation_implementation}.
+
+\begin{lstlisting}[
+    caption=Serial pair\_operation implementation.,
+    label=lst:serial_pair_operation_implementation
+]
+subroutine pair_operation(                     &
+    pair_to_value, particle_value_to_particle, &
+    reduction_type                             &
+)
+    ...
+    do i=1, num_particles
+        value = reduction_identity(reduction)
+
+        do j=1, num_particles
+            tmp_value = pair_to_value(     &
+                particles(i), particles(j) &
+            )
+
+            value = reduce(       &
+                value, tmp_value, &
+                reduction_type    & 
+            )
+        end do
+
+        particles(i) = particle_value_to_particle( &
+            particles(i), i, value
+        )
+    end do
+end subroutine pair_operation
+\end{lstlisting}
+
+\item[print\_particles]
+    This method should accept a function which transforms a particle
+    to a string. It will use this to output a string generated by
+    each particle to the screen.
+
+    An example serial implementation is in
+    \LST{lst:serial_print_particles_implementation}
+
+    \begin{lstlisting}[
+        caption=Serial print\_particles implementation.,
+        label=lst:serial_print_particles_implementation,
+        gobble=8
+    ]
+        subroutine print_particles(particle_to_string)
+            ...
+            do i=1, num_particles
+                call particle_to_string(           &
+                    particles(i), i, output_string &
+                )
+
+                write(*,*) output_string
+            end do
+        end subroutine print_particles
+    \end{lstlisting}
+
+\item[print\_string]
+    This method simply accepts a string and prints it to the screen.
+
+    For completeness, an example is in
+    \LST{lst:serial_print_string_implementation}
+
+    \begin{lstlisting}[
+        caption=Serial print\_string implementation.,
+        label=lst:serial_print_string_implementation,
+        gobble=8
+    ]
+        subroutine print_string(string)
+            write(*,*) string
+        end subroutine print_string
+    \end{lstlisting}
+
+    This method is implemented primarily because we want to completely
+    abstract the underlying parallelism from the user code.
+\end  {description}
+
+As can be seen, we have taken several design choices which limit how
+general the user defined operations can be.
+%
+This is primarily due to language restrictions.
+%
+However, as we are focusing primarily on implementing the velocity
+Verlet algorithm, this is not a major concern for us.
+
+We require that all parallel implementations are functionally equivalent
+to the above codes.
+%
+This allows us to easily implement tests.
+%
+We simply implement tests for the serial implementation involving
+performing transformations on the code and outputting the data to disk
+and then analysing this output.
+
+Further, it discourages us from making optimizations that make
+assumptions about our MD algorithm.
+%
+We must focus solely upon parallel list comparison and updates.
+
+\subsection{Initial Implementation}
+
+\subsubsection{Replicated Data}
+
+
+
