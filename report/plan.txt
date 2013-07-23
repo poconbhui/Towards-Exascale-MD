@@ -63,10 +63,17 @@ What are the scaling challenges of systolic loop?
 Why are the scaling challenges of systolic loop concerning for exascale?
 
 
-Is it important for us to also distribute the data?
-What are the benefits of the
-  replicated, domain distributed and systolic loop schemes?
-What are the drawbacks/limitations?
+### Benchmarks ###
 
-What benchmarks should we be performing?
+What should we be measuring?
+What will we measure?
+How will we measure these?
+Will we measure IO?
+How accurate will the benchmarked simulations be?
+
+### Implementation ###
+
+What does an implementation look like?
+
+
 How do the initial implementations perform?
