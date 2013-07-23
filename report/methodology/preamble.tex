@@ -93,19 +93,19 @@ contains
     ! Expect all the forces to have been summed together
     ! in the "total_force" parameter.
     ! Apply force to the particle and return it.
-    PURE function unmap_force(particle_i, i, total_force)
+    PURE function unmap_force(particle_i, total_force)
         ...
-        unmap_force = particlei
+        unmap_force = particle_i
         unmap_force%force = total_force
     end function unmap_force
 
     ! Accept a particle and return a string
     ! that can be printed.
     PURE subroutine particle_to_string( &
-        particlei, i, output_string     &
+        particle_i, i, output_string     &
     )
         ...
-        write(output_string, *) particlei%pos
+        write(output_string, *) particle_i%pos
     end subroutine particle_to_string
 end program MD
 \end{lstlisting}
@@ -269,7 +269,7 @@ subroutine pair_operation(                     &
         end do
 
         particles(i) = particle_value_to_particle( &
-            particles(i), i, value
+            particles(i), value
         )
     end do
 end subroutine pair_operation
