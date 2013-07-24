@@ -1,5 +1,5 @@
 pdflatex=./latexmk.pl -pdf
-subdirs = introduction background methodology
+subdirs = introduction background methodology logos
 
 
 introduction.tex = \
@@ -18,6 +18,7 @@ methodology.tex = \
 
 report.tex = \
 	report.tex \
+	epcc.sty \
 	macros.tex \
 	$(introduction.tex) \
 	$(background.tex) \
@@ -37,6 +38,13 @@ report.pdf: $(report.tex)
 	epstopdf $*.plt.eps
 #	# Correct .plt.tex file to allow .plt.pdf file to be referenced as .plt
 	sed -i 's#{$*.plt}#[type=pdf,ext=.pdf,read=.pdf]{$*.plt}#' $@
+
+logos_pdf = $(patsubst %.eps, %.pdf, $(wildcard logos/*.eps))
+epcc.sty : $(logos_pdf)
+
+# Compile eps images to pdf
+%.pdf : %.eps
+	epstopdf $<
 
 # Clean up
 .PHONY: clean
