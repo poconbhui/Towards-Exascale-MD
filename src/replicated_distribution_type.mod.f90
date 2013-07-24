@@ -14,6 +14,7 @@ module replicated_distribution_type
         integer, private :: num_particles
 
         type(particle), private, allocatable :: particles(:)
+        type(particle), private, allocatable :: local_particles(:)
 
         integer, private :: rank
         integer, private :: nprocs
@@ -45,6 +46,8 @@ contains
         integer, intent(in) :: num_particles
         integer, intent(in) :: comm
 
+        integer :: local_chunk_size, chunk_start, chunk_end
+
         integer :: comm_dup
         integer :: ierror
 
@@ -57,7 +60,12 @@ contains
         call MPI_Comm_rank(comm_dup, this%rank, ierror)
         call MPI_Comm_size(comm_dup, this%nprocs, ierror)
 
+        call this%get_chunk_data( &
+            this%rank, local_chunk_size, chunk_start, chunk_end &
+        )
+
         allocate(this%particles(num_particles))
+        allocate(this%local_particles(local_chunk_size))
     end subroutine init
 
     subroutine pair_operation(this, compare_func, merge_func)
@@ -146,6 +154,9 @@ contains
         integer :: rank
         integer :: chunk_size, chunk_start, chunk_end
 
+        integer :: chunk_sizes(this%nprocs)
+        integer :: chunk_starts(this%nprocs)
+
         integer :: MPI_particle
 
         integer :: ierror
@@ -154,18 +165,23 @@ contains
         call generate_MPI_particle(MPI_particle)
 
         do rank=0, this%nprocs-1
-            call this%get_chunk_data(rank, chunk_size, chunk_start, chunk_end)
-
-            ! Sync positions
-            call MPI_Bcast( &
-                this%particles(chunk_start:chunk_end), &
-                chunk_size, &
-                MPI_particle, &
-                rank, &
-                this%comm, &
-                ierror &
+            call this%get_chunk_data( &
+                rank, chunk_sizes(rank+1), chunk_starts(rank+1), chunk_end &
             )
         end do
+        ! Convert Fortran offsets to C offsets
+        chunk_starts = chunk_starts -1
+
+        call this%get_chunk_data( &
+            this%rank, chunk_size, chunk_start, chunk_end &
+        )
+
+        ! Sync positions
+        call MPI_Allgatherv( &
+            this%particles(chunk_start), chunk_size, MPI_particle, &
+            this%particles, chunk_sizes, chunk_starts, MPI_particle, &
+            this%comm, ierror &
+        )
 
     end subroutine sync_particles
 
