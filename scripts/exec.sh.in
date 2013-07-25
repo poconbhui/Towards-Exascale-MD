@@ -4,4 +4,7 @@ export FC=@FC@
 export MPIFC=@MPIFC@
 export mpiexec=@mpiexec@
 
-exec "$@"
+script_dir=$(dirname $0)
+
+# Execute passed script with script dir in exec path
+PATH=$script_dir:$PATH exec "$@"
