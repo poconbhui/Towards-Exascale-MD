@@ -4,15 +4,21 @@ include ../scripts/Makefile.inc
 	make -C ../src $@
 
 
-programs = calculation_only.bench
+programs = bench
 
 bench_suite.mod.o = \
 	../src/global_variables.mod.o \
         ../src/particle_type.mod.o \
+    	../src/abstract_distribution_type.mod.o \
+    	../src/integration.mod.o \
+    	../src/lj_force.mod.o \
         bench_suite.mod.o
 bench_suite.mod = \
 	../src/global_variables.mod \
         ../src/particle_type.mod \
+    	../src/abstract_distribution_type.mod \
+    	../src/integration.mod \
+    	../src/lj_force.mod \
         bench_suite.mod
 
 distribution_type.mod= \
@@ -24,7 +30,7 @@ distribution_type.mod.o= \
 	../src/particle_type.mod.o \
 	../src/abstract_distribution_type.mod.o
 
-calculation_only.bench: \
+bench: \
 	$(bench_suite.mod.o) \
 	$(distribution_type.mod.o) \
 	../src/grav_force.mod.o \
@@ -33,7 +39,7 @@ calculation_only.bench: \
         ../src/replicated_distribution_type.mod.o \
         ../src/domain_distribution_type.mod.o \
         ../src/systolic_distribution_type.mod.o
-calculation_only.bench.o: \
+bench.o: \
 	$(bench_suite.mod.o) \
 	$(distribution_type.mod) \
 	../src/grav_force.mod \

@@ -1,11 +1,37 @@
 module bench_suite
     use mpi
+
     use global_variables
     use particle_type
+
+    use abstract_distribution_type
+    use integration
+    use lj_force
+
     implicit none
 
-    integer, parameter :: badRNG_p = selected_int_kind(18)
-    integer(badRNG_p), parameter :: badRNG_max = (2_badRNG_p)**32
+    real(p), private :: system_width(Ndim)
+    integer, private :: num_particles
+    real(p), private :: time_step
+
+    integer, private :: particle_grid_dim
+
+
+    procedure(one_particle_function), pointer &
+        :: bench_integrate_1 => verlet_integrate_pt1
+
+    procedure(one_particle_function), pointer &
+        :: bench_integrate_2 => verlet_integrate_pt2
+
+    procedure(one_particle_function), pointer &
+        :: bench_force_init => lj_init
+
+    procedure(two_particle_function), pointer &
+        :: bench_force_compare => lj_compare
+
+    procedure(two_particle_function), pointer &
+        :: bench_force_merge => lj_merge
+
 
 contains
     function get_time()
@@ -14,29 +40,63 @@ contains
         get_time = MPI_Wtime()
     end function get_time
 
-    PURE function dist_init(pi, i)
-        type(particle) :: dist_init
+
+
+    !
+    ! Initialize number of particles and size of box in bench and integrator
+    !
+    subroutine bench_suite_init(num_particles_in, system_width_in, time_step_in)
+        integer, intent(in) :: num_particles_in
+        real(p), intent(in) :: system_width_in(Ndim)
+        real(p), intent(in) :: time_step_in
+
+
+        num_particles = num_particles_in
+        system_width  = system_width_in
+        time_step     = time_step_in
+
+        call integration_init(time_step)
+
+
+        ! Expect the number of particles to be in the form n**(3*n)
+
+        particle_grid_dim = int(num_particles_in**(1.0/3))
+
+        if(particle_grid_dim**3 .NE. num_particles_in) then
+            write(*,*) "num_particles must be a cube."
+            call exit(1)
+        end if
+    end subroutine bench_suite_init
+
+
+    !
+    ! Distribute particles in a regular grid
+    !
+    PURE function bench_dist_init(pi, i)
+        type(particle) :: bench_dist_init
 
         type(particle), intent(in) :: pi
         integer, intent(in) :: i
 
-        integer(badRNG_p) :: state
-        real(p) :: pos(Ndim)
 
+        ! This particles grid position
+        integer :: particle_grid_pos(Ndim)
         integer :: d
+        integer :: skip_count
 
-        state = i
-        state = badRNG(state)
-
-        do d=1, Ndim
-            state  = badRNG(state)
-            pos(d) = state
+        
+        skip_count = 1
+        do d=Ndim, 1, -1
+            particle_grid_pos(d) = mod(i/skip_count, particle_grid_dim)
+            skip_count = skip_count*particle_grid_dim
         end do
 
-        pos = pos/badRNG_max
 
-        dist_init = particle(pos=pos, vel=0, force=0, mass=1)
-    end function dist_init
+        bench_dist_init = particle( &
+            pos=(particle_grid_pos*system_width), vel=0, force=0, mass=1 &
+        )
+    end function bench_dist_init
+
 
     PURE subroutine print_particle(pi, i, string)
         type(particle), intent(in) :: pi
@@ -50,21 +110,4 @@ contains
         string = adjustl(tmp)
     end subroutine print_particle
 
-    ! We don't need a good RNG.
-    ! We just need something to spread particles out a bit which is
-    ! PURE and reproducable.
-    !
-    ! badRNG produces outputs which are close for inputs that are close.
-    PURE function badRNG(x)
-        integer(badRNG_p) :: badRNG
-
-        integer(badRNG_p), intent(in) :: x
-
-        ! LCG values from Numerical Recipes.
-        integer(badRNG_p), parameter :: m = (2_badRNG_p)**32
-        integer(badRNG_p), parameter :: a = 1664525
-        integer(badRNG_p), parameter :: c = 1013904223
-
-        badRNG = mod(a*x + c, m)
-    end function badRNG
 end module bench_suite
