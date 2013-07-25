@@ -24,7 +24,7 @@ contains
     ! are called.
     !
     subroutine integration_init(time_step)
-        REAL(p), intent(in) :: time_step
+        real(p), intent(in) :: time_step
 
         dt = time_step
     end subroutine integration_init
