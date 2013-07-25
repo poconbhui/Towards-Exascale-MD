@@ -15,8 +15,8 @@ require relpath('../bench/list_of_benches.rb')
 # Require bench to run is specified
 if ARGV[0].nil? or ARGV[1].nil?
     raise "\n\nUsage: run_benchs.rb num_particles core_range\n" \
-            "Particle ranges: #{Benches.keys}\n" \
-            "Core ranges: #{Benches[Benches.keys[0]].keys}"
+            "Particle ranges: #{Benches.keys.inspect}\n" \
+            "Core ranges: #{Benches[Benches.keys[0]].keys.inspect}"
 end
 
 @num_particles = ARGV[0].to_s
