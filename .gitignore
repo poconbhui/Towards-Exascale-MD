@@ -4,4 +4,6 @@
 *.test
 *.bench
 
+*.dat
+
 *.swp
