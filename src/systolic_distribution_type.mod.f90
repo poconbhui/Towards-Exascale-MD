@@ -18,9 +18,6 @@ module systolic_distribution_type
     ! Exported functions
     public :: new_systolic_distribution
 
-    
-    procedure(global_reduce_function), pointer, private :: local_reduce_op
-
 
     ! TYPE systolic_distribution
     !
@@ -211,8 +208,6 @@ contains
         integer :: i
         integer :: ierror
 
-        integer :: myop
-
 
         do i=1, this%num_local_particles
             reduce_value = reduce( reduce_value, map(this%particles(i)) )
@@ -220,82 +215,13 @@ contains
 
         tmp_reduce_value = reduce_value
 
-
-        myop = MPI_reduce_binding(reduce)
         call MPI_Allreduce( &
             tmp_reduce_value, reduce_value, 1, MPI_REAL_P, &
-            myop, &
+            MPI_SUM, &
             this%comm, &
             ierror &
         )
     end subroutine
-
-
-    ! FUNCTION MPI_reduce_binding
-    !
-    ! This functions returns an MPI_Op that can be used for
-    ! MPI_Allreduce.
-    !
-    ! This is a slightly disgusting hack. We define a function with
-    ! the signature necessary for an MPI_User_function which then
-    ! calls a previously set function pointer with the binding we want
-    ! out users to use.
-    !
-    ! This function sets that local function pointer, and returns the
-    ! MPI_Op. If necessary, this function will register the binding
-    ! with MPI.
-    !
-    ! It should be noted that this will only work for one binding at a time,
-    ! if even. I'm not quite brave enough to come up with a fix.
-    !
-    function MPI_reduce_binding(reduce_op)
-        integer :: MPI_reduce_binding
-
-        procedure(global_reduce_function) :: reduce_op
-
-        logical, save :: first_entry = .TRUE.
-        integer, save :: saved_binding
-
-        integer :: ierror
-
-
-        local_reduce_op => reduce_op
-
-        if(first_entry) then
-            call MPI_Op_create( &
-                mpi_exec_local_reduce_op, .TRUE., saved_binding, ierror &
-            )
-
-            first_entry = .FALSE.
-        end if
-
-        MPI_reduce_binding = saved_binding
-    end function MPI_reduce_binding
-
-
-    ! FUNCTION mpi_exec_local_reduce_op
-    !
-    ! This is the function registered with MPI to call the reduce operation
-    ! with the binding we want our users to use.
-    !
-    ! This function should only be called by the MPI library.
-    !
-    function mpi_exec_local_reduce_op(in, inout, len, type)
-        integer mpi_exec_local_reduce_op
-
-        real(p) :: in(len), inout(len)
-        integer :: len
-        integer :: type
-
-        integer :: i
-
-
-        do i=1, len
-            inout(i) = local_reduce_op(inout(i), in(i));
-        end do
-
-        mpi_exec_local_reduce_op = MPI_SUCCESS
-    end function mpi_exec_local_reduce_op
 
 
     ! SUBROUTINE print_particles
