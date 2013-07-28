@@ -3,6 +3,7 @@ module replicated_distribution_type
     use particle_type
     use global_variables
     use mpi
+    use bench_flags
     implicit none
 
     private
@@ -80,16 +81,21 @@ contains
 
         call this%get_chunk_data(this%rank, i_size, i_start, i_end)
 
-        do i=i_start, i_end
-            do j=1, this%num_particles
-                if(i .EQ. j) cycle
+        if(.NOT. disable_calculation) then
+          do i=i_start, i_end
+              do j=1, this%num_particles
+                  if(i .EQ. j) cycle
 
-                tmp_particle = compare_func( &
-                    this%particles(i), this%particles(j) &
-                )
-                this%particles(i) = merge_func(this%particles(i), tmp_particle)
-            end do
-        end do
+                  tmp_particle = compare_func( &
+                      this%particles(i), this%particles(j) &
+                  )
+
+                  this%particles(i) = merge_func( &
+                      this%particles(i), tmp_particle &
+                  )
+              end do
+          end do
+        end if
 
         call this%sync_particles
 
@@ -101,6 +107,8 @@ contains
 
         integer :: i
 
+
+        if(disable_calculation) return
 
         do i=1, this%num_particles
             this%particles(i) = update_func(this%particles(i), i)
@@ -144,7 +152,7 @@ contains
         character(len=*), intent(in) :: string
 
 
-        if(this%rank .EQ. 0) write(*,'(A)') string
+        if(this%rank .EQ. 0) write(*,*) string
     end subroutine print_string
 
 
@@ -160,6 +168,9 @@ contains
         integer :: MPI_particle
 
         integer :: ierror
+
+
+        if(disable_mpi) return
 
 
         call generate_MPI_particle(MPI_particle)

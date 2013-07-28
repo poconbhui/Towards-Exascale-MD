@@ -8,6 +8,7 @@ module systolic_distribution_type
     use particle_type
     use global_variables
     use mpi
+    use bench_flags
     implicit none
 
     private
@@ -151,6 +152,8 @@ contains
                 chunk_size, chunk_start, chunk_end &
             )
 
+            if(disable_calculation) cycle
+
             do i=1, this%num_local_particles
                 do j=1, chunk_size
                     if(pulse .EQ. 0 .AND. i .EQ. j) cycle
@@ -182,6 +185,9 @@ contains
         integer :: chunk_end
 
         integer :: i
+
+
+        if(disable_calculation) return
 
 
         call this%get_chunk_data(this%rank, chunk_size, chunk_start, chunk_end)
@@ -291,10 +297,13 @@ contains
 
         integer :: chunk_size, chunk_start, chunk_end
 
-        integer :: send_request
-        integer :: recv_request
+        integer :: send_rank
+        integer :: recv_rank
 
         integer :: ierror
+
+        
+        if(disable_mpi) return
 
 
         ! All processes send lists of the same size as process 0.
@@ -302,31 +311,22 @@ contains
 
         this%swap_particles = this%foreign_particles
 
+
+        send_rank = mod(this%rank+1, this%nprocs)
+        recv_rank = mod(this%rank-1 + this%nprocs, this%nprocs)
+
+
         ! Swap particles
-        call MPI_Isend( &
-            this%swap_particles, &
-            chunk_size, &
-            this%MPI_particle, &
-            mod(this%rank+1, this%nprocs), 0, &
-            this%comm, &
-            send_request, &
-            ierror &
-        )
-        call MPI_Irecv( &
-            this%foreign_particles, &
-            chunk_size, &
-            this%MPI_particle, &
-            mod(this%rank-1 + this%nprocs, this%nprocs), 0, &
-            this%comm, &
-            recv_request, &
-            ierror &
+        call MPI_Sendrecv( &
+            this%swap_particles, chunk_size, this%MPI_particle, &
+            send_rank, 0, &
+            &
+            this%foreign_particles, chunk_size, this%MPI_particle, &
+            recv_rank, 0, &
+            &
+            this%comm, MPI_STATUS_IGNORE, ierror &
         )
 
-        call MPI_Waitall( &
-            2, (/ send_request, recv_request /), &
-            MPI_STATUSES_IGNORE, &
-            ierror &
-        )
 
         this%current_foreign_rank = mod( &
             this%current_foreign_rank-1 + this%nprocs, this%nprocs &

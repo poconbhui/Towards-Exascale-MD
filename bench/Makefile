@@ -1,7 +1,7 @@
-include ../scripts/Makefile.inc
-
-../src/%.o: ../src/%.f90
+../src/%:
 	make -C ../src $@
+
+include ../scripts/Makefile.inc
 
 
 programs = bench
@@ -12,6 +12,7 @@ bench_suite.mod.o = \
     	../src/abstract_distribution_type.mod.o \
     	../src/integration.mod.o \
     	../src/lj_force.mod.o \
+        ../src/bench_flags.mod.o \
         bench_suite.mod.o
 bench_suite.mod = \
 	../src/global_variables.mod \
@@ -19,6 +20,7 @@ bench_suite.mod = \
     	../src/abstract_distribution_type.mod \
     	../src/integration.mod \
     	../src/lj_force.mod \
+        ../src/bench_flags.mod \
         bench_suite.mod
 
 distribution_type.mod= \

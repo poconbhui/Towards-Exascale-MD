@@ -17,21 +17,6 @@ module bench_suite
     integer, private :: particle_grid_dim
 
 
-    procedure(one_particle_function), pointer &
-        :: bench_integrate_1 => verlet_integrate_pt1
-
-    procedure(one_particle_function), pointer &
-        :: bench_integrate_2 => verlet_integrate_pt2
-
-    procedure(one_particle_function), pointer &
-        :: bench_force_init => lj_init
-
-    procedure(two_particle_function), pointer &
-        :: bench_force_compare => lj_compare
-
-    procedure(two_particle_function), pointer &
-        :: bench_force_merge => lj_merge
-
 
 contains
     function get_time()
@@ -66,6 +51,8 @@ contains
             write(*,*) "num_particles must be a cube."
             call exit(1)
         end if
+
+
     end subroutine bench_suite_init
 
 
@@ -96,6 +83,62 @@ contains
             pos=(particle_grid_pos*system_width), vel=0, force=0, mass=1 &
         )
     end function bench_dist_init
+
+
+    !
+    ! Set procedures
+    !
+
+    PURE function bench_integrate_1(p_i, i)
+        type(particle) :: bench_integrate_1
+
+        type(particle), intent(in) :: p_i
+        integer, intent(in) :: i
+
+
+        bench_integrate_1 = verlet_integrate_pt1(p_i, i)
+    end function bench_integrate_1
+
+    PURE function bench_integrate_2(p_i, i)
+        type(particle) :: bench_integrate_2
+
+        type(particle), intent(in) :: p_i
+        integer, intent(in) :: i
+
+
+        bench_integrate_2 = verlet_integrate_pt2(p_i, i)
+    end function bench_integrate_2
+
+    PURE function bench_force_init(p_i, i)
+        type(particle) :: bench_force_init
+
+        type(particle), intent(in) :: p_i
+        integer, intent(in) :: i
+
+
+        bench_force_init = lj_init(p_i, i)
+    end function bench_force_init
+
+
+    PURE function bench_force_compare(p_i, p_j)
+        type(particle) :: bench_force_compare
+
+        type(particle), intent(in) :: p_i
+        type(particle), intent(in) :: p_j
+
+
+        bench_force_compare = lj_compare(p_i, p_j)
+    end function bench_force_compare
+
+    PURE function bench_force_merge(p_i, p_j)
+        type(particle) :: bench_force_merge
+
+        type(particle), intent(in) :: p_i
+        type(particle), intent(in) :: p_j
+
+
+        bench_force_merge = lj_merge(p_i, p_j)
+    end function bench_force_merge
 
 
     PURE subroutine print_particle(pi, i, string)

@@ -34,12 +34,14 @@ distribution_test.mod = \
 	../src/global_variables.mod \
 	../src/abstract_distribution_type.mod \
 	../src/particle_type.mod \
+        ../src/bench_flags.mod \
 	test_suite.mod \
 	distribution_test.mod
 distribution_test.mod.o = \
         ../src/global_variables.mod.o \
 	../src/abstract_distribution_type.mod.o \
 	../src/particle_type.mod.o \
+        ../src/bench_flags.mod.o \
 	test_suite.mod.o \
 	distribution_test.mod.o
 

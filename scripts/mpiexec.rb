@@ -11,6 +11,7 @@ module MpiExec
     options = args.last.is_a?(Hash) ? args.pop : {}
 
     options[:cores] ||= 1
+    options[:cores] = Integer(options[:cores])
 
     args << options
 
@@ -35,10 +36,10 @@ module MpiExec
     cores_per_node = options[:cores_per_node] || options[:cores]
     cores_per_node = [ hector_max_cores_per_node, options[:cores] ].min
 
-    "aprun -n #{cores} -N #{cores_per_node} #{program}"
+    "time aprun -n #{cores} -N #{cores_per_node} #{program}"
   end
 
   def mpiexec(program, options)
-    "mpiexec -n #{options[:cores]} #{program}"
+    "time mpiexec -n #{options[:cores]} #{program}"
   end
 end

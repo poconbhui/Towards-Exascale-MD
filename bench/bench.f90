@@ -1,6 +1,47 @@
+module bench_types
+    use abstract_distribution_type
+    use bench_suite
+    implicit none
+
+contains
+
+
+    !
+    ! Our benchmarks!
+    !
+    subroutine full_calculation(dist)
+        class(abstract_distribution), intent(inout) :: dist
+
+
+        call dist%individual_operation(bench_integrate_1)
+
+        call dist%individual_operation(bench_force_init)
+        call dist%pair_operation(bench_force_compare, bench_force_merge)
+
+        call dist%individual_operation(bench_integrate_2)
+    end subroutine full_calculation
+
+    subroutine individual_operation(dist)
+        class(abstract_distribution), intent(inout) :: dist
+
+
+        call dist%individual_operation(bench_integrate_1)
+    end subroutine individual_operation
+
+    subroutine pair_operation(dist)
+        class(abstract_distribution), intent(inout) :: dist
+
+
+        call dist%pair_operation(bench_force_compare, bench_force_merge)
+    end subroutine pair_operation
+
+end module bench_types
+
 program bench
     use mpi
     use bench_suite
+    use bench_types
+    use bench_flags
 
     use global_variables
     use particle_type
@@ -34,14 +75,18 @@ program bench
 
     procedure(bench_type_subroutine), pointer :: bench_ptr => null()
     interface bench_type_interface
-        subroutine bench_type_subroutine
+        subroutine bench_type_subroutine(dist)
+            use abstract_distribution_type
+            implicit none
+
+            class(abstract_distribution), intent(inout) :: dist
         end subroutine bench_type_subroutine
     end interface
 
 
     double precision :: start_time, end_time
     real(p) :: dt
-    character(len=100) :: output_string
+    character(len=200) :: output_string
 
     integer :: argc
     character(len=20), dimension(:), allocatable :: argv
@@ -49,6 +94,7 @@ program bench
     integer :: rep
 
     integer :: ierror
+
 
     dt = 0.001
 
@@ -121,27 +167,47 @@ program bench
     !call dist%print_particles(print_particle)
 
 
+    !
+    ! Do one warm up rep, time it, set future rep count based on that.
+    !
+
+    ! Get rid of synchronization fuzz before timing
+    call MPI_Barrier(MPI_COMM_WORLD, ierror)
     start_time = get_time()
-    end_time = start_time
-    rep=0
+    call bench_ptr(dist)
+    end_time = get_time()
 
-    ! Do while we have done fewer than the min reps or we haven't run
-    ! for at least a second
-    do while (rep .LT. num_reps .OR. end_time - start_time .LT. 1)
-        call bench_ptr
-        end_time = get_time()
+    ! Get suggested reps
+    num_reps = max(num_reps, int(1.0/(end_time - start_time)))
 
-        rep = rep+1
+    ! Use num_reps from process 0
+    call MPI_Bcast(num_reps, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierror)
+
+
+    !
+    ! Do actual timing
+    !
+
+    start_time = get_time()
+    do rep=1, num_reps
+        call bench_ptr(dist)
     end do
+    end_time = get_time()
 
 
-    write(output_string, *) "# distrubution_name benchmark_name num_particles num_procs num_reps time"
+    !
+    ! Output data
+    !
+
+    write(output_string, *) "# distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time"
     output_string = adjustl(output_string)
     call dist%print_string(output_string)
 
     write(output_string, *) &
         trim(distribution_name)//" ", trim(benchmark_name)//" ", &
-        num_particles, num_procs, rep, end_time-start_time
+        num_particles, num_procs, &
+        disable_mpi, disable_calculation, &
+        num_reps, end_time-start_time
     call dist%print_string(output_string)
 
 
@@ -149,26 +215,6 @@ program bench
 
 
 contains
-
-    !
-    ! Our benchmarks!
-    !
-    subroutine full_calculation
-        call dist%individual_operation(bench_integrate_1)
-
-        call dist%individual_operation(bench_force_init)
-        call dist%pair_operation(bench_force_compare, bench_force_merge)
-
-        call dist%individual_operation(bench_integrate_2)
-    end subroutine full_calculation
-
-    subroutine individual_operation
-        call dist%individual_operation(bench_integrate_1)
-    end subroutine individual_operation
-
-    subroutine pair_operation
-        call dist%pair_operation(bench_force_compare, bench_force_merge)
-    end subroutine pair_operation
 
 
     !
@@ -199,9 +245,9 @@ contains
             call get_command_argument(i, argv(i))
         end do
 
-        if(argc .NE. 4) then
+        if(argc .NE. 6) then
             write(*,*) &
-                "Usage: ./bench dist_name benchmark_name num_particles num_reps"
+                "Usage: ./bench dist_name benchmark_name num_particles num_reps disable_mpi disable_calculation"
             call exit(1)
         end if
 
@@ -209,6 +255,9 @@ contains
         read(argv(2), *) benchmark_name
         read(argv(3), *) num_particles
         read(argv(4), *) num_reps
+
+        read(argv(5), *) disable_mpi
+        read(argv(6), *) disable_calculation
     end subroutine parse_arguments
 
 

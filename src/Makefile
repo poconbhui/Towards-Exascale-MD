@@ -15,7 +15,7 @@ md: global_variables.mod.o particle_type.mod.o abstract_distribution_type.mod.o 
 particle_type.mod: global_variables.mod
 integration.mod: global_variables.mod particle_type.mod
 
-distribution_type_mod = abstract_distribution_type.mod global_variables.mod particle_type.mod
+distribution_type_mod = abstract_distribution_type.mod global_variables.mod particle_type.mod bench_flags.mod
 abstract_distribution_type.mod: particle_type.mod global_variables.mod
 serial_distribution_type.mod: $(distribution_type_mod)
 replicated_distribution_type.mod: $(distribution_type_mod)

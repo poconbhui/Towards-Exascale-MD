@@ -1,5 +1,5 @@
 Distributions = ["replicated", "systolic"]
-BenchNames = ["full_calculation", "individual_operation", "pair_operation"]
+BenchNames = ["individual_operation", "full_calculation", "pair_operation"]
 MinReps = 5
 
 
@@ -7,14 +7,31 @@ MinReps = 5
 # Run all benches for the given number of particles and cores
 #
 def bench_for(num_particles, core_counts)
-    Distributions.each do |distribution_name|
+    core_counts.each do |num_cores|
         BenchNames.each do |bench_name|
-            core_counts.each do |num_cores|
+            Distributions.each do |distribution_name|
                 bench(
                     distribution_name,
                     bench_name,
                     num_particles,
                     MinReps,
+                    false, false,
+                    num_cores
+                )
+                bench(
+                    distribution_name,
+                    bench_name,
+                    num_particles,
+                    MinReps,
+                    true, false,
+                    num_cores
+                )
+                bench(
+                    distribution_name,
+                    bench_name,
+                    num_particles,
+                    MinReps,
+                    false, true,
                     num_cores
                 )
             end
@@ -30,7 +47,10 @@ def bench_list_for(num_particles)
     {
         "serial" => Proc.new do
             BenchNames.each do |bench_name|
-                bench("serial", bench_name, num_particles, MinReps, 1)
+                bench(
+                  "serial", bench_name, num_particles,
+                  MinReps, false, false, 1
+                )
             end
         end,
 
@@ -40,22 +60,8 @@ def bench_list_for(num_particles)
             bench_for(num_particles, cores)
         end,
 
-        "128-512" => Proc.new do
-            cores = (7..9).map{|i| 2**i} # 128-512 in powers of 2
-            num_particles = 2**12
-
-            bench_for(num_particles, cores)
-        end,
-
-        "1024-8192" => Proc.new do
-            cores = (10..13).map{|i| 2**i} # 1024-8192 in powers of 2
-            num_particles = 2**12
-
-            bench_for(num_particles, cores)
-        end,
-
-        "16384" => Proc.new do
-            cores = (14..14).map{|i| 2**i} # 16384-16384 in powers of 2
+        "128-1024" => Proc.new do
+            cores = (7..10).map{|i| 2**i} # 128-1024 in powers of 2
 
             bench_for(num_particles, cores)
         end
@@ -64,6 +70,7 @@ end
 
 
 Benches = {
+    "2^9"  => bench_list_for(2**9),
     "2^12" => bench_list_for(2**12),
     "2^15" => bench_list_for(2**15),
     "2^18" => bench_list_for(2**18),
