@@ -1,0 +1,5 @@
+# In this directory, .plt.gnu files are being generated
+
+*.plt.gnu
+*.plt.eps
+*.plt.tex
