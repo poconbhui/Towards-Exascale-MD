@@ -29,18 +29,98 @@ a mapping from fully reduced values back onto the particles.
 This allows us to gracefully handle arbitrary user defined operations while
 leaving us free to change our underlying distribution and operations
 at will.
+
 %
-It also suggests a minimum number of operations we must implement,
+%Q: What does an implementation look like?
+Our approach suggests a minimum number of operations we must implement,
 namely individual particle operations and particle list comparison
 operations.
 %
+\begin{description}[style=nextline]
+\item[individual\_operation]
+    This method will accept a function defining a mapping from
+    particles to particles.
+    This will replace each particle in the list with it's mapped
+    particle.
+
+    An example serial implementation is in
+    \LST{lst:serial_individual_operation_implementation}.
+
+    \begin{lstlisting}[
+        caption=Serial individual\_operation implementation.,
+        label=lst:serial_individual_operation_implementation,
+        gobble=8
+    ]
+        subroutine individual_operation(f)
+            ...
+            do i=1, num_particles
+                particles(i) = f(particles(i), i)
+            end do
+        end subroutine individual_operation
+    \end{lstlisting}
+    
+    This will be useful for initialising particle distributions
+    and performing integration steps.
+
+\item[pair\_operation]
+    This method will accept a function defining a mapping from two
+    particles to a value, a predefined reduction operation, and
+    a mapping from a particle and a value a new particle.
+
+    An example serial implementation is in
+    \LST{lst:serial_pair_operation_implementation}.
+
+    \begin{lstlisting}[
+        caption=Serial pair\_operation implementation.,
+        label=lst:serial_pair_operation_implementation,
+        gobble=8
+    ]
+        subroutine pair_operation(                     &
+            pair_to_value, particle_value_to_particle, &
+            reduction_type                             &
+        )
+            ...
+            do i=1, num_particles
+                value = reduction_identity(reduction_type)
+
+                do j=1, num_particles
+                    tmp_value = pair_to_value(     &
+                        particles(i), particles(j) &
+                    )
+
+                    value = reduce(       &
+                        value, tmp_value, &
+                        reduction_type    & 
+                    )
+                end do
+
+                particles(i) = particle_value_to_particle( &
+                    particles(i), value
+                )
+            end do
+        end subroutine pair_operation
+    \end{lstlisting}
+\end  {description}
+
+As can be seen, we have taken several design choices which limit how
+general the user defined operations can be.
+%
+This is primarily due to language restrictions.
+%
+However, as we are focusing primarily on implementing
+the \velocityverlet{} algorithm, this is not a major concern for us.
+
 We further provide an interface for printing information on the particles
 out to disk.
 %
 We are not particularly concerned with IO efficiency in this dissertation,
 so we simply print out to the screen.
 %
-An example of this is in \LST{lst:distribution_operation}.
+This is noted for completeness, and implementations for specific distributions
+will not be documented.
+
+An example of an MD simulation using this model is provided in
+\LST{lst:distribution_operation}.
 
 \begin{lstlisting}[
     caption=An example MD simulation,
@@ -54,7 +134,7 @@ program MD
     call dist%individual_operation(init_particles)
 
     do while(time < end_time)
-        ! Perform first half of Velocity Verlet scheme
+        ! Perform first half of velocity Verlet scheme
         call dist%individual_operation(VV_scheme_part_1)
 
         ! Find forces between particles due to
@@ -63,7 +143,7 @@ program MD
             map_force, unmap_force, dist%sum &
         )
 
-        ! Perform second half of Velocity Verlet scheme
+        ! Perform second half of velocity Verlet scheme
         call dist%individual_operation(VV_scheme_part_2)
 
         ! Step time forward
@@ -74,7 +154,7 @@ program MD
     call dist%print_particles(particle_to_string)
 
 contains
-    ! An overly simplistic initialization scheme
+    ! An overly simplistic initialisation scheme
     PURE function init_particles(particle_i, i)
         ...
         init_particles = Particle(        &
@@ -116,11 +196,9 @@ end program MD
 
 %
 %Q: What should we be measuring?
-In an MD simulation, the time for a single step is strongly dependent
-on the number of particles present.
-%
-It is also dependent on the number of parallel processes the simulation
-is running on.
+In a parallel MD simulation, the time for a single step is strongly dependent
+on both the number of particles present and
+the number of parallel processes the simulation is running on.
 %
 This suggests a 2D space over which we might evaluate performance.
 
@@ -131,43 +209,35 @@ systems, we are not so interested in evaluating just how large we can
 make our simulations.
 %
 As such, we choose several fixed system sizes to test, namely
-$10^4$, $10^5$, $10^6$ and $10^7$
-particles.
+$2^{9} = 512$, $2^{12} = 4096$, $2^{15} = 32768$ particles.
 %
-The primary reason for omitting $10^8$ particles and above is that the time to
-solution unfeasibly high to test for this paper and with the resources
-at our disposal.
-
-Given these system sizes, we have 4 systems on which to plot time to solution
-versus number of processes.
+These are chosen mainly so we can study effects when the number of cores
+used are small compared to the system, large compared to the system
+and comparable to the system.
 %
-As we are performing this study with many-core systems in mind,
-we are less interested in speedup than overall time to solution.
+The minimum system size was chosen to reflect a number of cores
+exceeding the number of cores on a single \hector{} node and yet well
+below the total number of cores on the machine.
 %
-With this focus, we will simply measure time versus processes for these
-systems and pick out the fastest time to solution.
-%
-This time will then be used to measure how our time scales with
-our system size.
+The maximum system size was chosen both for time to completion for
+a single repetition, and for it's large size compared to the number of
+cores on a \hector{} node.
 
 %
 %Q: How will we measure these?
-We use a very simple model of MD to distill the very fundamental calculation
+We use a very simple model of MD to distil the fundamental calculation
 with our implementation.
 %
 Specifically, our simulation will perform a loop consisting of two
 individual operations over our particles representing the first
-and second halves of the velocity Verlet integration scheme and one
+and second halves of the \velocityverlet{} integration scheme and one
 pair operation representing the force evaluation section of the scheme.
 %
 The loop will be run several times to extract some statistical significance
 from our timings.
 %
-In particular, for quick loops, they will be repeated until the overall
-time is comparable to 1 second.
-%
-Longer loops will be cut short if evaluation would take a long time and omitted
-from the results, however, we will aim to gather at least 10 iterations.
+In particular, loops will be repeated until at least 5 iterations
+have been performed and the overall time is comparable to 1 second.
 
 %
 %Q: Will we measure IO?
@@ -181,7 +251,7 @@ We implement I/O primarily for testing purposes.
 
 %
 %Q: How accurate will the benchmarked simulations be?
-We make no pretense of performing accurate simulations in our benchmarks,
+We make no pretence of performing accurate simulations in our benchmarks,
 so the entire step of allowing the system to come to
 thermal equilibrium will be ignored.
 %
@@ -196,242 +266,3 @@ performed.
 It will, however, be considered when testing our software so we are
 certain our code is at least doing the work of a realistic simulation.
 
-
-
-\subsection{Implementation}
-
-%
-%Q: What does an implementation look like?
-Here we outline how our two parallel schemes are implemented.
-%
-Each scheme will inherit from a base distribution type and
-implement the methods
-``individual\_operation'',
-``pair\_operation'',
-``print\_particles'' and
-``print\_string''.
-%
-\begin{description}[style=nextline]
-\item[individual\_operation]
-    This method will accept a function defining a mapping from
-    particles to particles.
-    This will replace each particle in the list with it's mapped
-    particle.
-
-    An example serial implementation is in
-    \LST{lst:serial_individual_operation_implementation}.
-
-    \begin{lstlisting}[
-        caption=Serial individual\_operation implementation.,
-        label=lst:serial_individual_operation_implementation,
-        gobble=8
-    ]
-        subroutine individual_operation(f)
-            ...
-            do i=1, num_particles
-                particles(i) = f(particles(i), i)
-            end do
-        end subroutine individual_operation
-    \end{lstlisting}
-    
-    This will be useful for initializing particle distributions
-    and performing integration steps.
-
-\item[pair\_operation]
-    This method will accept a function defining a mapping from two
-    particles to a value, a predefined reduction operation, and
-    a mapping from a particle and a value a new particle.
-
-    An example serial implementation is in
-    \LST{lst:serial_pair_operation_implementation}.
-
-\begin{lstlisting}[
-    caption=Serial pair\_operation implementation.,
-    label=lst:serial_pair_operation_implementation
-]
-subroutine pair_operation(                     &
-    pair_to_value, particle_value_to_particle, &
-    reduction_type                             &
-)
-    ...
-    do i=1, num_particles
-        value = reduction_identity(reduction)
-
-        do j=1, num_particles
-            tmp_value = pair_to_value(     &
-                particles(i), particles(j) &
-            )
-
-            value = reduce(       &
-                value, tmp_value, &
-                reduction_type    & 
-            )
-        end do
-
-        particles(i) = particle_value_to_particle( &
-            particles(i), value
-        )
-    end do
-end subroutine pair_operation
-\end{lstlisting}
-
-\item[print\_particles]
-    This method should accept a function which transforms a particle
-    to a string. It will use this to output a string generated by
-    each particle to the screen.
-
-    An example serial implementation is in
-    \LST{lst:serial_print_particles_implementation}
-
-    \begin{lstlisting}[
-        caption=Serial print\_particles implementation.,
-        label=lst:serial_print_particles_implementation,
-        gobble=8
-    ]
-        subroutine print_particles(particle_to_string)
-            ...
-            do i=1, num_particles
-                call particle_to_string(           &
-                    particles(i), i, output_string &
-                )
-
-                write(*,*) output_string
-            end do
-        end subroutine print_particles
-    \end{lstlisting}
-
-\item[print\_string]
-    This method simply accepts a string and prints it to the screen.
-
-    For completeness, an example is in
-    \LST{lst:serial_print_string_implementation}
-
-    \begin{lstlisting}[
-        caption=Serial print\_string implementation.,
-        label=lst:serial_print_string_implementation,
-        gobble=8
-    ]
-        subroutine print_string(string)
-            write(*,*) string
-        end subroutine print_string
-    \end{lstlisting}
-
-    This method is implemented primarily because we want to completely
-    abstract the underlying parallelism from the user code.
-\end  {description}
-
-As can be seen, we have taken several design choices which limit how
-general the user defined operations can be.
-%
-This is primarily due to language restrictions.
-%
-However, as we are focusing primarily on implementing the velocity
-Verlet algorithm, this is not a major concern for us.
-
-We require that all parallel implementations are functionally equivalent
-to the above codes.
-%
-This allows us to easily implement tests.
-%
-We simply implement tests for the serial implementation involving
-performing transformations on the code and outputting the data to disk
-and then analysing this output.
-
-Further, it discourages us from making optimizations that make
-assumptions about our MD algorithm.
-%
-We must focus solely upon parallel list comparison and updates.
-
-
-\subsection{Initial Implementations}
-
-Both the replicated data and systolic loop schemes were initially implemented
-using MPI for parallelism.
-
-
-\subsubsection{Replicated Data}
-
-The replicated data scheme is initialized by allocating a list the
-size of the whole system on every process.
-
-\begin{description}[style=nextline]
-\item[individual\_operation]
-    Individual operations are performed by having each process update
-    its entire local list.
-
-    This approach should take $\bigO{N}$ time.
-
-\item[pair\_operation]
-    We parallelize the outer loop across the processes.
-    After the loop, we synchronize the updated list across processes.
-    This was implemented with a simple MPI\_Bcast to synchronize
-    the lists in sections, which is done in a loop over the number
-    of processes.
-
-    It was stated before that an update could be performed in
-    $\bigO{N\log{P}}$ time
-    where $N$ is the number of particles and $P$ is the number of
-    processes.
-    This synchronization should take $\bigO{NP}$ time.
-
-    Overall, the implementation should take $\bigO{N^2/P}$ time.
-
-\item[print\_particles]
-    This is implemented by simply having the root process perform the
-    print loop using its local list.
-
-\item[print\_string]
-    This is implemented by having the root process print the given string.
-
-\end  {description}
-
-
-
-\subsubsection{Systolic Loop}
-
-The systolic loop scheme is initialized by allocating 3 arrays of
-size $N/P$ on every process.
-
-\begin{description}[style=nextline]
-\item[individual\_operation]
-    This is implemented by having each process update its local list
-    of particles.
-
-    This should take $\bigO{N/P}$ time.
-
-\item[pair\_operation]
-    This is implemented by having each process use three lists of particles.
-
-    The first list is the processes local list of particles.
-
-    The second list will be referred to as the foreign list, and
-    represents a list originating from another process.
-
-    The third list is a swap list to allow a process to receive a new
-    foreign list list from the right
-    while also sending its old foreign list to the left
-    during a systolic pulse.
-
-    Initially, a process will copy its local list to the foreign list
-    and perform a partial force update on its local list using this
-    foreign list.
-    The system will then perform a systolic pulse.
-    After a systolic pulse, every foreign list should move one process
-    to the left in the systolic loop.
-    This is performed by copying the old foreign list into the
-    swap list, and sending the swap list to the left process while
-    receiving from the right process into the foreign list.
-    When a new foreign list is received, another partial force update
-    is performed on the local list.
-    This process is repeated $P-1$ times.
-
-    This approach should take $\bigO{N^2/P}$ time.
-
-\item[print\_particles]
-    This is implemented by having every process print its local
-    list of particles in turn.
-
-\item[print\_string]
-    This is implemented by having the root process print the string.
-
-\end  {description}

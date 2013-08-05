@@ -21,11 +21,11 @@ genetic engineering.
 %
 %Q: What modelling methods are there?
 There are many tools to study these systems,
-from molecular modeling by solving energy minimization problems,
+from molecular modelling by solving energy minimisation problems,
 to molecular dynamics by integrating equations of motion.
 %
 Each of these tools is useful for
-deriving some information on the system being modeled and
+deriving some information on the system being modelled and
 each has their difficulties and limitations.
 %
 Here, we are interested primarily in molecular dynamics.
@@ -39,11 +39,11 @@ simulating the time evolution of that system.
 By doing this, it is possible to
 gather spatial and temporal information for the system.
 %
-Compare this to static modeling which may gather only spatial information.
+Compare this to static modelling which may gather only spatial information.
 %
 As the system is allowed to run naturally, rather than being solved,
 MD also avoids the multiple minimum problems
-sometimes present in molecular modeling.
+sometimes present in molecular modelling.
 %
 However, it presents significant new problems.
 
@@ -69,7 +69,7 @@ Here, we are interested mainly in the force calculation.
 There are many approaches taken to reduce the time complexity of
 the $\bigO{N^2}$ term.
 %
-This is often done by truncating the effective length of intermolecular
+This is often done by truncating the effective length of inter-molecular
 forces, leading to $\bigO{N}$ algorithms.
 %
 %Q: Why is truncation bad?
@@ -101,11 +101,11 @@ In this dissertation we will
     non-periodic boundary conditions.
 
 \item
-    Study 2 parallelization schemes:
+    Study 2 parallelisation schemes:
     replicated data and the systolic loop.
 
 \item
-    Attempt to optimize these schemes and
+    Attempt to optimise these schemes and
     evaluate their performance by looking at
     strong scaling data on system sizes of
     $10^4$ , $10^5$ , $10^6$ and $10^7$ particles.

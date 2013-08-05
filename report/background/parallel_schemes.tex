@@ -2,12 +2,14 @@
 
 %
 %Q: Can we parallelize the force calculation?
-As discussed, the velocity Verlet scheme immediately provides an algorithm for
+As discussed, the \velocityverlet{} scheme
+immediately provides an algorithm for
 performing MD simulations of long ranged forces in isolated systems.
 %
-The question is, can this be parallelized?
+We would like to explore parallel implementations of this algorithm.
 %
-In this dissertation, we focus on two schemes in particular:
+In this dissertation, we begin by focusing on two particular schemes
+that directly evaluate the \velocityverlet{} algorithm:
 replicated data and systolic loops.
 
 
@@ -43,27 +45,38 @@ As a result, all processes must share their updated particles at
 every time step and receive updated particles from other processes.
 %
 This results in a large amount of communications occurring very frequently,
-with a size growing as $\bigO{N}$ and as $\bigO{\log{P}}$.
+with a size growing as $\bigO{N}$ and as $\bigO{\log{P}}$,
+yielding a communication time of $\bigO{N \log{P}}$.
 
 Further problems arising from this algorithm is that every process has
 an individual copy of the system.
 %
-For very large systems, this can stretch the memory of the system
-it is running on.
+For large systems running on a large number of cores,
+this can stretch the memory of the machine it is running on.
 %
 Imagining a system of particles where each particle contains double
 precision floating point (8~B) data for position, velocity, force and mass,
 amounting to 80~B per particle, a 32~GB system could hold around $10^8$
 particles.
 %
-However, if the system has around 10 cores, with the replicated scheme,
-it can now hold a maximum of around $10^7$ particles as each core will
-be holding a full system.
+However, if the system has around 10 cores per 32~GB of memory,
+with the replicated scheme,
+it can now hold a maximum of around $10^7$ particles
+as each core will be holding a full system.
 %
-Further, we encounter the problem that all processes must communicate
+Essentially, the maximum size of the system becomes inversely proportional
+to the number of cores used per GB of memory.
+%
+This increased use of memory can cause other issues such as poor caching
+due to the increased memory use.
+
+We further encounter the problem that all processes must communicate
 with every other process at every time step.
 %
-This puts global synchronization points into the simulation.
+This puts global synchronisation points into the simulation.
+%
+Frequent global synchronisation and global data exchange can incur
+significant overhead for the calculation.
 
 %
 %Q: Why are the scaling challenges of replicated data concerning for exascale?
@@ -71,12 +84,12 @@ These drawbacks are particularly important when considering exascale systems
 where we expect large numbers of cores per node.
 %
 As we expect memory per node to grow at a much lower rate, a replicated data
-scheme may have difficulties utilizing every core on a node.
+scheme may have difficulties utilising every core on a node.
 %
 Indeed, even in current systems, nodes are often requested and only a
 subset of cores used due to memory per core considerations in applications.
 %
-Even if all the cores in the node are utilized, global synchronization
+Even if all the cores in the node are utilised, global synchronisation
 points do not scale well to large numbers of processes.
 
 
@@ -132,7 +145,7 @@ and sending only $N/P$ particles.
 %
 By this mechanism, we simultaneously reduce the volume of data
 being communicated between every process and
-remove a hard global synchronization
+remove a hard global synchronisation
 when compared to the replicated data scheme.
 %
 However, we must perform $P$ communications.

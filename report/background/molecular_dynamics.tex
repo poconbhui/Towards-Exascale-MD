@@ -27,7 +27,7 @@ a numerical integration scheme.
 The particle distribution and force finding schemes are
 the parts we will be most interested in here.
 %
-In this study, we use the velocity Verlet integration scheme.
+In this study, we use the \velocityverlet{} integration scheme.
 
 
 %
@@ -101,7 +101,7 @@ Systems studied using Van der Waals interactions will have
 potentials that drop to zero at relatively short distances from
 a particle.
 %
-Several intermolecular and intramolecular forces may
+Several inter-molecular and intra-molecular forces may
 calculated in a simulation to more accurately model underlying behaviours.
 
 
@@ -134,10 +134,10 @@ We may then derive the equations of motion
 
 %
 %Q: What is the Velocity Verlet integration scheme?
-The equations of motion may be discretized and solved numerically
+The equations of motion may be discretise and solved numerically
 by using an appropriate integration scheme.
 The integration scheme used in this dissertation is
-the Velocity Verlet scheme
+the \velocityverlet{} scheme
 \begin{align}
 \label{eqn:velocity_verlet_scheme}
     \vec{v}_i(t + \tfrac{1}{2} h) &=
@@ -218,7 +218,7 @@ Typically, $\epsilon$ and $\delta$ are determined for a system by
 fitting them to experimental data.
 %
 %Q: What is the LJ potential useful for?
-The Lennard-Jones is useful for modeling simple particle interactions.
+The Lennard-Jones is useful for modelling simple particle interactions.
 %
 Due to the simplicity of this potential,
 it is well studied and there exists good data on
@@ -226,6 +226,7 @@ reasonable values for $\epsilon$ and $\delta$ for
 different molecular systems.
 %
 \begin{figure}
+    \label{fig:lennard_jones_potential}
     \input{background/lennard_jones_potential.plt}
     \caption{The Lennard-Jones Potential with $\epsilon = 1$ and $\delta = 1$}
 \end  {figure}
@@ -245,7 +246,7 @@ $r_{ij} = |\vec{r}_{ij}|$, $\hat{r}_{ij} = \frac{\vec{r}_{ij}}{r_{ij}}$
     \right]
 \end  {equation}
 which may be used in \EQN{eqn:velocity_verlet_scheme} to describe
-the discretized equations of motion of $N$ bodies interacting under the
+the discretised equations of motion of $N$ bodies interacting under the
 Lennard-Jones potential.
 %
 %Q: How do these equations affect our time to solution?
@@ -278,10 +279,10 @@ Several schemes for tailoring a potential to a cutoff exist, and several
 schemes for limiting calculations performed to ``close'' particles
 exist.
 %
-The Verlet List scheme, for example, involves using some bookkeeping to
+The \verletlist{} scheme, for example, involves using some bookkeeping to
 maintain lists of particles that are within the cutoff.
 %
-Typically, Verlet List implementations scale near $\bigO{N}$ with the
+Typically, \verletlist{} implementations scale near $\bigO{N}$ with the
 number of particles in the simulation, but $\bigO{N^2}$ in memory used.
 %
 Another example is a domain distributed parallel decomposition.
