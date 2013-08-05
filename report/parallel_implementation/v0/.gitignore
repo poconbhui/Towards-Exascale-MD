@@ -3,3 +3,10 @@
 *.plt.gnu
 *.plt.eps
 *.plt.tex
+
+
+# Ignore aggregated data files
+
+*.normal.dat
+*.nompi.dat
+*.onlympi.dat
