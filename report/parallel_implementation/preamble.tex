@@ -1,0 +1,130 @@
+We require that all parallel implementations are functionally equivalent
+to the above codes.
+%
+This allows us to easily implement tests.
+%
+We simply implement tests for the serial implementation involving
+performing transformations on the code and outputting the data to disk
+and then analysing this output.
+
+Further, it discourages us from making optimisations that make
+assumptions about our MD algorithm.
+%
+We must focus solely upon parallel list comparison and updates.
+
+Both the replicated data and systolic loop schemes were initially implemented
+using MPI for parallelism.
+
+
+
+\subsection{Replicated Data}
+
+The replicated data scheme is initialised by allocating a list the
+size of the whole system on every process.
+
+
+\subsubsection{individual\_operation}
+
+Individual operations are performed by having each process update
+its entire local list.
+This approach involves more computation than having each process
+evaluate a subsection of the list and share the result with the
+other processes, but it avoids a global synchronization.
+
+This approach should take $\bigO{N}$ time.
+
+
+
+\subsubsection{pair\_operation}
+
+We parallelise the outer loop across the processes.
+That is, each process is assigned a set of particles for which
+it will determine the forces.
+So, each process should be comparing $N/P$ particles to $N$ other
+particles, suggesting a calculation term of $\bigO{N^2/P}$.
+
+After the loop, we synchronise the updated list across processes.
+This was implemented using an MPI\_Allgatherv, which
+should introduce a communication term of $\bigO{N\log{P}}$.
+
+Overall, this should take $\bigO{N^2/P + lN\log{P}}$ time
+where $N$ is the number of particles,
+$P$ is the number of processes and
+$l$ is a constant.
+
+\begin{figure}
+    \label{fig:v0_replicated_512_logspeedup}
+    \input{parallel_implementation/v0/replicated.pair_operation.512.logspeedup.plt}
+    \caption{Replicated Data pair\_operation Speedup for $N = 512$}
+\end  {figure}
+
+In \FIG{fig:v0_replicated_512_logspeedup}, we see strong scaling results
+for the pair\_operation performed normally begin to drop off as the number
+of processes used is comparable to the number of particles in the system.
+%
+This is consistent with our predictions.
+%
+If $P = N/k$, then our time should be $\bigO{kN + lN\log{kN}}$.
+%
+We see the communication term begins to dominate our time, and
+the system doesn't scale as well.
+
+Similarly, for small $P << N$, we see our calculation term dominating
+and the system appears to scale quite well.
+
+This suggests the primary bottleneck in the replicated data approach
+is in communications.
+
+We expect to see this approach scale relatively well
+with problem size.
+%
+Where a larger system is used, we may use more cores to solve the problem.
+%
+In particular, if there is an optimum $k$ for $P = N/k$, we see that
+if we place no particular importance on core count, the time to solution
+should scale roughly linearly with the problem size.
+
+
+
+
+\subsection{Systolic Loop}
+
+The systolic loop scheme is initialised by allocating 3 arrays of
+size $N/P$ on every process.
+
+\begin{description}[style=nextline]
+\item[individual\_operation]
+    This is implemented by having each process update its local list
+    of particles.
+
+    This should take $\bigO{N/P}$ time.
+
+\item[pair\_operation]
+    This is implemented by having each process use three lists of particles.
+
+    The first list is the processes local list of particles.
+
+    The second list will be referred to as the foreign list, and
+    represents a list originating from another process.
+
+    The third list is a swap list to allow a process to receive a new
+    foreign list list from the right
+    while also sending its old foreign list to the left
+    during a systolic pulse.
+
+    Initially, a process will copy its local list to the foreign list
+    and perform a partial force update on its local list using this
+    foreign list.
+    The system will then perform a systolic pulse.
+    After a systolic pulse, every foreign list should move one process
+    to the left in the systolic loop.
+    This is performed by copying the old foreign list into the
+    swap list, and sending the swap list to the left process while
+    receiving from the right process into the foreign list.
+    When a new foreign list is received, another partial force update
+    is performed on the local list.
+    This process is repeated $P-1$ times.
+
+    This approach should take $\bigO{N^2/P}$ time.
+
+\end  {description}
