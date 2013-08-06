@@ -1,4 +1,8 @@
-pdflatex=./latexmk.pl -pdf -g
+pdflatex=./latexmk.pl -pdf -g \
+    -latexoption=-file-line-error \
+    -latexoption=-halt-on-error \
+    -latexoption=-interaction=nonstopmode
+
 subdirs = introduction background methodology logos
 
 
@@ -16,11 +20,16 @@ methodology.tex = \
 	methodology/methodology.tex \
 	methodology/preamble.tex
 
+parallel_implementation_graphs_sources = \
+    $(wildcard parallel_implementation/v0/*.plt.sh)
+parallel_implementation_graphs = \
+    $(patsubst %.sh, %.tex, $(parallel_implementation_graphs_sources)) \
+    $(patsubst %.sh, %.pdf, $(parallel_implementation_graphs_sources))
 parallel_implementation.tex = \
         parallel_implementation/parallel_implementation.tex \
         parallel_implementation/preamble.tex \
-        parallel_implementation/v0/replicated.individual_operation.512.logspeedup.plt.tex \
-        parallel_implementation/v0/replicated.pair_operation.512.logspeedup.plt.tex
+        \
+        $(parallel_implementation_graphs)
 
 
 report.tex = \
@@ -39,17 +48,18 @@ report.pdf: $(report.tex)
 
 
 # Compile plots into latex includable format
+.PRECIOUS: %.plt.pdf
+
 %.plt.tex: %.plt.pdf %.plt.gnu
+#	# Compile .plt.eps and .plt.tex files
+	gnuplot $*.plt.gnu
+#
 #	# Correct .plt.tex file to allow .plt.pdf file to be referenced as .plt
 	sed -i 's#\\includegraphics{#\\includegraphics[type=pdf,ext=.pdf,read=.pdf]{#' $@
 
 %.plt.eps: %.plt.gnu
 #	# Compile .plt.eps and .plt.tex files
 	gnuplot $*.plt.gnu
-
-%.plt.pdf: %.plt.eps
-#	# Compile .plt.pdf file
-	epstopdf $*.plt.eps
 
 
 # Compile bash plots into gnuplots

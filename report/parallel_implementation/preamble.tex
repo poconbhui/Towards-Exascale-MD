@@ -19,9 +19,16 @@ using MPI for parallelism.
 
 \subsection{Replicated Data}
 
-The replicated data scheme is initialised by allocating a list the
-size of the whole system on every process.
+The replicated scheme allocates a list the size of the entire system
+on each process.
+%
+It uses this list to keep an up-to-date copy of the system on every
+process.
 
+
+%
+% Replicated individual_operation v0
+%
 
 \subsubsection{individual\_operation}
 
@@ -33,38 +40,113 @@ other processes, but it avoids a global synchronization.
 
 This approach should take $\bigO{N}$ time.
 
+\begin{figure}
+    \input{parallel_implementation/v0/replicated.individual_operation.512.time.plt}
+    \caption{Replicated Data individual\_operation Time for $N = 512$}
+    \label{fig:v0_replicated_individual_operation_512_time}
+\end  {figure}
 
+\begin{figure}
+    \input{parallel_implementation/v0/replicated.individual_operation.4096.time.plt}
+    \caption{Replicated Data individual\_operation Time for $N = 4096$}
+    \label{fig:v0_replicated_individual_operation_4096_time}
+\end  {figure}
+
+\begin{figure}
+    \input{parallel_implementation/v0/replicated.individual_operation.32768.time.plt}
+    \caption{Replicated Data individual\_operation Time for $N = 32768$}
+    \label{fig:v0_replicated_individual_operation_32768_time}
+\end  {figure}
+
+It is plain to see from \FIG{fig:v0_replicated_individual_operation_512_time}
+that the time for the individual\_operation doesn't scale with the number
+of cores.
+%
+We see that there is no time devited to MPI operations.
+
+There is an interesting increase of time that occurs at 2 cores and again
+at 8 cores.
+%
+Given that \hector{} has 4 NUMA regions of 8 cores and each of those
+regions is further subdivided into 4 NUMA regions of 2 cores,
+it is likely this is a cause for the jumps at 2 and 8 cores.
+%
+This is particularly noticeable in
+\FIG{fig:v0_replicated_individual_operation_32768_time}
+where the jump occurs at exactly the same core count, but is noticeably larger.
+
+It appears that after the given number of processes, the time remains
+roughly constant.
+%
+This suggests either a latency effect with processes accessing memory
+in other NUMA regionr or a memory bandwith effect.
+%
+Given that the effect scales roughly with the number of particles
+in the system, at fixed core counts, it is most likely due to
+memory bandwidth saturation.
+%
+Indeed, with bandwidth saturated, we would expect data transfer times
+to scale linearly with the amound of data per core being transferred.
+%
+We may suggest that the bandwidth is not saturated in the 2 core NUMA
+region when 1 core is in use, and then that the bandwidth for the 8 core
+NUMA region is not saturated for 7 cores.
+
+We also see that the time to solution scales roughly with the number
+of particles in the system.
+
+We may conclude in this implementation that the time to completion
+is indeed $\bigO{N}$ as previously suggested.
+
+
+%
+% Replicated pair_operation v0
+%
 
 \subsubsection{pair\_operation}
 
-We parallelise the outer loop across the processes.
-That is, each process is assigned a set of particles for which
+Each process is assigned a set of particles for which
 it will determine the forces.
+the number of particles each process is assigned is roughly $N/P$
 So, each process should be comparing $N/P$ particles to $N$ other
 particles, suggesting a calculation term of $\bigO{N^2/P}$.
 
 After the loop, we synchronise the updated list across processes.
 This was implemented using an MPI\_Allgatherv, which
-should introduce a communication term of $\bigO{N\log{P}}$.
+should introduce a communication term of $\bigO{(N + l)\log{P}}$
+where $l$ is a constant latency.
 
-Overall, this should take $\bigO{N^2/P + lN\log{P}}$ time
+Overall, this should take $\bigO{N^2/P + d(N+l)\log{P}}$ time
 where $N$ is the number of particles,
 $P$ is the number of processes and
-$l$ is a constant.
+$d$ is a constant and
+$l$ is a constant latency.
 
 \begin{figure}
-    \label{fig:v0_replicated_512_logspeedup}
-    \input{parallel_implementation/v0/replicated.pair_operation.512.logspeedup.plt}
-    \caption{Replicated Data pair\_operation Speedup for $N = 512$}
+    \input{parallel_implementation/v0/replicated.pair_operation.512.logtime.plt}
+    \caption{Replicated Data pair\_operation Time for $N = 512$}
+    \label{fig:v0_replicated_pair_operation_512_logtime}
 \end  {figure}
 
-In \FIG{fig:v0_replicated_512_logspeedup}, we see strong scaling results
+\begin{figure}
+    \input{parallel_implementation/v0/replicated.pair_operation.4096.logtime.plt}
+    \caption{Replicated Data pair\_operation Time for $N = 4096$}
+    \label{fig:v0_replicated_pair_operation_4096_logtime}
+\end  {figure}
+
+\begin{figure}
+    \input{parallel_implementation/v0/replicated.pair_operation.32768.logtime.plt}
+    \caption{Replicated Data pair\_operation Time for $N = 32768$}
+    \label{fig:v0_replicated_pair_operation_32768_logtime}
+\end  {figure}
+
+In \FIG{fig:v0_replicated_pair_operation_512_logtime}, we see strong scaling results
 for the pair\_operation performed normally begin to drop off as the number
 of processes used is comparable to the number of particles in the system.
 %
 This is consistent with our predictions.
 %
-If $P = N/k$, then our time should be $\bigO{kN + lN\log{kN}}$.
+If $P = N/k$, then our time should be $\bigO{kN + d(N+l)\log{kN}}$.
 %
 We see the communication term begins to dominate our time, and
 the system doesn't scale as well.
@@ -73,7 +155,7 @@ Similarly, for small $P << N$, we see our calculation term dominating
 and the system appears to scale quite well.
 
 This suggests the primary bottleneck in the replicated data approach
-is in communications.
+is in the number of particles communicated.
 
 We expect to see this approach scale relatively well
 with problem size.
@@ -84,6 +166,26 @@ In particular, if there is an optimum $k$ for $P = N/k$, we see that
 if we place no particular importance on core count, the time to solution
 should scale roughly linearly with the problem size.
 
+Indeed, where
+\FIG{fig:v0_replicated_pair_operation_512_logtime}
+and
+\FIG{fig:v0_replicated_pair_operation_4096_logtime}
+begin straying away from time reduction proportional to the core count,
+we see that the minimum execution time of 512 particles is around
+$10^{-4}$ seconds, while fo 4096 particles it is approaching
+$10^{-3}$ seconds.
+%
+It is difficult to tell from
+\FIG{fig:v0_replicated_pair_operation_32768_logtime}
+where exactly the minimum execution time will be, but
+extrapolating the graph with the other two in mind suggests it may
+rest somewhere within $10^{-2}$ seconds.
+
+Thus it appears the minimum execution time for this distribution
+scales linearly with the number of particles for the system sizes tested.
+%
+Indeed, finding an optimim $k$ for $P=N/k$, it appears $k \approx{} 1$
+is sufficient.
 
 
 
@@ -91,40 +193,122 @@ should scale roughly linearly with the problem size.
 
 The systolic loop scheme is initialised by allocating 3 arrays of
 size $N/P$ on every process.
+%
+The system is then split roughly evenly across all the processes
+and is held, updated and shared using these three lists.
 
-\begin{description}[style=nextline]
-\item[individual\_operation]
-    This is implemented by having each process update its local list
-    of particles.
 
-    This should take $\bigO{N/P}$ time.
+%
+% Systolic individual_operation v0
+%
 
-\item[pair\_operation]
-    This is implemented by having each process use three lists of particles.
+\subsubsection{individual\_operation}
+This is implemented by having each process update its local list
+of particles.
 
-    The first list is the processes local list of particles.
+This should take $\bigO{N/P}$ time.
 
-    The second list will be referred to as the foreign list, and
-    represents a list originating from another process.
+\begin{figure}
+    \input{parallel_implementation/v0/systolic.individual_operation.512.logtime.plt}
+    \caption{Systolic Data individual\_operation Time for $N = 512$}
+    \label{fig:v0_systolic_individual_operation_512_logtime}
+\end  {figure}
 
-    The third list is a swap list to allow a process to receive a new
-    foreign list list from the right
-    while also sending its old foreign list to the left
-    during a systolic pulse.
+\begin{figure}
+    \input{parallel_implementation/v0/systolic.individual_operation.4096.logtime.plt}
+    \caption{Systolic Data individual\_operation Time for $N = 4096$}
+    \label{fig:v0_systolic_individual_operation_4096_logtime}
+\end  {figure}
 
-    Initially, a process will copy its local list to the foreign list
-    and perform a partial force update on its local list using this
-    foreign list.
-    The system will then perform a systolic pulse.
-    After a systolic pulse, every foreign list should move one process
-    to the left in the systolic loop.
-    This is performed by copying the old foreign list into the
-    swap list, and sending the swap list to the left process while
-    receiving from the right process into the foreign list.
-    When a new foreign list is received, another partial force update
-    is performed on the local list.
-    This process is repeated $P-1$ times.
+\begin{figure}
+    \input{parallel_implementation/v0/systolic.individual_operation.32768.logtime.plt}
+    \caption{Systolic Data individual\_operation Time for $N = 32768$}
+    \label{fig:v0_systolic_individual_operation_32768_logtime}
+\end  {figure}
 
-    This approach should take $\bigO{N^2/P}$ time.
+As seen in
+\FIG{fig:v0_systolic_individual_operation_512_logtime},
+\FIG{fig:v0_systolic_individual_operation_4096_logtime} and
+\FIG{fig:v0_systolic_individual_operation_512_logtime}
+the current implementation satisfies this.
 
-\end  {description}
+There appear to be a few unexpected data points in the mpi only timings,
+but these are unlikely to be anything except an error.
+%
+As these are approaching nanosecond execution times, it is
+unsurprising that they may pick up unexpected errors as the system clock
+has at most a nanosecond resolution time.
+%
+Given the processor operates on about this time, it is also unsurprising
+if some odd times may be picked up from taking measurements so
+close to this time scale.
+
+
+%
+% Systolic pair_operation v0
+%
+
+\subsubsection{pair\_operation}
+This is implemented by having each process use three lists of particles.
+
+The first list is the processes local list of particles.
+
+The second list will be referred to as the foreign list, and
+represents a list originating from another process.
+
+The third list is a swap list to allow a process to receive a new
+foreign list list from the right
+while also sending its old foreign list to the left
+during a systolic pulse.
+
+Initially, a process will copy its local list to the foreign list
+and perform a partial force update on its local list using this
+foreign list.
+%
+The system will then perform a systolic pulse.
+After a systolic pulse, every foreign list should move one process
+to the left in the systolic loop.
+%
+This is performed by copying the old foreign list into the
+swap list, and sending the swap list to the left process while
+receiving from the right process into the foreign list.
+%
+When a new foreign list is received, another partial force update
+is performed on the local list.
+%
+This process is repeated $P-1$ times.
+
+Each list comparison between systolic pulses should take $\bigO{(N/P)^2}$ time.
+%
+For a given timestep, there should be $P$ of these list comparisons
+performed, giving an over calculation time of $\bigO{N^2/P}$.
+
+Given each pulse should be passing $N/P$ particles between two processes,
+we expect this to take $\bigO{N/P + l}$ time where $l$ is a constant latency.
+%
+With $P$ pulses on each time step, we expect a communication time of
+$\bigO{(N/P + l)P}$.
+
+This approach should take $\bigO{N^2/P + dN + dlP}$ time
+where $N$ is the number of particles in the system,
+$P$ is the number of processes used and
+$l$ is a constant latency and
+$d$ is a constant.
+
+\begin{figure}
+    \input{parallel_implementation/v0/systolic.pair_operation.512.logtime.plt}
+    \caption{Systolic Data pair\_operation Time for $N = 512$}
+    \label{fig:v0_systolic_pair_operation_512_logtime}
+\end  {figure}
+
+\begin{figure}
+    \input{parallel_implementation/v0/systolic.pair_operation.4096.logtime.plt}
+    \caption{Systolic Data pair\_operation Time for $N = 4096$}
+    \label{fig:v0_systolic_pair_operation_4096_logtime}
+\end  {figure}
+
+\begin{figure}
+    \input{parallel_implementation/v0/systolic.pair_operation.32768.logtime.plt}
+    \caption{Systolic Data pair\_operation Time for $N = 32768$}
+    \label{fig:v0_systolic_pair_operation_32768_logtime}
+\end  {figure}
