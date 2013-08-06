@@ -17,12 +17,12 @@ graph_type=${info[3]}
 data_prefix=$distribution_name.$bench_name.$num_particles
 
 #
-# Compile data in $base_dir/$data_prefix
+# Compile data in $base_dir/data
 #
-echo Compiling data in $base_dir/$data_prefix
+echo Compiling data in $base_dir/data
 
 source $base_dir/../compile_data.sh
-compile_data $base_dir/$data_prefix $distribution_name $bench_name $num_particles
+compile_data $base_dir/data $distribution_name $bench_name $num_particles
 
 
 #
@@ -32,6 +32,6 @@ echo Generating $base_dir/$data_prefix.plt.gnu
 
 source $base_dir/../gen_plotfile.sh
 gen_plotfile \
-    $base_dir/$data_prefix/$data_prefix \
+    $base_dir/data/$data_prefix \
     $base_dir/$data_prefix \
     ${info[3]}

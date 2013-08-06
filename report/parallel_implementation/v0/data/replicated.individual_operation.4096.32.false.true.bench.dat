@@ -1,0 +1,3 @@
+# distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time                                                                                              
+ replicated individual_operation  4096,  32,  F,  T,  1048576,  3.57120037078857422E-2                                                                                                                  
+Application 5265229 resources: utime ~2s, stime ~9s
