@@ -21,6 +21,8 @@ function gen_plotfile() {
 
         echo set logscale x 2
 
+        echo set format y \"%.2e\"
+
     } > $output_gnu
 
 
@@ -40,11 +42,11 @@ function gen_plotfile() {
         # Print linear time
         #
         if [ "$graph_type" = "time" ] ; then
-            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"mpi, calculation\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"mpi and calculation\" with lp, \\
 
-            echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"no mpi, calculation\" with lp, \\
+            echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"calculation only\" with lp, \\
 
-            echo \"$data_base.onlympi.dat\" using 1:'($3/$2)' title \"mpi, no calculation\" with lp
+            echo \"$data_base.onlympi.dat\" using 1:'($3/$2)' title \"mpi only\" with lp
         fi
 
 
@@ -55,11 +57,11 @@ function gen_plotfile() {
             # Set log scales on both axes.
             echo set logscale xy 2
 
-            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"mpi, calculation\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"mpi and calculation\" with lp, \\
 
-            echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"no mpi, calculation\" with lp, \\
+            echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"calculation only\" with lp, \\
 
-            echo \"$data_base.onlympi.dat\" using 1:'($3/$2)' title \"mpi, no calculation\" with lp
+            echo \"$data_base.onlympi.dat\" using 1:'($3/$2)' title \"mpi only\" with lp
 
         fi
 
@@ -91,9 +93,9 @@ function gen_plotfile() {
         # Print linear speedup graph
         #
         if [ "$graph_type" = "speedup" ] ; then
-            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"mpi, calculation\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"mpi and calculation\" with lp, \\
 
-            echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"no mpi, calculation\" with lp, \\
+            echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"calculation only\" with lp, \\
 
             echo 'f(x) ti "f(x) = x"'
         fi
@@ -107,9 +109,9 @@ function gen_plotfile() {
             # set logarithmix axes
             echo set logscale xy 2
 
-            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"mpi, calculation\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"mpi and calculation\" with lp, \\
 
-            echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"no mpi, calculation\" with lp, \\
+            echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"calculation only\" with lp, \\
 
             echo 'f(x) ti "f(x) = x"'
         fi
