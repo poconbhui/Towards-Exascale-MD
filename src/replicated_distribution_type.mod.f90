@@ -65,6 +65,15 @@ contains
             this%rank, local_chunk_size, chunk_start, chunk_end &
         )
 
+        !
+        ! Ensure num_particles >= nprocs. If not, die.
+        !
+        if(num_particles .LT. this%nprocs) then
+            ! Write to stderr
+            call this%print_string("ERROR: num_particles > num_procs. Exiting")
+            call MPI_Abort(MPI_COMM_WORLD, 1, ierror)
+        end if
+
         allocate(this%particles(num_particles))
         allocate(this%local_particles(local_chunk_size))
     end subroutine init

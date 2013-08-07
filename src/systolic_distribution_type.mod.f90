@@ -97,24 +97,40 @@ contains
         integer :: ierror
 
 
+        !
         ! Set up MPI variables
+        !
         call MPI_Comm_dup(comm, this%comm, ierror)
         call MPI_Comm_rank(this%comm, this%rank, ierror)
         call MPI_Comm_size(this%comm, this%nprocs, ierror)
+
+        ! Generate MPI derived type for particle
+        call generate_MPI_particle(this%MPI_particle)
+
+
+        !
+        ! Require that num_particles >= nprocs
+        !
+        if(num_particles .LT. this%nprocs) then
+            call this%print_string("ERROR: num_particles < num_procs. Exiting.")
+            call MPI_Abort(MPI_COMM_WORLD, 1, ierror)
+        end if
+
+
+        !
+        ! Generate particle array data
+        !
 
         ! Set particle list sizes
         this%num_particles = num_particles
         call this%get_chunk_data(this%rank, chunk_size, chunk_start, chunk_end)
         this%num_local_particles = chunk_size
 
-        ! Set MPI derived type for particle
-        call generate_MPI_particle(this%MPI_particle)
-
         ! We allocate as many particles as the largest possible chunk
         ! (process 0 should have the largest possible chunk)
         call this%get_chunk_data(0, chunk_size, chunk_start, chunk_end)
 
-        ! Allocate particle arrays
+        ! Do the allocations
         allocate(this%particles(chunk_size))
         allocate(this%foreign_particles(chunk_size))
         allocate(this%swap_particles(chunk_size))
