@@ -14,6 +14,7 @@ background.tex = \
 	background/background.tex \
 	background/molecular_dynamics.tex \
 	background/lennard_jones_potential.plt.tex \
+	background/lennard_jones_potential.plt.pdf \
 	background/parallel_schemes.tex
 
 methodology.tex = \

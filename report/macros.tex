@@ -15,6 +15,9 @@
 \newcommand{\velocityverlet}{velocity Verlet}
 \newcommand{\verletlist}{Verlet list}
 
+\newcommand{\replicateddata}{replicated data}
+\newcommand{\systolicloop}{systolic loop}
+
 \newcommand{\individualoperation}{\texttt{individual\_operation}}
 \newcommand{\pairoperation}{\texttt{pair\_operation}}
 
@@ -32,9 +35,10 @@
     for an MD system of particles of size ${\bf N = {#3}}$.
 }
 
-\newcommand{\vZeroTimeExplanation}[4]{
+\newcommand{\vZeroTimeExplanation}[5]{
     {#1}, {#2} and {#3}
-    show how the execution time of the \hfill {#4} varies with
+    show how the execution time of the {#4} method
+    for the {#5} scheme varies with
     the number of cores used for the simulation
     where $N$, the number of particles in the system, is
     512, 4096 and 32768 respectively.

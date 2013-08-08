@@ -1,10 +1,16 @@
 \subsection{Systolic Loop}
 
-The systolic loop scheme is initialised by allocating 3 arrays of
+The \systolicloop{} scheme, as described in
+\SEC{sec:background:subsec:systolic_loop},
+is initialised by allocating 3 arrays of
 size $N/P$ on every process.
 %
 The system is then split roughly evenly across all the processes
 and is held, updated and shared using these three lists.
+
+In this section, the implementation details and performance of
+of the \individualoperation{} and \pairoperation{} methods
+for the \systolicloop{} scheme using MPI will be analysed and discussed.
 
 
 %
@@ -12,45 +18,69 @@ and is held, updated and shared using these three lists.
 %
 
 \subsubsection{Implementation of the \individualoperation{} Method}
-This is implemented by having each process update its local list
-of particles.
 
-This should take $\bigO{N/P}$ time.
+The \individualoperation{} method, as outlined in
+\SEC{sec:the_individual_operation_method}
+for the \systolicloop{} scheme
+is implemented by having each process update its local list of particles.
+
+As each update is an $\bigO{1}$ operation and there are $N/P$ particles
+to update, and as there are no MPI communications performed,
+this should take a time
+\begin{equation}
+    \frac{N}{P}\bigO{1} = \bigO{\frac{N}{P}}
+\end  {equation}
 
 \begin{figure}[!h]
     \input{parallel_implementation/v0/systolic.individual_operation.512.logtime.plt}
-    \caption{\vZeroTimeCaption{Systolic Loop}{\individualoperation{}}{512}}
+    \caption{\vZeroTimeCaption{\systolicloop{}}{\individualoperation{}}{512}}
     \label{fig:v0_systolic_individual_operation_512_logtime}
 \end  {figure}
 
 \begin{figure}[!h]
     \input{parallel_implementation/v0/systolic.individual_operation.4096.logtime.plt}
-    \caption{\vZeroTimeCaption{Systolic Loop}{\individualoperation{}}{4096}}
+    \caption{\vZeroTimeCaption{\systolicloop{}}{\individualoperation{}}{4096}}
     \label{fig:v0_systolic_individual_operation_4096_logtime}
 \end  {figure}
 
 \begin{figure}[!h]
     \input{parallel_implementation/v0/systolic.individual_operation.32768.logtime.plt}
-    \caption{\vZeroTimeCaption{Systolic Loop}{\individualoperation{}}{32768}}
+    \caption{\vZeroTimeCaption{\systolicloop{}}{\individualoperation{}}{32768}}
     \label{fig:v0_systolic_individual_operation_32768_logtime}
 \end  {figure}
 
-As seen in
+\vZeroTimeExplanation
+    {\FIG{fig:v0_systolic_individual_operation_512_logtime}}
+    {\FIG{fig:v0_systolic_individual_operation_4096_logtime}}
+    {\FIG{fig:v0_systolic_individual_operation_32768_logtime}}
+    {\individualoperation{}}
+    {\systolicloop{}}
+
 \FIG{fig:v0_systolic_individual_operation_512_logtime},
 \FIG{fig:v0_systolic_individual_operation_4096_logtime} and
 \FIG{fig:v0_systolic_individual_operation_32768_logtime}
-the current implementation satisfies this.
+appear to follow $\bigO{N/P}$ scaling.
+%
+Where $P \sim{} N$, the scaling drops off slightly.
+%
+This could be due to the very small amount of work performed
+inside the function call, where function call and loop overheads
+become comparable to the calculation time.
+%
+This is supported by the scaling of each graph tending to drop off
+as execution times reach $\sim{} 10^{-7}$~s.
 
-There appear to be a few unexpected data points in the mpi only timings,
-but these are unlikely to be anything except an error.
+The MPI only scaling times here are unexpectedly nonzero.
 %
-As these are approaching nanosecond execution times, it is
-unsurprising that they may pick up unexpected errors as the system clock
-has at most a nanosecond resolution time.
+As turning calculations or MPI off in our code is implemented in
+the form of global flags and conditional branches, this timing
+could be a result of having to perform a function call and
+evaluate a flag.
 %
-Given the processor operates on about this time, it is also unsurprising
-if some odd times may be picked up from taking measurements so
-close to this time scale.
+As previously suggested, this could have the potential to impact on
+operations occuring at scales of $10^{-7}$~s, so it is plausible
+that these effects may occur around $10^-{8}$~s for a much simplified
+function body.
 
 
 %
@@ -58,78 +88,117 @@ close to this time scale.
 %
 
 \subsubsection{Implementation of the \pairoperation{} Method}
+
+The \pairoperation{} method, as outlined in 
+\SEC{sec:the_pair_operation_method}
+is implemented by arranging the processes in a ring and passing
+packets of particles around the ring while the processes perform
+partial updates to their local particles using these packages.
+
 This is implemented by having each process use three lists of particles,
 each of size $P/N$.
-
+%
 The first list is the processes local list of particles.
-
-The second list will be referred to as the foreign list, and
-represents a list originating from another process.
-
-The third list is a swap list to allow a process to receive a new
-foreign list list from the right
-while also sending its old foreign list to the left
+%
+The second list is to receive a list of particles originating from
+another process.
+%
+The third list is used to send a receive list
+to one process while simultaneously receiving a new
+list of particles from another
 during a systolic pulse.
 
-Initially, a process will copy its local list to the foreign list
-and perform a partial force update on its local list using this
-foreign list.
+When a system performs a systolic pulse,
+every receive list should move one process
+to the ``left'' in the \systolicloop{}.
 %
-The system will then perform a systolic pulse.
-After a systolic pulse, every foreign list should move one process
-to the left in the systolic loop.
+This is performed by copying the old receive list into the
+send list, and using an MPI\_sendrecv to send the send list to
+the ``left'' process while receiving from
+the ``right'' process into the receive list.
+
+The \systolicloop{} is initialised by having each process
+copy its local list to its receive list.
 %
-This is performed by copying the old foreign list into the
-swap list, and using an MPI\_sendrecv to send the swap list to
-the left process while receiving from
-the right process into the foreign list.
+Each process will then perform a partial update using this receive
+list, and then perform a systolic pulse.
 %
 When a new foreign list is received, another partial force update
 is performed on the local list.
 %
-This process is repeated $P-1$ times.
+The system will perform $P-1$ systolic pulses overall, at which point
+each process should have received a list of particles originating
+from each other process exactly once.
 
-Each list comparison between systolic pulses should take $\bigO{(N/P)^2}$ time.
+The size of both the local list and the receive list are $N/P$.
 %
-For a given timestep, there should be $P$ of these list comparisons
-performed, giving an over calculation time of $\bigO{N^2/P}$.
-
-Given each pulse should be passing $N/P$ particles between two processes,
-we expect this to take $\bigO{N/P + l}$ time where $l$ is a constant latency.
+To perform all the partial updates for a one local particle
+using a given receive list should take
+\begin{equation}
+    \frac{N}{P}\bigO{1} = \bigO{\frac{N}{P}}
+\end  {equation}
 %
-With $P$ pulses on each time step, we expect a communication time of
-$\bigO{(N/P + l)P}$.
+Performing $N/P$ partial updates should take a time
+\begin{equation}
+    \frac{N}{P}\bigO{\frac{N}{P}} = \bigO{\left( \frac{N}{P} \right)^2}
+\end  {equation}
+%
+As there are $P-1$ systolic pulses per time step, and including
+the initial comparison, there should be $P$ such partial force updates
+performed, giving an overall calculation time of
+\begin{equation}
+    P\bigO{ \left(\frac{N}{P}\right)^2 } = \bigO{\frac{N^2}{P}}
+\end  {equation}
 
-Combining our calculation and communication terms, the systolic loop approach
-should run in $\bigO{N^2/P + dN + dlP}$ time
-where $N$ is the number of particles in the system,
-$P$ is the number of processes used and
-$l$ is a constant latency and
-$d$ is a constant.
+Given each pulse should be passing $N/P$ particles between two processes
+with a fixed latency $l$, each pulse is expected to take a time
+$\bigO{N/P + l}$.
+%
+With $P$ pulses on each time step, the communication per timestep should be
+\begin{align}
+    P\bigO{N/P + l} &= \bigO{N + lP} \\
+                    &\approx{} \bigO{N + P}
+\end  {align}
+
+Combining the calculation and communication terms, the \systolicloop{} approach
+should run in a time
+\begin{align}
+    \bigO{\frac{N^2}{P}} + \bigO{N + P}
+        &\approx{} \bigO{\frac{N^2}{P} + N + P} \\
+        &\approx{} \bigO{\frac{N^2}{P} + P}
+\end  {align}
+assuming $P \ll{} N^2$, which for this implementation will hold true.
 
 \begin{figure}[!h]
     \input{parallel_implementation/v0/systolic.pair_operation.512.logtime.plt}
-    \caption{\vZeroTimeCaption{Systolic Loop}{\pairoperation{}}{512}}
+    \caption{\vZeroTimeCaption{\systolicloop{}}{\pairoperation{}}{512}}
     \label{fig:v0_systolic_pair_operation_512_logtime}
 \end  {figure}
 
 \begin{figure}[!h]
     \input{parallel_implementation/v0/systolic.pair_operation.4096.logtime.plt}
-    \caption{\vZeroTimeCaption{Systolic Loop}{\pairoperation{}}{4096}}
+    \caption{\vZeroTimeCaption{\systolicloop{}}{\pairoperation{}}{4096}}
     \label{fig:v0_systolic_pair_operation_4096_logtime}
 \end  {figure}
 
 \begin{figure}[!h]
     \input{parallel_implementation/v0/systolic.pair_operation.32768.logtime.plt}
-    \caption{\vZeroTimeCaption{Systolic Loop}{\pairoperation{}}{32768}}
+    \caption{\vZeroTimeCaption{\systolicloop{}}{\pairoperation{}}{32768}}
     \label{fig:v0_systolic_pair_operation_32768_logtime}
 \end  {figure}
+
+\vZeroTimeExplanation
+{\FIG{fig:v0_systolic_pair_operation_512_logtime}}
+{\FIG{fig:v0_systolic_pair_operation_4096_logtime}}
+{\FIG{fig:v0_systolic_pair_operation_32768_logtime}}
+{\pairoperation{}}
+{\systolicloop{}}
 
 We see in 
 \FIG{fig:v0_systolic_pair_operation_512_logtime},
 \FIG{fig:v0_systolic_pair_operation_4096_logtime} and
 \FIG{fig:v0_systolic_pair_operation_32768_logtime}
-that, much like in the replicated case, that the system scales
+that, much like in the \replicateddata{} case, that the system scales
 roughly as $N/P$ when $P \ll{} N$.
 
 With a communication term scaling as $P$, we see the point in which

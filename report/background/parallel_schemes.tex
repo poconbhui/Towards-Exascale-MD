@@ -1,4 +1,7 @@
-\subsection{Parallel Schemes}
+esubsection{Parallel Schemes}
+\FIG{fig:v0_systolic_pair_operation_512_logtime},
+\FIG{fig:v0_systolic_pair_operation_4096_logtime} and
+\FIG{fig:v0_systolic_pair_operation_32768_logtime}
 
 %
 %Q: Can we parallelize the force calculation?
@@ -10,15 +13,16 @@ We would like to explore parallel implementations of this algorithm.
 %
 In this dissertation, we begin by focusing on two particular schemes
 that directly evaluate the \velocityverlet{} algorithm:
-replicated data and systolic loops.
+\replicateddata{} and the \systolicloop{}.
 
 
 
 \subsubsection{Replicated Data}
+\label{sec:background:subsec:replicated_data}
 
 %
 %Q: What is the replicated data scheme?
-In the replicated data scheme,
+In the \replicateddata{} scheme,
 the entire system of particles is replicated across all processors.
 %
 This is useful for the force update, as each particle must have a view of
@@ -83,7 +87,7 @@ significant overhead for the calculation.
 These drawbacks are particularly important when considering exascale systems
 where we expect large numbers of cores per node.
 %
-As we expect memory per node to grow at a much lower rate, a replicated data
+As we expect memory per node to grow at a much lower rate, a \replicateddata{}
 scheme may have difficulties utilising every core on a node.
 %
 Indeed, even in current systems, nodes are often requested and only a
@@ -95,10 +99,11 @@ points do not scale well to large numbers of processes.
 
 
 \subsubsection{Systolic Loop}
+\label{sec:background:subsec:systolic_loop}
 
 %
 %Q: What is the systolic loop scheme?
-In the systolic loop scheme, the system is split up and distributed among
+In the \systolicloop{} scheme, the system is split up and distributed among
 all the processes.
 %
 Force updates are performed by passing list data around a ring in pulses.
@@ -146,7 +151,7 @@ and sending only $N/P$ particles.
 By this mechanism, we simultaneously reduce the volume of data
 being communicated between every process and
 remove a hard global synchronisation
-when compared to the replicated data scheme.
+when compared to the \replicateddata{} scheme.
 %
 However, we must perform $P$ communications.
 
@@ -159,7 +164,7 @@ pulses.
 As communications have a given latency, we would like to reduce the number
 of communications performed.
 %
-In a systolic loop, the number of operations performed reduces with
+In a \systolicloop{}, the number of operations performed reduces with
 the square of the processes, but the communications performed scales linearly.
 %
 As such, we quickly reach a point where latency dominates over computation.
