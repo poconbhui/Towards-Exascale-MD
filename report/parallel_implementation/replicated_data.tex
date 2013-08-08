@@ -1,0 +1,241 @@
+\subsection{Replicated Data}
+
+The replicated scheme allocates a list of particles the size of
+the entire MD system of particles
+on each process.
+%
+It uses this list to keep an up-to-date copy of the system of particles
+on every process.
+
+In this section, the implementation details and performance of
+of the \individualoperation{} and \pairoperation{} methods
+for the replicated data scheme using only MPI will be analysed and discussed.
+
+
+%
+% Replicated individual_operation v0
+%
+
+\subsubsection{Implementation of the \individualoperation{} Method}
+
+The \individualoperation{} method as outlined in
+\SEC{sec:the_individual_operation_method}
+is implemented by having each process update its entire local list.
+%
+As such, it closely resembles the example serial implementation.
+%
+This approach involves more computation than having each process
+evaluate a subsection of the list and share the result with the
+other processes, but it avoids a global synchronization.
+%
+As each process performs an $\bigO{1}$ operation on $N$ particles with
+no communications,
+this implementation is expected to take a time
+\begin{equation}
+\label{eqn:v0_replicated_individual_operation_overall_time}
+    N\bigO{1} = \bigO{N}
+\end  {equation}
+
+\newcommand{\vZeroTimeCaption}[3]{
+    {\bf Time vs. Cores} for the {\bf #1} implementation of the
+    {\bf #2} method for the total execution time (red),
+    calculation execution time without MPI (green) and
+    MPI execution time without calculations (blue)
+    for an MD system of particles of size ${\bf N = {#3}}$.
+}
+
+\begin{figure}[!h]
+    \input{parallel_implementation/v0/replicated.individual_operation.512.time.plt}
+    \caption{\vZeroTimeCaption{Replicated Data}{\individualoperation{}}{512}}
+    \label{fig:v0_replicated_individual_operation_512_time}
+\end  {figure}
+
+\begin{figure}[!h]
+    \input{parallel_implementation/v0/replicated.individual_operation.4096.time.plt}
+    \caption{\vZeroTimeCaption{Replicated Data}{\individualoperation{}}{4096}}
+    \label{fig:v0_replicated_individual_operation_4096_time}
+\end  {figure}
+
+\begin{figure}[!h]
+    \input{parallel_implementation/v0/replicated.individual_operation.32768.time.plt}
+    \caption{\vZeroTimeCaption{Replicated Data}{\individualoperation{}}{32768}}
+    \label{fig:v0_replicated_individual_operation_32768_time}
+\end  {figure}
+
+\newcommand{\vZeroTimeExplanation}[4]{
+    {#1}, {#2} and {#3}
+    show how the execution time of the \hfill {#4} varies with
+    the number of cores used for the simulation
+    where $N$, the number of particles in the system, is
+    512, 4096 and 32768 respectively.
+    They present the cases where
+    both MPI and calculations are performed (red)
+        representing the total execution time;
+    calculations are performed without MPI (green)
+        representing the execution time of the simulation
+        without communication effects; and
+    MPI is performed without calculations (blue)
+        representing the time taken up solely by the communications.
+}
+
+\vZeroTimeExplanation
+    { \FIG{fig:v0_replicated_individual_operation_512_time} }
+    { \FIG{fig:v0_replicated_individual_operation_4096_time} }
+    { \FIG{fig:v0_replicated_individual_operation_32768_time} }
+    { \individualoperation{} }
+
+From these, it is clear that
+the time for the \individualoperation{} doesn't scale with the number
+of cores and that MPI takes up no time as this method uses no MPI calls.
+
+There is an interesting increase of time that occurs at 2 cores and again
+at 8 cores.
+%
+Given that \hector{} has 4 NUMA regions of 8 cores and each of those
+regions is further subdivided into 4 NUMA regions of 2 cores,
+it is likely this is a cause for the jumps at 2 and 8 cores.
+%
+This is particularly noticeable in
+\FIG{fig:v0_replicated_individual_operation_32768_time}
+where the jump occurs at exactly the same core count, but is noticeably larger.
+
+The jumps occur at the same numbers of processes in
+\FIG{fig:v0_replicated_individual_operation_512_time},
+\FIG{fig:v0_replicated_individual_operation_4096_time} and
+\FIG{fig:v0_replicated_individual_operation_32768_time}
+and after 8 processes, the time remains roughly constant.
+%
+This suggests either a latency effect with processes accessing memory
+in other NUMA regions or a memory bandwith effect.
+%
+Given that the effect scales roughly with the number of particles
+in the system, at fixed core counts, it is most likely due to
+memory bandwidth saturation.
+%
+If bandwidth saturated, it is expected that the time taken for
+data transfer would
+scale linearly with the size of the data per core being transferred.
+%
+Therefore, it is likely that the bandwidth is not saturated in the 2 core NUMA
+region when only 1 core is in use, and
+similarly that the bandwidth for the 8 core NUMA region is not saturated
+when only 7 cores are in use.
+
+Above 8 cores, the overall execution time for
+the \individualoperation{} method for the Replicated Data implementation
+appears to scale as $\bigO{N}$
+as predicted in \EQN{eqn:v0_replicated_individual_operation_overall_time}.
+
+
+%
+% Replicated pair_operation v0
+%
+
+\subsubsection{Implementation of the \pairoperation{} Method}
+
+The \pairoperation{} method as outlined in
+\SEC{sec:the_pair_operation_method}
+is implemented by having each process evaluating the pair
+comparisons for a subset of the particles and sharing the
+results with the other processes.
+
+Each process is designated a subset of the list of particles for which
+it will evaluate the results of the comparison and reduction.
+%
+This looks similar to parallelising the outer loop of the example
+serial implementation.
+%
+The number of particles each process is assigned is roughly $N/P$.
+%
+Each of these $N/P$ particles are compared to $N$ other particles
+using an $\bigO{1}$ operation.
+%
+The time for one of the $N/P$ particles to be updated is
+\begin{equation}
+    N\bigO{1} = \bigO{N}
+\end  {equation}
+and so, the time for all $N/P$ particles to be updated is
+\begin{equation}
+    \frac{N}{P}\bigO{N} = \bigO{\frac{N^2}{P}}
+\end  {equation}
+As such, a calculation term of $\bigO{N^2/P}$ is expected.
+
+After the each process finishes updating it's section of the list,
+the updated sections of lists are shared across processes using
+an MPI\_Allgatherv.
+This introduces a communication term of $\bigO{(N + l)\log{P}}$
+where $l$ represents a constant latency.
+
+The overall execution time of this method should therefore be
+\begin{align}
+    \bigO{\frac{N^2}{P}} + \bigO{(N+l)\log{P}}
+        &\approx{} \bigO{\frac{N^2}{P} + (N+l)\log{P}} \\
+        &\approx{} \bigO{\frac{N^2}{P} + (N+l)\log{P}} \\
+        &\approx{} \bigO{\frac{N^2}{P} + N\log{P} + \log{P}} \\
+        \label{eqn:v0_replicated_pair_operation_overall_time}
+        &\approx{} \bigO{\frac{N^2}{P} + N\log{P}}
+\end  {align}
+
+\begin{figure}[!h]
+    \input{parallel_implementation/v0/replicated.pair_operation.512.logtime.plt}
+    \caption{\vZeroTimeCaption{Replicated Data}{\pairoperation{}}{512}}
+    \label{fig:v0_replicated_pair_operation_512_logtime}
+\end  {figure}
+
+\begin{figure}[!h]
+    \input{parallel_implementation/v0/replicated.pair_operation.4096.logtime.plt}
+    \caption{\vZeroTimeCaption{Replicated Data}{\pairoperation{}}{4096}}
+    \label{fig:v0_replicated_pair_operation_4096_logtime}
+\end  {figure}
+
+\begin{figure}[!h]
+    \input{parallel_implementation/v0/replicated.pair_operation.32768.logtime.plt}
+    \caption{\vZeroTimeCaption{Replicated Data}{\pairoperation{}}{32768}}
+    \label{fig:v0_replicated_pair_operation_32768_logtime}
+\end  {figure}
+
+\vZeroTimeExplanation
+    { \FIG{fig:v0_replicated_pair_operation_512_logtime} }
+    { \FIG{fig:v0_replicated_pair_operation_4096_logtime} }
+    { \FIG{fig:v0_replicated_pair_operation_32768_logtime} }
+    { \pairoperation{} }
+
+In \FIG{fig:v0_replicated_pair_operation_512_logtime},
+\FIG{fig:v0_replicated_pair_operation_4096_logtime} and
+\FIG{fig:v0_replicated_pair_operation_32768_logtime},
+it is apparent that scaling begins to drop off as the number
+of processes used is comparable to the number of particles in the system.
+%
+From \EQN{eqn:v0_replicated_pair_operation_overall_time} when $P \ll{} N$
+\begin{equation}
+    \bigO{\frac{N^2}{P} + N\log{P}} \sim{} \bigO{\frac{N^2}{P}}
+\end  {equation}
+suggesting good scaling in this regime.
+%
+Similarly when $P \sim{} N$
+or $P > N$
+\begin{align}
+    \bigO{\frac{N^2}{P} + N\log{P}}
+        &\sim{} \bigO{N + N\log{P}} \\
+        &\sim{} \bigO{N\log{P}}
+\end  {align}
+%
+suggesting the communication term eventually dominating and
+the overall time increasing as a function of $P$.
+
+Indeed, examining where
+\FIG{fig:v0_replicated_pair_operation_512_logtime},
+\FIG{fig:v0_replicated_pair_operation_4096_logtime},
+\FIG{fig:v0_replicated_pair_operation_32768_logtime} and
+begin straying away from linear scaling,
+it can be seen that the minimum execution time
+of 512 particles is approximately $10^{-4}$ seconds,
+of 4096 particles is approximately $10^{-3}$ seconds and
+of 32768 particles is approximately $10^{-2}$ seconds.
+%
+Thus as scaling begins dropping off at $P = N$,
+the minimum execution time for this distribution,
+for the system sizes tested,
+scales as $N\log{N}$
+where $N$ is the number of particles in the system.
+

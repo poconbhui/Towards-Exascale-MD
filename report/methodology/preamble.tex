@@ -3,6 +3,7 @@ the replicated data and systolic loop MD codes
 along with our methods for extracting performance data from our codes.
 
 \subsection{Implementation}
+\label{sec:methodology:subsec:implementation}
 
 The code is implemented in Fortran.
 %
@@ -35,72 +36,77 @@ at will.
 Our approach suggests a minimum number of operations we must implement,
 namely individual particle operations and particle list comparison
 operations.
-%
-\begin{description}[style=nextline]
-\item[individual\_operation]
-    This method will accept a function defining a mapping from
-    particles to particles.
-    This will replace each particle in the list with it's mapped
-    particle.
 
-    An example serial implementation is in
-    \LST{lst:serial_individual_operation_implementation}.
 
-    \begin{lstlisting}[
-        caption=Serial individual\_operation implementation.,
-        label=lst:serial_individual_operation_implementation,
-        gobble=8
-    ]
-        subroutine individual_operation(f)
-            ...
-            do i=1, num_particles
-                particles(i) = f(particles(i), i)
-            end do
-        end subroutine individual_operation
-    \end{lstlisting}
-    
-    This will be useful for initialising particle distributions
-    and performing integration steps.
+\subsubsection{The \individualoperation{} Method}
+\label{sec:the_individual_operation_method}
 
-\item[pair\_operation]
-    This method will accept a function defining a mapping from two
-    particles to a value, a predefined reduction operation, and
-    a mapping from a particle and a value a new particle.
+This method will accept a function defining a mapping from
+particles to particles.
+This will replace each particle in the list with it's mapped
+particle.
 
-    An example serial implementation is in
-    \LST{lst:serial_pair_operation_implementation}.
+An example serial implementation is in
+\LST{lst:serial_individual_operation_implementation}.
 
-    \begin{lstlisting}[
-        caption=Serial pair\_operation implementation.,
-        label=lst:serial_pair_operation_implementation,
-        gobble=8
-    ]
-        subroutine pair_operation(                     &
-            pair_to_value, particle_value_to_particle, &
-            reduction_type                             &
-        )
-            ...
-            do i=1, num_particles
-                value = reduction_identity(reduction_type)
+\begin{lstlisting}[
+    caption=Serial \individualoperation{} implementation.,
+    label=lst:serial_individual_operation_implementation,
+    gobble=4
+]
+    subroutine individual_operation(f)
+        ...
+        do i=1, num_particles
+            particles(i) = f(particles(i), i)
+        end do
+    end subroutine individual_operation
+\end{lstlisting}
 
-                do j=1, num_particles
-                    tmp_value = pair_to_value(     &
-                        particles(i), particles(j) &
-                    )
+This will be useful for initialising particle distributions
+and performing integration steps.
 
-                    value = reduce(       &
-                        value, tmp_value, &
-                        reduction_type    & 
-                    )
-                end do
 
-                particles(i) = particle_value_to_particle( &
-                    particles(i), value
+\subsubsection{The \pairoperation{} Method}
+\label{sec:the_pair_operation_method}
+
+This method will accept a function defining a mapping from two
+particles to a value, a predefined reduction operation, and
+a mapping from a particle and a value a new particle.
+
+An example serial implementation is in
+\LST{lst:serial_pair_operation_implementation}.
+
+\begin{lstlisting}[
+    caption=Serial \pairoperation{} implementation.,
+    label=lst:serial_pair_operation_implementation,
+    gobble=4
+]
+    subroutine pair_operation(                     &
+        pair_to_value, particle_value_to_particle, &
+        reduction_type                             &
+    )
+        ...
+
+        do i=1, num_particles
+            value = reduction_identity(reduction_type)
+
+            do j=1, num_particles
+                tmp_value = pair_to_value(     &
+                    particles(i), particles(j) &
+                )
+
+                value = reduce(       &
+                    value, tmp_value, &
+                    reduction_type    & 
                 )
             end do
-        end subroutine pair_operation
-    \end{lstlisting}
-\end  {description}
+
+            particles(i) = particle_value_to_particle( &
+                particles(i), value
+            )
+        end do
+    end subroutine pair_operation
+\end{lstlisting}
 
 As can be seen, we have taken several design choices which limit how
 general the user defined operations can be.
@@ -109,6 +115,9 @@ This is primarily due to language restrictions.
 %
 However, as we are focusing primarily on implementing
 the \velocityverlet{} algorithm, this is not a major concern for us.
+
+
+\subsubsection{Errata and an Example}
 
 We further provide an interface for printing information on the particles
 out to disk.

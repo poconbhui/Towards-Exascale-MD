@@ -28,6 +28,8 @@ parallel_implementation_graphs = \
 parallel_implementation.tex = \
         parallel_implementation/parallel_implementation.tex \
         parallel_implementation/preamble.tex \
+        parallel_implementation/replicated_data.tex \
+        parallel_implementation/systolic_loop.tex \
         \
         $(parallel_implementation_graphs)
 
