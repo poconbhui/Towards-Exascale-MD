@@ -23,5 +23,31 @@
 \newcommand{\FIG}[1]{Figure~\ref{#1}}
 \newcommand{\SEC}[1]{Section~\ref{#1}}
 
+
+\newcommand{\vZeroTimeCaption}[3]{
+    {\bf Time vs. Cores} for the {\bf #1} implementation of the
+    {\bf #2} method for the total execution time (red),
+    calculation execution time without MPI (green) and
+    MPI execution time without calculations (blue)
+    for an MD system of particles of size ${\bf N = {#3}}$.
+}
+
+\newcommand{\vZeroTimeExplanation}[4]{
+    {#1}, {#2} and {#3}
+    show how the execution time of the \hfill {#4} varies with
+    the number of cores used for the simulation
+    where $N$, the number of particles in the system, is
+    512, 4096 and 32768 respectively.
+    They present the cases where
+    both MPI and calculations are performed (red)
+        representing the total execution time;
+    calculations are performed without MPI (green)
+        representing the execution time of the simulation
+        without communication effects; and
+    MPI is performed without calculations (blue)
+        representing the time taken up solely by the communications.
+}
+
+
 \def\macrosHeader{0}
 \fi

@@ -36,14 +36,6 @@ this implementation is expected to take a time
     N\bigO{1} = \bigO{N}
 \end  {equation}
 
-\newcommand{\vZeroTimeCaption}[3]{
-    {\bf Time vs. Cores} for the {\bf #1} implementation of the
-    {\bf #2} method for the total execution time (red),
-    calculation execution time without MPI (green) and
-    MPI execution time without calculations (blue)
-    for an MD system of particles of size ${\bf N = {#3}}$.
-}
-
 \begin{figure}[!h]
     \input{parallel_implementation/v0/replicated.individual_operation.512.time.plt}
     \caption{\vZeroTimeCaption{Replicated Data}{\individualoperation{}}{512}}
@@ -62,27 +54,13 @@ this implementation is expected to take a time
     \label{fig:v0_replicated_individual_operation_32768_time}
 \end  {figure}
 
-\newcommand{\vZeroTimeExplanation}[4]{
-    {#1}, {#2} and {#3}
-    show how the execution time of the \hfill {#4} varies with
-    the number of cores used for the simulation
-    where $N$, the number of particles in the system, is
-    512, 4096 and 32768 respectively.
-    They present the cases where
-    both MPI and calculations are performed (red)
-        representing the total execution time;
-    calculations are performed without MPI (green)
-        representing the execution time of the simulation
-        without communication effects; and
-    MPI is performed without calculations (blue)
-        representing the time taken up solely by the communications.
-}
 
 \vZeroTimeExplanation
     { \FIG{fig:v0_replicated_individual_operation_512_time} }
     { \FIG{fig:v0_replicated_individual_operation_4096_time} }
     { \FIG{fig:v0_replicated_individual_operation_32768_time} }
     { \individualoperation{} }
+
 
 From these, it is clear that
 the time for the \individualoperation{} doesn't scale with the number
