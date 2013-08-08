@@ -1,3 +1,2 @@
-# distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time                                                                                              
- systolic pair_operation  512,  1,  T,  F,  44,  0.98058414459228516                                                                                                                                    
-Application 5265006 resources: utime ~1s, stime ~0s
+ # distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time
+ systolic pair_operation  512,  1,  T,  F,  5,  0.11080002784729004

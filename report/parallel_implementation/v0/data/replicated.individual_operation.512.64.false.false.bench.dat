@@ -1,3 +1,2 @@
-# distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time                                                                                              
- replicated individual_operation  512,  64,  2*F,  37117,  0.87667608261108398                                                                                                                          
-Application 5265100 resources: utime ~1358s, stime ~26s
+ # distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time
+ replicated individual_operation  512,  64,  2*F,  8405,  0.19904208183288574

@@ -1,3 +1,2 @@
-# distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time                                                                                              
- systolic full_calculation  32768,  8,  2*F,  5,  64.70048999786377                                                                                                                                     
-Application 5265635 resources: utime ~621s, stime ~0s
+ # distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time
+ systolic full_calculation  32768,  8,  2*F,  5,  64.896589040756226

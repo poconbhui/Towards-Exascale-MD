@@ -1,0 +1,2 @@
+ # distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time
+ systolic full_calculation  32768,  8192,  2*F,  5,  0.34375619888305664

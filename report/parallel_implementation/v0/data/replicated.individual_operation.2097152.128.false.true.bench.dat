@@ -1,2 +1,0 @@
- # distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time
- replicated individual_operation  2097152,  128,  F,  T,  77672,  2.55107879638671875E-3

@@ -1,3 +1,0 @@
-# distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time                                                                                              
- serial individual_operation  32768,  1,  2*F,  752,  0.99963116645812988                                                                                                                               
-Application 5263888 resources: utime ~1s, stime ~0s
