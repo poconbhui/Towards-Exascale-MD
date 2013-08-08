@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function filter_bench_dat() {
-    sed 's/Application.*//' | sed 's/2\*\([^,]*\)/\1, \1/' \
+    sed 's/Application.*//' | sed 's/2\*\([^,]*\)/\1, \1/g' \
     | grep -v '#' | sed 's/\ \+/\ /'g | grep -v '^$' \
     | awk '{print $4 " " $7 " " $8}' | sort -n
 }
