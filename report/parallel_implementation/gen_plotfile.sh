@@ -42,7 +42,7 @@ function gen_plotfile() {
         # Print linear time
         #
         if [ "$graph_type" = "time" ] ; then
-            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"mpi and calculation\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"total time\" with lp, \\
 
             echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"calculation only\" with lp, \\
 
@@ -57,7 +57,7 @@ function gen_plotfile() {
             # Set log scales on both axes.
             echo set logscale xy 2
 
-            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"mpi and calculation\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"total time\" with lp, \\
 
             echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"calculation only\" with lp, \\
 
@@ -93,7 +93,7 @@ function gen_plotfile() {
         # Print linear speedup graph
         #
         if [ "$graph_type" = "speedup" ] ; then
-            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"mpi and calculation\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"total time\" with lp, \\
 
             echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"calculation only\" with lp, \\
 
@@ -109,7 +109,7 @@ function gen_plotfile() {
             # set logarithmix axes
             echo set logscale xy 2
 
-            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"mpi and calculation\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"total time\" with lp, \\
 
             echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"calculation only\" with lp, \\
 
