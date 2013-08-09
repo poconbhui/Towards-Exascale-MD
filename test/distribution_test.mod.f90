@@ -17,6 +17,7 @@ contains
         integer, intent(in) :: num_particles
 
         real(p) :: reduction_value
+        real(p) :: pair_op_identity(Ndim)
 
         real(p) :: x
         integer :: i, j
@@ -84,7 +85,11 @@ contains
         ! When all of these values are summed together, it should look like
         ! a multiple of the value of all the numbers summed together minus
         ! the value of all the numbers summed together.
-        call dist%pair_operation(pair_operation, pair_merge)
+        pair_op_identity = 0
+        call dist%pair_operation( &
+            pair_to_p2_pos, pos_to_p1_vel, &
+            dist%sum, pair_op_identity &
+        )
 
         reduction_value = 0
         call dist%global_map_reduce( &
@@ -139,27 +144,28 @@ contains
         pos_sum_reduce = d1 + d2
     end function pos_sum_reduce
 
-    PURE function pair_operation(p1, p2)
-        type(particle) :: pair_operation
+    PURE function pair_to_p2_pos(p1, p2, N)
+        integer, intent(in) :: N
+        real(p) :: pair_to_p2_pos(N)
 
         type(particle), intent(in) :: p1
         type(particle), intent(in) :: p2
 
 
-        pair_operation = p1
-        pair_operation%vel = p2%pos
-    end function pair_operation
+        pair_to_p2_pos = p2%pos
+    end function pair_to_p2_pos
 
-    PURE function pair_merge(p1, p2)
-        type(particle) :: pair_merge
+    PURE function pos_to_p1_vel(p1, pos, N)
+        type(particle) :: pos_to_p1_vel
 
         type(particle), intent(in) :: p1
-        type(particle), intent(in) :: p2
+        integer, intent(in) :: N
+        real(p), intent(in) :: pos(N)
 
 
-        pair_merge = p1
-        pair_merge%vel = p1%vel + p2%vel
-    end function pair_merge
+        pos_to_p1_vel = p1
+        pos_to_p1_vel%vel = pos
+    end function pos_to_p1_vel
 
     PURE function vel_sum_map(p1)
         real(p) :: vel_sum_map

@@ -17,6 +17,8 @@ module abstract_distribution_type
     ! Exported interfaces
     public :: one_particle_function
     public :: two_particle_function
+    public :: two_particle_to_array_function
+    public :: particle_and_array_to_particle_function
     public :: global_map_function
     public :: global_reduce_function
     public :: print_particle_function
@@ -42,6 +44,22 @@ module abstract_distribution_type
     ! abstract_distribution passed to them implicitly.
     !
     type, abstract :: abstract_distribution
+
+
+        !
+        ! Reduction operations that are expected to be supported
+        ! These should be set to appropriate values in the
+        ! distribution's initialiser
+        !
+
+        ! INTEGER sum
+        !
+        ! This should be used for an elementwise summation over a set of arrays
+        !
+        ! Eg, s = [ [1,2,3], [1,2,3], [1,2,3] ]
+        ! The sum should yield an array [3, 6, 9]
+        !
+        integer :: sum
 
     contains
 
@@ -146,6 +164,7 @@ module abstract_distribution_type
 
 
     abstract interface
+
         !
         ! Interfaces for functions accepted by abstract_distribution methods.
         !
@@ -168,6 +187,33 @@ module abstract_distribution_type
             type(particle), intent(in) :: p1
             type(particle), intent(in) :: p2
         end function two_particle_function
+
+        PURE function two_particle_to_array_function(p1, p2, array_dim)
+            use particle_type
+            use global_variables
+            implicit none
+
+            integer, intent(in) :: array_dim
+            real(p) :: two_particle_to_array_function(array_dim)
+
+            type(particle), intent(in) :: p1
+            type(particle), intent(in) :: p2
+        end function two_particle_to_array_function
+
+        PURE function particle_and_array_to_particle_function( &
+            p1, array, array_dim &
+        )
+            use particle_type
+            use global_variables
+            implicit none
+
+            type(particle) :: particle_and_array_to_particle_function
+
+            type(particle), intent(in) :: p1
+            integer, intent(in) :: array_dim
+            real(p), intent(in) :: array(array_dim)
+        end function particle_and_array_to_particle_function
+
 
         PURE function global_map_function(p1)
             use particle_type
@@ -203,15 +249,22 @@ module abstract_distribution_type
         ! Interfaces for methods of abstract_distribution type
         !
 
-        subroutine pair_operation_subroutine(this, compare_func, merge_func)
+        subroutine pair_operation_subroutine( &
+            this, pair_to_val, val_to_particle, reduce_op, reduction_identity &
+        )
+            use global_variables
             import abstract_distribution
-            import two_particle_function
+            import two_particle_to_array_function
+            import particle_and_array_to_particle_function
             implicit none
 
             class(abstract_distribution), intent(inout) :: this
 
-            procedure(two_particle_function) :: compare_func
-            procedure(two_particle_function) :: merge_func
+            procedure(two_particle_to_array_function) :: pair_to_val
+            procedure(particle_and_array_to_particle_function) &
+                :: val_to_particle
+            integer :: reduce_op
+            real(p) :: reduction_identity(:)
         end subroutine pair_operation_subroutine
 
         subroutine individual_operation_subroutine(this, update_func)

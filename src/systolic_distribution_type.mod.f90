@@ -107,6 +107,9 @@ contains
         ! Generate MPI derived type for particle
         call generate_MPI_particle(this%MPI_particle)
 
+        ! Define reduction ops
+        this%sum = MPI_SUM
+
 
         !
         ! Require that num_particles >= nprocs
@@ -143,47 +146,126 @@ contains
     ! pair_operation implements the list comparison algorithm using
     ! a systolic pulse approach.
     !
-    subroutine pair_operation(this, compare_func, merge_func)
+    subroutine pair_operation( &
+        this, pair_to_val, val_to_particle, reduce_op, reduction_identity &
+    )
         class(systolic_distribution), intent(inout) :: this
-        procedure(two_particle_function) :: compare_func
-        procedure(two_particle_function) :: merge_func
+
+        procedure(two_particle_to_array_function) :: pair_to_val
+        procedure(particle_and_array_to_particle_function) :: val_to_particle
+        integer :: reduce_op
+        real(p) :: reduction_identity(:)
+
+        integer :: N
 
         integer :: chunk_size, chunk_start, chunk_end
 
-        type(particle) :: tmp_particle
+        logical, save :: tmp_vals_allocated = .FALSE.
+        real(p), allocatable, save :: tmp_vals(:,:)
         integer :: i, j
 
         integer :: pulse
+
+
+        interface reduce_types
+            PURE function reduce_type(arr1, arr2)
+                use global_variables
+                implicit none
+
+                real(p), intent(in) :: arr1(:)
+                real(p), intent(in) :: arr2(size(arr1))
+
+                real(p) :: reduce_type(size(arr1))
+            end function reduce_type
+        end interface
+
+        procedure(reduce_type), pointer :: reduce_func
+
+
+        !
+        ! Set reduction function
+        !
+        if(reduce_op .EQ. MPI_SUM) then
+            reduce_func => reduce_sum
+        else
+            call this%print_string("Error: provided reduce_op not supported!")
+            call exit(1)
+        end if
+
+
+        N = size(reduction_identity)
+
+
+        ! allocate array for reduction values
+        if(.NOT. tmp_vals_allocated) then
+            allocate(tmp_vals(this%num_local_particles, N))
+            tmp_vals_allocated = .TRUE.
+        end if
+        if(N .NE. size(tmp_vals, 2)) then
+            deallocate(tmp_vals)
+            allocate(tmp_vals(this%num_local_particles, N))
+        end if
 
 
         this%foreign_particles = this%particles
 
         this%current_foreign_rank = this%rank
 
-        do pulse=0, this%nprocs-1
-            if(pulse .NE. 0) call this%do_systolic_pulse
-
-            call this%get_chunk_data( &
-                this%current_foreign_rank, &
-                chunk_size, chunk_start, chunk_end &
-            )
-
-            if(disable_calculation) cycle
-
+        ! Initialise reduction value list
+        if(.NOT. disable_calculation) then
             do i=1, this%num_local_particles
-                do j=1, chunk_size
-                    if(pulse .EQ. 0 .AND. i .EQ. j) cycle
-
-                    tmp_particle = compare_func( &
-                        this%particles(i), this%foreign_particles(j) &
-                    )
-
-                    this%particles(i) = merge_func( &
-                        this%particles(i), tmp_particle &
-                    )
-                end do
+                tmp_vals(i,:) = reduction_identity
             end do
+        end if
+
+        ! Do systolic loop
+        do pulse=0, this%nprocs-1
+            if(.NOT. disable_mpi) then
+                if(pulse .NE. 0) call this%do_systolic_pulse
+            end if
+
+            if(.NOT. disable_calculation) then
+
+                call this%get_chunk_data( &
+                    this%current_foreign_rank, &
+                    chunk_size, chunk_start, chunk_end &
+                )
+
+                do i=1, this%num_local_particles
+                    do j=1, chunk_size
+                        if(pulse .EQ. 0 .AND. i .EQ. j) cycle
+
+                        tmp_vals(i,:) = reduce_sum( &
+                            tmp_vals(i,:), pair_to_val( &
+                                this%particles(i), &
+                                this%foreign_particles(j), &
+                                N &
+                            ) &
+                        )
+
+                    end do
+                end do
+            end if
         end do
+
+        ! Set particle values with reduction values
+        if(.NOT. disable_calculation) then
+            do i=1, this%num_local_particles
+                this%particles(i) = val_to_particle( &
+                    this%particles(i), tmp_vals(i,:), N &
+                )
+            end do
+        end if
+    contains
+        PURE function reduce_sum(arr1, arr2)
+            real(p), intent(in) :: arr1(:)
+            real(p), intent(in) :: arr2(size(arr1))
+
+            real(p) :: reduce_sum(size(arr1))
+
+
+            reduce_sum = arr1 + arr2
+        end function reduce_sum
     end subroutine pair_operation
 
 

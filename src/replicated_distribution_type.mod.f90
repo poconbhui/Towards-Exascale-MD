@@ -53,17 +53,17 @@ contains
         integer :: ierror
 
 
+        !
+        ! Set up MPI variables
+        !
         call MPI_Comm_dup(comm, comm_dup, ierror)
-
-        this%num_particles = num_particles
-        this%comm = comm_dup
-
         call MPI_Comm_rank(comm_dup, this%rank, ierror)
         call MPI_Comm_size(comm_dup, this%nprocs, ierror)
+        this%comm = comm_dup
 
-        call this%get_chunk_data( &
-            this%rank, local_chunk_size, chunk_start, chunk_end &
-        )
+        ! Set up reduce ops
+        this%sum = MPI_SUM
+
 
         !
         ! Ensure num_particles >= nprocs. If not, die.
@@ -74,40 +74,105 @@ contains
             call MPI_Abort(MPI_COMM_WORLD, 1, ierror)
         end if
 
+        
+        !
+        ! Set up particle list variables
+        !
+        this%num_particles = num_particles
+
+        ! Find size of local list
+        call this%get_chunk_data( &
+            this%rank, local_chunk_size, chunk_start, chunk_end &
+        )
+
+        ! Allocate lists
         allocate(this%particles(num_particles))
         allocate(this%local_particles(local_chunk_size))
     end subroutine init
 
-    subroutine pair_operation(this, compare_func, merge_func)
+    subroutine pair_operation( &
+        this, pair_to_val, val_to_particle, reduce_op, reduction_identity &
+    )
         class(replicated_distribution), intent(inout) :: this
-        procedure(two_particle_function) :: compare_func
-        procedure(two_particle_function) :: merge_func
+
+        procedure(two_particle_to_array_function) :: pair_to_val
+        procedure(particle_and_array_to_particle_function) :: val_to_particle
+        integer :: reduce_op
+        real(p) :: reduction_identity(:)
+
+        integer :: N
 
         integer :: i_size, i_start, i_end
-        type(particle) :: tmp_particle
+        real(p) :: tmp_val(size(reduction_identity))
         integer :: i, j
 
 
-        call this%get_chunk_data(this%rank, i_size, i_start, i_end)
+        interface reduce_types
+            PURE function reduce_type(arr1, arr2)
+                use global_variables
+                implicit none
+
+                real(p), intent(in) :: arr1(:)
+                real(p), intent(in) :: arr2(size(arr1))
+
+                real(p) :: reduce_type(size(arr1))
+            end function reduce_type
+        end interface
+
+        procedure(reduce_type), pointer :: reduce_func
+
+
+        !
+        ! Set reduction function
+        !
+        if(reduce_op .EQ. MPI_SUM) then
+            reduce_func => reduce_sum
+        else
+            call this%print_string("Error: provided reduce_op not supported!")
+            call exit(1)
+        end if
+
+
+        N = size(reduction_identity)
+
 
         if(.NOT. disable_calculation) then
-          do i=i_start, i_end
-              do j=1, this%num_particles
-                  if(i .EQ. j) cycle
 
-                  tmp_particle = compare_func( &
-                      this%particles(i), this%particles(j) &
-                  )
+            call this%get_chunk_data(this%rank, i_size, i_start, i_end)
 
-                  this%particles(i) = merge_func( &
-                      this%particles(i), tmp_particle &
-                  )
-              end do
-          end do
+            do i=i_start, i_end
+                tmp_val = reduction_identity
+
+                do j=1, this%num_particles
+                    if(i .EQ. j) cycle
+
+                    tmp_val = reduce_sum( &
+                        tmp_val, pair_to_val( &
+                            this%particles(i), this%particles(j), N &
+                        ) &
+                    )
+
+                end do
+
+                this%particles(i) = val_to_particle( &
+                    this%particles(i), tmp_val, N &
+                )
+            end do
+
         end if
 
         call this%sync_particles
 
+    contains
+        PURE function reduce_sum(arr1, arr2)
+            real(p), intent(in) :: arr1(:)
+            real(p), intent(in) :: arr2(size(arr1))
+
+            real(p) :: reduce_sum(size(arr1))
+
+
+            reduce_sum = arr1 + arr2
+        end function reduce_sum
     end subroutine pair_operation
 
     subroutine individual_operation(this, update_func)
