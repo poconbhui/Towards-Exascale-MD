@@ -113,7 +113,7 @@ every receive list should move one process
 to the ``left'' in the \systolicloop{}.
 %
 This is performed by copying the old receive list into the
-send list, and using an MPI\_sendrecv to send the send list to
+send list, and using an MPI\_Sendrecv to send the send list to
 the ``left'' process while receiving from
 the ``right'' process into the receive list.
 
@@ -198,38 +198,26 @@ We see in
 \FIG{fig:v0_systolic_pair_operation_512_logtime},
 \FIG{fig:v0_systolic_pair_operation_4096_logtime} and
 \FIG{fig:v0_systolic_pair_operation_32768_logtime}
-that, much like in the \replicateddata{} case, that the system scales
-roughly as $N/P$ when $P \ll{} N$.
+it is clear that the system scales as $N/P$ when $P \ll{} N$.
+%
+However, it begins deviating significantly from linear scaling
+when $N/P \approx{} 32$.
 
-With a communication term scaling as $P$, we see the point in which
-communications dominate comes much sooner.
+With a communication term scaling as $P$, and a calculation term
+scaling as $N/P$, the communications term eventually dominates.
 %
-However, we also note that it appears when $P \approx{} N$.
-%
-Taking our previous approach of finding an optimum $k$ for $P = N/k$,
-we find $k \approx{} 8$.
+The minimum time for execution occurs in all systems tested when $N/P = 8$
+and appears to scale linearly with the number of particles in the MD system.
 
-This appears to hold for our three system sizes, although there does appear
-to be an unexpected jump in
-\FIG{fig:v0_systolic_pair_operation_32768_logtime}
-between 512 and 1024 processes.
+The implimentation ultimately becomes slowed due to
+communication latency caused by a large number
+of systolic pulses per time step.
 %
-It is unclear whether this is a genuine effect, or simply an error in
-measurement.
-
-Ignoring the unexpected jump in 
-\FIG{fig:v0_systolic_pair_operation_32768_logtime},
-we may conclude that the minimum time to completion for out system
-scales linearly with the number of particles.
-
-It would appear the implimentation ultimately becomes slowed due to
-communication latency, and in particular, due to a large number
-of these communications.
+When going to much larger numbers of processes
+this implementation may suffer from extra slow down due to
+global synchronisation, as it was implemented using a blocking
+MPI\_Sendrecv.
 %
-The initial scaling of this term is due to the number of particles
-in the system, however,
-scaling with $P$ is a result of having $P$ communications
-per time step.
-%
-Looking at our derivation for communication times,
-we conclude that this must be an effect of latency.
+A simple remedy may be to use nonblocking communications to allow
+processes to receive particles and perform partial updates while
+allowing send lists to be sent in the background.
