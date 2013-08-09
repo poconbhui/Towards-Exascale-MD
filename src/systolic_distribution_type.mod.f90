@@ -241,7 +241,7 @@ contains
                             tmp_val &
                         )
 
-                        reduce_vals(i,:) = reduce_sum( &
+                        reduce_vals(i,:) = reduce_func( &
                             tmp_val, reduce_vals(i,:) &
                         )
 

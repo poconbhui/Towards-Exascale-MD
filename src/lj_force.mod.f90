@@ -35,7 +35,7 @@ contains
         type(particle), intent(in) :: p2
 
         ! Expect val(Ndim)
-        real(p), intent(out) :: val(Ndim)
+        real(p), intent(out) :: val(:)
 
 
         real(p) :: d(Ndim)
@@ -64,7 +64,7 @@ contains
         type(particle) :: LJ_set_val
 
         type(particle), intent(in) :: p1
-        real(p), intent(in) :: force(Ndim)
+        real(p), intent(in) :: force(:)
 
 
         LJ_set_val = p1

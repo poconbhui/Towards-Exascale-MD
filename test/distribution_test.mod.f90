@@ -148,7 +148,7 @@ contains
         type(particle), intent(in) :: p1
         type(particle), intent(in) :: p2
 
-        real(p), intent(out) :: pos(Ndim)
+        real(p), intent(out) :: pos(:)
 
 
         pos = p2%pos
@@ -158,7 +158,7 @@ contains
         type(particle) :: pos_to_p1_vel
 
         type(particle), intent(in) :: p1
-        real(p), intent(in) :: pos(Ndim)
+        real(p), intent(in) :: pos(:)
 
 
         pos_to_p1_vel = p1

@@ -31,9 +31,9 @@ program particle_type_test
     test_particle = particle(pos=1, vel=2, force=3, mass=4)
 
     call expect("%pos should be 1", all(test_particle%pos .EQ. 1))
-    call expect("%vel should be 1", all(test_particle%vel .EQ. 2))
-    call expect("%force should be 1", all(test_particle%force .EQ. 3))
-    call expect("%mass should be 1", test_particle%mass .EQ. 4)
+    call expect("%vel should be 2", all(test_particle%vel .EQ. 2))
+    call expect("%force should be 3", all(test_particle%force .EQ. 3))
+    call expect("%mass should be 4", test_particle%mass .EQ. 4)
 
 
     !
@@ -43,14 +43,15 @@ program particle_type_test
 
     call generate_MPI_particle(MPI_particle)
 
-    test_particle = particle(pos=rank, vel=rank, force=rank, mass=rank)
+    test_particle = particle(pos=rank, vel=2*rank, force=3*rank, mass=4*rank)
 
+    ! Get particle from process 1
     call MPI_Bcast(test_particle, 1, MPI_particle, 1, comm, ierror)
 
     call expect("%pos should be 1", all(test_particle%pos .EQ. 1))
-    call expect("%vel should be 1", all(test_particle%vel .EQ. 1))
-    call expect("%force should be 1", all(test_particle%force .EQ. 1))
-    call expect("%mass should be 1", test_particle%mass .EQ. 1)
+    call expect("%vel should be 2", all(test_particle%vel .EQ. 2))
+    call expect("%force should be 3", all(test_particle%force .EQ. 3))
+    call expect("%mass should be 4", test_particle%mass .EQ. 4)
 
 
     exit_value = end_test()

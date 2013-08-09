@@ -60,7 +60,7 @@ contains
         type(particle) :: grav_set_val
 
         type(particle), intent(in) :: p1
-        real(p), intent(in) :: force(Ndim)
+        real(p), intent(in) :: force(:)
 
 
         grav_set_val = p1

@@ -99,7 +99,7 @@ contains
 
                 reduce_val = reduce_func(reduce_val, tmp_val)
             end do
-            this%particles(i) = val_to_particle(this%particles(i), tmp_val)
+            this%particles(i) = val_to_particle(this%particles(i), reduce_val)
         end do
 
     contains
