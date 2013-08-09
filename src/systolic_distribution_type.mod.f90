@@ -336,10 +336,8 @@ contains
         call MPI_Sendrecv( &
             this%swap_particles, chunk_size, this%MPI_particle, &
             send_rank, 0, &
-            &
             this%foreign_particles, chunk_size, this%MPI_particle, &
             recv_rank, 0, &
-            &
             this%comm, MPI_STATUS_IGNORE, ierror &
         )
 

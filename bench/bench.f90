@@ -87,7 +87,6 @@ program bench
 
     double precision :: start_time, end_time
     real(p) :: dt
-    character(len=200) :: output_string
 
     integer :: argc
     character(len=255), dimension(:), allocatable :: argv
@@ -398,7 +397,10 @@ contains
         if(rank .EQ. 0) then
             open(88, FILE=output_filename)
             
-            write(88, *) "# distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time"
+            write(88, *) &
+                "# distrubution_name benchmark_name &
+                &num_particles mpi_disabled calculation_disabled &
+                &num_procs num_reps time"
 
             write(88, *) &
                 trim(distribution_name)//" ", trim(benchmark_name)//" ", &
