@@ -19,5 +19,4 @@ distribution_type_mod = abstract_distribution_type.mod global_variables.mod part
 abstract_distribution_type.mod: particle_type.mod global_variables.mod
 serial_distribution_type.mod: $(distribution_type_mod)
 replicated_distribution_type.mod: $(distribution_type_mod)
-domain_distribution_type.mod: $(distribution_type_mod)
 systolic_distribution_type.mod: $(distribution_type_mod)

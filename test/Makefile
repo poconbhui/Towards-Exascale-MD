@@ -11,7 +11,6 @@ programs = \
 	lj_force.test \
 	serial_distribution_type.test \
 	replicated_distribution_type.test \
-	domain_distribution_type.test \
 	systolic_distribution_type.test 
 
 
@@ -55,10 +54,6 @@ serial_distribution_type.test: \
 replicated_distribution_type.test: \
 	$(distribution_test.mod.o) \
 	../src/replicated_distribution_type.mod.o
-
-domain_distribution_type.test: \
-	$(distribution_test.mod.o) \
-	../src/domain_distribution_type.mod.o
 
 systolic_distribution_type.test: \
 	$(distribution_test.mod.o) \

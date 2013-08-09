@@ -39,7 +39,6 @@ bench: \
 	../src/integration.mod.o \
 	../src/serial_distribution_type.mod.o \
         ../src/replicated_distribution_type.mod.o \
-        ../src/domain_distribution_type.mod.o \
         ../src/systolic_distribution_type.mod.o
 bench.o: \
 	$(bench_suite.mod.o) \
@@ -48,5 +47,4 @@ bench.o: \
 	../src/integration.mod \
 	../src/serial_distribution_type.mod \
         ../src/replicated_distribution_type.mod \
-        ../src/domain_distribution_type.mod \
         ../src/systolic_distribution_type.mod
