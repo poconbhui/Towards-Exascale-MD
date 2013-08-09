@@ -5,6 +5,18 @@ module force_test
     use test_suite
     implicit none
 
+
+    interface
+        PURE function gen_reduce_op_function(dist)
+            use abstract_distribution_type
+            implicit none
+
+            integer :: gen_reduce_op_function
+
+            class(abstract_distribution), intent(in) :: dist
+        end function gen_reduce_op_function
+    end interface
+
 contains
     subroutine force_module_test( &
         name, pair_to_val, set_val, &
@@ -14,17 +26,7 @@ contains
         procedure(two_particle_to_array_subroutine) :: pair_to_val
         procedure(particle_and_array_to_particle_function) :: set_val
 
-        integer :: gen_reduce_op
-        interface
-            PURE function gen_reduce_op(dist)
-                use abstract_distribution_type
-                implicit none
-
-                integer :: gen_reduce_op_function
-
-                class(abstract_distribution), intent(in) :: dist
-            end function gen_reduce_op
-        end interface
+        procedure(gen_reduce_op_function) :: gen_reduce_op
 
 
 
