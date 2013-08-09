@@ -119,26 +119,24 @@ contains
     end function bench_integrate_2
 
 
-    PURE function bench_force_pair_to_val(p_i, p_j, N)
-        integer, intent(in) :: N
-        real(p) :: bench_force_pair_to_val(N)
-
+    PURE subroutine bench_force_pair_to_val(p_i, p_j, val)
         type(particle), intent(in) :: p_i
         type(particle), intent(in) :: p_j
 
+        real(p), intent(out) :: val(:)
 
-        bench_force_pair_to_val = lj_pair_to_val(p_i, p_j, N)
-    end function bench_force_pair_to_val
 
-    PURE function bench_force_set_val(p_i, force, N)
-        integer, intent(in) :: N
+        call lj_pair_to_val(p_i, p_j, val)
+    end subroutine bench_force_pair_to_val
+
+    PURE function bench_force_set_val(p_i, force)
         type(particle) :: bench_force_set_val
 
         type(particle), intent(in) :: p_i
-        real(p), intent(in) :: force(N)
+        real(p), intent(in) :: force(:)
 
 
-        bench_force_set_val = lj_set_val(p_i, force, N)
+        bench_force_set_val = lj_set_val(p_i, force)
     end function bench_force_set_val
 
     PURE function bench_force_gen_reduce_op(dist)

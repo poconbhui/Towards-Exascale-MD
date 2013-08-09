@@ -11,7 +11,7 @@ contains
         gen_reduce_op, reduction_init &
     )
         character(len=*) :: name
-        procedure(two_particle_to_array_function) :: pair_to_val
+        procedure(two_particle_to_array_subroutine) :: pair_to_val
         procedure(particle_and_array_to_particle_function) :: set_val
 
         interface
@@ -46,8 +46,8 @@ contains
         p1 = particle(pos=1, vel=2, force=3, mass=4)
         p2 = particle(pos=5, vel=6, force=7, mass=8)
 
-        tmp_val = pair_to_val(p1, p2, N)
-        test_particle = set_val(p1, tmp_val, N)
+        call pair_to_val(p1, p2, tmp_val)
+        test_particle = set_val(p1, tmp_val)
 
         call expect( &
             "pos should be unchanged", &

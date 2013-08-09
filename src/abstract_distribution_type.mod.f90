@@ -17,7 +17,7 @@ module abstract_distribution_type
     ! Exported interfaces
     public :: one_particle_function
     public :: two_particle_function
-    public :: two_particle_to_array_function
+    public :: two_particle_to_array_subroutine
     public :: particle_and_array_to_particle_function
     public :: global_map_function
     public :: global_reduce_function
@@ -188,20 +188,19 @@ module abstract_distribution_type
             type(particle), intent(in) :: p2
         end function two_particle_function
 
-        PURE function two_particle_to_array_function(p1, p2, array_dim)
+        PURE subroutine two_particle_to_array_subroutine(p1, p2, array_out)
             use particle_type
             use global_variables
             implicit none
 
-            integer, intent(in) :: array_dim
-            real(p) :: two_particle_to_array_function(array_dim)
+            real(p), intent(out) :: array_out(:)
 
             type(particle), intent(in) :: p1
             type(particle), intent(in) :: p2
-        end function two_particle_to_array_function
+        end subroutine two_particle_to_array_subroutine
 
         PURE function particle_and_array_to_particle_function( &
-            p1, array, array_dim &
+            p1, array &
         )
             use particle_type
             use global_variables
@@ -210,8 +209,7 @@ module abstract_distribution_type
             type(particle) :: particle_and_array_to_particle_function
 
             type(particle), intent(in) :: p1
-            integer, intent(in) :: array_dim
-            real(p), intent(in) :: array(array_dim)
+            real(p), intent(in) :: array(:)
         end function particle_and_array_to_particle_function
 
 
@@ -254,13 +252,13 @@ module abstract_distribution_type
         )
             use global_variables
             import abstract_distribution
-            import two_particle_to_array_function
+            import two_particle_to_array_subroutine
             import particle_and_array_to_particle_function
             implicit none
 
             class(abstract_distribution), intent(inout) :: this
 
-            procedure(two_particle_to_array_function) :: pair_to_val
+            procedure(two_particle_to_array_subroutine) :: pair_to_val
             procedure(particle_and_array_to_particle_function) &
                 :: val_to_particle
             integer :: reduce_op

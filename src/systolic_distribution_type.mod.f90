@@ -151,7 +151,7 @@ contains
     )
         class(systolic_distribution), intent(inout) :: this
 
-        procedure(two_particle_to_array_function) :: pair_to_val
+        procedure(two_particle_to_array_subroutine) :: pair_to_val
         procedure(particle_and_array_to_particle_function) :: val_to_particle
         integer :: reduce_op
         real(p) :: reduction_identity(:)
@@ -160,8 +160,9 @@ contains
 
         integer :: chunk_size, chunk_start, chunk_end
 
-        logical, save :: tmp_vals_allocated = .FALSE.
-        real(p), allocatable, save :: tmp_vals(:,:)
+        logical, save :: reduce_vals_allocated = .FALSE.
+        real(p), allocatable, save :: reduce_vals(:,:)
+        real(p) :: tmp_val(size(reduction_identity))
         integer :: i, j
 
         integer :: pulse
@@ -197,13 +198,13 @@ contains
 
 
         ! allocate array for reduction values
-        if(.NOT. tmp_vals_allocated) then
-            allocate(tmp_vals(this%num_local_particles, N))
-            tmp_vals_allocated = .TRUE.
+        if(.NOT. reduce_vals_allocated) then
+            allocate(reduce_vals(this%num_local_particles, N))
+            reduce_vals_allocated = .TRUE.
         end if
-        if(N .NE. size(tmp_vals, 2)) then
-            deallocate(tmp_vals)
-            allocate(tmp_vals(this%num_local_particles, N))
+        if(N .NE. size(reduce_vals, 2)) then
+            deallocate(reduce_vals)
+            allocate(reduce_vals(this%num_local_particles, N))
         end if
 
 
@@ -214,7 +215,7 @@ contains
         ! Initialise reduction value list
         if(.NOT. disable_calculation) then
             do i=1, this%num_local_particles
-                tmp_vals(i,:) = reduction_identity
+                reduce_vals(i,:) = reduction_identity
             end do
         end if
 
@@ -235,12 +236,13 @@ contains
                     do j=1, chunk_size
                         if(pulse .EQ. 0 .AND. i .EQ. j) cycle
 
-                        tmp_vals(i,:) = reduce_sum( &
-                            tmp_vals(i,:), pair_to_val( &
-                                this%particles(i), &
-                                this%foreign_particles(j), &
-                                N &
-                            ) &
+                        call pair_to_val( &
+                            this%particles(i), this%foreign_particles(j), &
+                            tmp_val &
+                        )
+
+                        reduce_vals(i,:) = reduce_sum( &
+                            tmp_val, reduce_vals(i,:) &
                         )
 
                     end do
@@ -252,7 +254,7 @@ contains
         if(.NOT. disable_calculation) then
             do i=1, this%num_local_particles
                 this%particles(i) = val_to_particle( &
-                    this%particles(i), tmp_vals(i,:), N &
+                    this%particles(i), reduce_vals(i,:) &
                 )
             end do
         end if

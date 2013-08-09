@@ -144,23 +144,21 @@ contains
         pos_sum_reduce = d1 + d2
     end function pos_sum_reduce
 
-    PURE function pair_to_p2_pos(p1, p2, N)
-        integer, intent(in) :: N
-        real(p) :: pair_to_p2_pos(N)
-
+    PURE subroutine pair_to_p2_pos(p1, p2, pos)
         type(particle), intent(in) :: p1
         type(particle), intent(in) :: p2
 
+        real(p), intent(out) :: pos(Ndim)
 
-        pair_to_p2_pos = p2%pos
-    end function pair_to_p2_pos
 
-    PURE function pos_to_p1_vel(p1, pos, N)
+        pos = p2%pos
+    end subroutine pair_to_p2_pos
+
+    PURE function pos_to_p1_vel(p1, pos)
         type(particle) :: pos_to_p1_vel
 
         type(particle), intent(in) :: p1
-        integer, intent(in) :: N
-        real(p), intent(in) :: pos(N)
+        real(p), intent(in) :: pos(Ndim)
 
 
         pos_to_p1_vel = p1

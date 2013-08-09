@@ -50,26 +50,25 @@ contains
     )
         class(serial_distribution), intent(inout) :: this
 
-        procedure(two_particle_to_array_function) :: pair_to_val
+        procedure(two_particle_to_array_subroutine) :: pair_to_val
         procedure(particle_and_array_to_particle_function) :: val_to_particle
         integer :: reduce_op
         real(p) :: reduction_identity(:)
 
-        integer :: N
         real(p) :: tmp_val(size(reduction_identity))
+        real(p) :: reduce_val(size(reduction_identity))
         integer :: i, j
 
 
         interface reduce_types
-            PURE function reduce_type(arr1, arr2, N)
+            PURE function reduce_type(arr1, arr2)
                 use global_variables
                 implicit none
 
-                integer, intent(in) :: N
-                real(p) :: reduce_type(N)
+                real(p), intent(in) :: arr1(:)
+                real(p), intent(in) :: arr2(size(arr1))
 
-                real(p), intent(in) :: arr1(N)
-                real(p), intent(in) :: arr2(N)
+                real(p) :: reduce_type(size(arr1))
             end function reduce_type
         end interface
 
@@ -87,31 +86,30 @@ contains
         end if
 
 
-        N = size(reduction_identity)
-
+        !
+        ! Do actual pair_operation
+        !
         do i=1, this%num_particles
-            tmp_val = reduction_identity
+            reduce_val = reduction_identity
 
             do j=1, this%num_particles
                 if(i .EQ. j) cycle
 
-                tmp_val = reduce_func( &
-                    tmp_val, pair_to_val( &
-                        this%particles(i), this%particles(j), N &
-                    ), N &
-                )
+                call pair_to_val(this%particles(i), this%particles(j), tmp_val)
+
+                reduce_val = reduce_func(reduce_val, tmp_val)
             end do
-            this%particles(i) = val_to_particle(this%particles(i), tmp_val, N)
+            this%particles(i) = val_to_particle(this%particles(i), tmp_val)
         end do
 
     contains
 
-        PURE function reduce_sum(arr1, arr2, N)
-            integer, intent(in) :: N
-            real(p) :: reduce_sum(N)
+        PURE function reduce_sum(arr1, arr2)
+            real(p), intent(in) :: arr1(:)
+            real(p), intent(in) :: arr2(size(arr1))
 
-            real(p), intent(in) :: arr1(N)
-            real(p), intent(in) :: arr2(N)
+            real(p) :: reduce_sum(size(arr1))
+
 
             reduce_sum = arr1 + arr2
         end function reduce_sum

@@ -30,13 +30,12 @@ contains
     ! Calculate the LJ force between two particles and return an
     ! array representing the force on p1 due to p2
     !
-    PURE function LJ_pair_to_val(p1, p2, N)
-        ! Expect N = Ndim
-        integer, intent(in) :: N
-        real(p) :: LJ_pair_to_val(N)
-
+    PURE subroutine LJ_pair_to_val(p1, p2, val)
         type(particle), intent(in) :: p1
         type(particle), intent(in) :: p2
+
+        ! Expect val(Ndim)
+        real(p), intent(out) :: val(Ndim)
 
 
         real(p) :: d(Ndim)
@@ -53,21 +52,19 @@ contains
 
         force = -24*eps * ( 2*(del**12/r**13) - (del**6/r**7) ) * d_unit
 
-        LJ_pair_to_val = force
-    end function LJ_pair_to_val
+        val = force
+    end subroutine LJ_pair_to_val
 
 
     ! FUNCTION LJ_set_val
     !
     ! Set the force of the particle to the new reduced force.
     !
-    PURE function LJ_set_val(p1, force, N)
-        ! Expect N = Ndim
-        integer, intent(in) :: N
+    PURE function LJ_set_val(p1, force)
         type(particle) :: LJ_set_val
 
         type(particle), intent(in) :: p1
-        real(p), intent(in) :: force(N)
+        real(p), intent(in) :: force(Ndim)
 
 
         LJ_set_val = p1

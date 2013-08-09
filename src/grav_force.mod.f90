@@ -19,22 +19,19 @@ module grav_force
 contains
 
 
-    ! FUNCTION grav_pair_to_val
+    ! SUBROUTINE grav_pair_to_val
     !
     ! Compare the position of two particles and return an array
     ! representing the gravitational force on p1 due to p2.
     !
     ! F = G*m_1*m_2/(d^2) * r/|r|
     !
-    PURE function grav_pair_to_val(p1, p2, N)
-        ! Expect N = Ndim
-        integer, intent(in) :: N
-
-        real(p) :: grav_pair_to_val(N)
-
+    PURE subroutine grav_pair_to_val(p1, p2, val)
         type(particle), intent(in) :: p1
         type(particle), intent(in) :: p2
 
+        ! Expect size(val) = Ndim
+        real(p), intent(out) :: val(:)
 
 
         REAL(p) :: d(Ndim)
@@ -51,21 +48,19 @@ contains
 
         force = G*p1%mass*p2%mass / r**2 * d_unit
 
-        grav_pair_to_val = force
-    end function grav_pair_to_val
+        val = force
+    end subroutine grav_pair_to_val
 
 
     ! FUNCTION grav_set_val
     !
     ! Set the force of the particle to the new total force.
     !
-    PURE function grav_set_val(p1, force, N)
-        ! Expect N = Ndim
-        integer, intent(in) :: N
+    PURE function grav_set_val(p1, force)
         type(particle) :: grav_set_val
 
         type(particle), intent(in) :: p1
-        real(p), intent(in) :: force(N)
+        real(p), intent(in) :: force(Ndim)
 
 
         grav_set_val = p1

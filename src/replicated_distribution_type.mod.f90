@@ -95,7 +95,7 @@ contains
     )
         class(replicated_distribution), intent(inout) :: this
 
-        procedure(two_particle_to_array_function) :: pair_to_val
+        procedure(two_particle_to_array_subroutine) :: pair_to_val
         procedure(particle_and_array_to_particle_function) :: val_to_particle
         integer :: reduce_op
         real(p) :: reduction_identity(:)
@@ -103,6 +103,7 @@ contains
         integer :: N
 
         integer :: i_size, i_start, i_end
+        real(p) :: reduce_val(size(reduction_identity))
         real(p) :: tmp_val(size(reduction_identity))
         integer :: i, j
 
@@ -141,21 +142,22 @@ contains
             call this%get_chunk_data(this%rank, i_size, i_start, i_end)
 
             do i=i_start, i_end
-                tmp_val = reduction_identity
+                reduce_val = reduction_identity
 
                 do j=1, this%num_particles
                     if(i .EQ. j) cycle
 
-                    tmp_val = reduce_sum( &
-                        tmp_val, pair_to_val( &
-                            this%particles(i), this%particles(j), N &
-                        ) &
+                    call pair_to_val( &
+                        this%particles(i), this%particles(j), &
+                        tmp_val &
                     )
+                    
+                    reduce_val = reduce_sum(reduce_val, tmp_val)
 
                 end do
 
                 this%particles(i) = val_to_particle( &
-                    this%particles(i), tmp_val, N &
+                    this%particles(i), tmp_val &
                 )
             end do
 
