@@ -51,6 +51,13 @@ all: $(programs)
 
 
 #
+# Compile things in the src directory
+#
+../src/%:
+	make -C ../src $*
+
+
+#
 # Compile executables from object files
 #
 %: %.f90
@@ -60,6 +67,7 @@ all: $(programs)
 #
 # Module compilation rules
 #
+.PRECIOUS: %.mod
 %.mod: %.mod.f90
 	$(MPIFC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
 

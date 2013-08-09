@@ -258,17 +258,17 @@ contains
                 )
             end do
         end if
-    contains
-        PURE function reduce_sum(arr1, arr2)
-            real(p), intent(in) :: arr1(:)
-            real(p), intent(in) :: arr2(size(arr1))
-
-            real(p) :: reduce_sum(size(arr1))
-
-
-            reduce_sum = arr1 + arr2
-        end function reduce_sum
     end subroutine pair_operation
+
+    PURE function reduce_sum(arr1, arr2)
+        real(p), intent(in) :: arr1(:)
+        real(p), intent(in) :: arr2(size(arr1))
+
+        real(p) :: reduce_sum(size(arr1))
+
+
+        reduce_sum = arr1 + arr2
+    end function reduce_sum
 
 
     ! SUBROUTINE individual_operation

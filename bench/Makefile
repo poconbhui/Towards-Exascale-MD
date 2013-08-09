@@ -32,15 +32,7 @@ distribution_type.mod.o= \
 	../src/particle_type.mod.o \
 	../src/abstract_distribution_type.mod.o
 
-bench: \
-	$(bench_suite.mod.o) \
-	$(distribution_type.mod.o) \
-	../src/grav_force.mod.o \
-	../src/integration.mod.o \
-	../src/serial_distribution_type.mod.o \
-        ../src/replicated_distribution_type.mod.o \
-        ../src/systolic_distribution_type.mod.o
-bench.o: \
+bench.o = \
 	$(bench_suite.mod.o) \
 	$(distribution_type.mod) \
 	../src/grav_force.mod \
@@ -48,3 +40,14 @@ bench.o: \
 	../src/serial_distribution_type.mod \
         ../src/replicated_distribution_type.mod \
         ../src/systolic_distribution_type.mod
+
+bench = \
+	$(bench_suite.mod.o) \
+	$(distribution_type.mod.o) \
+	../src/grav_force.mod.o \
+	../src/integration.mod.o \
+	../src/serial_distribution_type.mod.o \
+        ../src/replicated_distribution_type.mod.o \
+        ../src/systolic_distribution_type.mod.o
+
+bench: $(bench)
