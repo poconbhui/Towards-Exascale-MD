@@ -25,9 +25,9 @@ force_test.mod   = test_suite.mod force_test.mod ../src/global_variables.mod ../
 force_test.mod: $(force_test.mod)
 force_test.mod.o: $(force_test.mod.o)
 
-grav_force.test: ../src/grav_force.mod.o $(force_test.mod.o)
+grav_force.test: $(force_test.mod.o) ../src/grav_force.mod.o
 
-lj_force.test: ../src/lj_force.mod.o $(force_test.mod.o)
+lj_force.test: $(force_test.mod.o) ../src/lj_force.mod.o
 
 
 distribution_test.mod = \

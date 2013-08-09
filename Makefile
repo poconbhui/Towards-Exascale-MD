@@ -21,7 +21,7 @@ $(SUBDIRS):
 # Run unit tests
 #
 .PHONY: run_test
-run_test:
+run_test: test
 	./scripts/exec.sh ./scripts/run_tests.rb
 
 #
