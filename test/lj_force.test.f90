@@ -6,16 +6,11 @@ program lj_force_test
     use force_test
     implicit none
 
-    ! Check function signatures are correct
-    procedure(one_particle_function), pointer :: lj_init_test
-    procedure(two_particle_function), pointer :: lj_compare_test
-    procedure(two_particle_function), pointer :: lj_merge_test
-
-    lj_init_test => lj_init
-    lj_compare_test => lj_compare
-    lj_merge_test => lj_merge
-
-    call force_module_test("lj_force", lj_init, lj_compare, lj_merge)
+    call force_module_test( &
+        "lj_force", &
+        lj_pair_to_val, lj_set_val, &
+        lj_gen_reduce_op, lj_reduction_init &
+    )
 
     call exit(end_test())
 

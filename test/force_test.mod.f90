@@ -1,114 +1,69 @@
 module force_test
+    use global_variables
     use particle_type
     use abstract_distribution_type
     use test_suite
     implicit none
 
-    contains
-    subroutine force_module_test(name, init, compare, merge)
+contains
+    subroutine force_module_test( &
+        name, pair_to_val, set_val, &
+        gen_reduce_op, reduction_init &
+    )
         character(len=*) :: name
-        procedure(one_particle_function) :: init
-        procedure(two_particle_function) :: compare
-        procedure(two_particle_function) :: merge
+        procedure(two_particle_to_array_function) :: pair_to_val
+        procedure(particle_and_array_to_particle_function) :: set_val
+
+        interface
+            PURE function gen_reduce_op_function(dist)
+                use abstract_distribution_type
+                implicit none
+
+                integer :: gen_reduce_op_function
+
+                class(abstract_distribution), intent(in) :: dist
+            end function gen_reduce_op_function
+        end interface
+
+        procedure(gen_reduce_op_function) :: gen_reduce_op
+
+        real(p) :: reduction_init(:)
 
         type(particle) :: test_particle
         type(particle) :: p1, p2
 
-        !
-        ! Describe init
-        !
-        call describe(name // "#init")
+        integer :: N
+        real(p) :: tmp_val(size(reduction_init))
 
-        test_particle = particle(pos=1, vel=1, force=1, mass=1)
-
-        test_particle = init(test_particle, 1)
-
-        call expect("Position should be unchanged", &
-            ALL(test_particle%pos .EQ. 1) &
-        )
-        call expect("Velocity should be unchanged", &
-            ALL(test_particle%vel .EQ. 1) &
-        )
-        call expect("Force should be initialized to 0", &
-            ALL(test_particle%force .EQ. 0) &
-        )
-        call expect("Mass should be unchanged", &
-            test_particle%mass .EQ. 1 &
-        )
+        N = size(reduction_init)
 
 
         !
-        ! Describe compare
+        ! Expect val_to_particle to only affect force
         !
+        call describe(name//" #pair_to_val, #set_val")
 
-        ! Expect only force to change
-        call describe(name // "#compare force changing")
+        p1 = particle(pos=1, vel=2, force=3, mass=4)
+        p2 = particle(pos=5, vel=6, force=7, mass=8)
 
-        p1 = init(particle(pos=1, vel=1, force=1, mass=1), 1)
-        p2 = init(particle(pos=0, vel=1, force=1, mass=1), 2)
+        tmp_val = pair_to_val(p1, p2, N)
+        test_particle = set_val(p1, tmp_val, N)
 
-        test_particle = compare(p1, p2)
-
-        call expect("Position should be unchanged", &
-            ALL(test_particle%pos .EQ. 1) &
+        call expect( &
+            "pos should be unchanged", &
+            ALL(p1%pos .EQ. test_particle%pos) &
         )
-        call expect("Velocity should be unchanged", &
-            ALL(test_particle%vel .EQ. 1) &
+        
+        call expect( &
+            "vel should be unchanged", &
+            ALL(p1%vel .EQ. test_particle%vel) &
         )
-        call expect("Force should change", &
-            ALL(test_particle%force .NE. 1) &
+        
+        call expect( &
+            "mass should be unchanged", &
+            p1%mass .EQ. test_particle%mass &
         )
-        call expect("Mass should be unchanged", &
-            test_particle%mass .EQ. 1 &
-        )
-
-
-        ! Expect idempotency
-        call describe(name // "#compare idempotency")
-
-        p1 = init(particle(pos=1, vel=1, force=1, mass=1), 1)
-        p2 = init(particle(pos=0, vel=1, force=1, mass=1), 2)
-
-        test_particle = compare(p1, p2)
-        p1            = compare(p1, p2)
-
-        call expect("Position should be unchanged", &
-            ALL(test_particle%pos .EQ. p1%pos) &
-        )
-        call expect("Velocity should be unchanged", &
-            ALL(test_particle%vel .EQ. p1%vel) &
-        )
-        call expect("Force should be unchanged", &
-            ALL(test_particle%force .EQ. p1%force) &
-        )
-        call expect("Mass should be unchanged", &
-            test_particle%mass .EQ. p1%mass &
-        )
-
-        ! Expect idempotency upon repeated application to output variable
-        call describe(name // "#compare recursive idempotency")
-
-        p1 = init(particle(pos=1, vel=1, force=1, mass=1), 1)
-        p2 = init(particle(pos=0, vel=1, force=1, mass=1), 2)
-
-        p1 = compare(p1, p2)
-        test_particle = p1
-        test_particle = compare(test_particle, p2)
-        test_particle = compare(test_particle, p2)
-        test_particle = compare(test_particle, p2)
-
-        call expect("Position should be unchanged", &
-            ALL(test_particle%pos .EQ. p1%pos) &
-        )
-        call expect("Velocity should be unchanged", &
-            ALL(test_particle%vel .EQ. p1%vel) &
-        )
-        call expect("Force should be unchanged", &
-            ALL(test_particle%force .EQ. p1%force) &
-        )
-        call expect("Mass should be unchanged", &
-            test_particle%mass .EQ. p1%mass &
-        )
+        
     end subroutine force_module_test
 
 end module force_test

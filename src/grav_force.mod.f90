@@ -6,43 +6,35 @@
 module grav_force
     use global_variables
     use particle_type
+    use abstract_distribution_type
     implicit none
 
 
     ! The gravitational constant.
-    REAL(p) :: G=1
+    real(p) :: G=1
+
+    integer, private :: i
+    real(p), parameter :: grav_reduction_init(Ndim) = 0
 
 contains
 
 
-    ! FUNCTION grav_init
+    ! FUNCTION grav_pair_to_val
     !
-    ! Initialize force to zero.
-    !
-    PURE function grav_init(p1, i)
-        type(particle) :: grav_init
-
-        type(particle), intent(in) :: p1
-        integer, intent(in) :: i
-
-
-        grav_init = p1
-        grav_init%force = 0
-    end function grav_init
-
-
-    ! FUNCTION grav_compare
-    !
-    ! Compare the position of two particles and return a particle
-    ! with the force set to the gravitational force between them.
+    ! Compare the position of two particles and return an array
+    ! representing the gravitational force on p1 due to p2.
     !
     ! F = G*m_1*m_2/(d^2) * r/|r|
     !
-    PURE function grav_compare(p1, p2)
-        type(particle) :: grav_compare
+    PURE function grav_pair_to_val(p1, p2, N)
+        ! Expect N = Ndim
+        integer, intent(in) :: N
+
+        real(p) :: grav_pair_to_val(N)
 
         type(particle), intent(in) :: p1
         type(particle), intent(in) :: p2
+
 
 
         REAL(p) :: d(Ndim)
@@ -59,24 +51,34 @@ contains
 
         force = G*p1%mass*p2%mass / r**2 * d_unit
 
-        grav_compare = p1
-        grav_compare%force = force
-    end function grav_compare
+        grav_pair_to_val = force
+    end function grav_pair_to_val
 
 
-    ! FUNCTION grav_merge
+    ! FUNCTION grav_set_val
     !
-    ! Sum the partial forces of the particles.
+    ! Set the force of the particle to the new total force.
     !
-    PURE function grav_merge(p1, p2)
-        type(particle) :: grav_merge
+    PURE function grav_set_val(p1, force, N)
+        ! Expect N = Ndim
+        integer, intent(in) :: N
+        type(particle) :: grav_set_val
 
         type(particle), intent(in) :: p1
-        type(particle), intent(in)    :: p2
+        real(p), intent(in) :: force(N)
 
 
-        grav_merge = p1
-        grav_merge%force = p1%force + p2%force
-    end function grav_merge
+        grav_set_val = p1
+        grav_set_val%force = force
+    end function grav_set_val
+
+    PURE function grav_gen_reduce_op(dist)
+        integer :: grav_gen_reduce_op
+
+        class(abstract_distribution), intent(in) :: dist
+
+
+        grav_gen_reduce_op = dist%sum
+    end function grav_gen_reduce_op
 
 end module grav_force

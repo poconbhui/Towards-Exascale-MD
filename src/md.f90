@@ -130,8 +130,10 @@ program MD
         ! Update forces, velocities and positions
         call dist%individual_operation(verlet_integrate_pt1)
 
-        call dist%individual_operation(grav_init)
-        call dist%pair_operation(grav_compare, grav_merge)
+        call dist%pair_operation( &
+            grav_pair_to_val, grav_set_val, &
+            grav_gen_reduce_op(dist), grav_reduction_init &
+        )
 
         call dist%individual_operation(verlet_integrate_pt2)
 

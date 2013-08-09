@@ -15,8 +15,10 @@ contains
 
         call dist%individual_operation(bench_integrate_1)
 
-        call dist%individual_operation(bench_force_init)
-        call dist%pair_operation(bench_force_compare, bench_force_merge)
+        call dist%pair_operation( &
+            bench_force_pair_to_val, bench_force_set_val, &
+            bench_force_gen_reduce_op(dist), bench_force_reduction_init &
+        )
 
         call dist%individual_operation(bench_integrate_2)
     end subroutine full_calculation
@@ -32,7 +34,10 @@ contains
         class(abstract_distribution), intent(inout) :: dist
 
 
-        call dist%pair_operation(bench_force_compare, bench_force_merge)
+        call dist%pair_operation( &
+            bench_force_pair_to_val, bench_force_set_val, &
+            bench_force_gen_reduce_op(dist), bench_force_reduction_init &
+        )
     end subroutine pair_operation
 
 end module bench_types
@@ -49,7 +54,6 @@ program bench
 
     use serial_distribution_type
     use replicated_distribution_type
-    use domain_distribution_type
     use systolic_distribution_type
 
     use integration
@@ -70,7 +74,6 @@ program bench
     ! Distribution types
     type(serial_distribution), target :: serial
     type(replicated_distribution), target :: replicated
-    type(domain_distribution), target :: domain
     type(systolic_distribution), target :: systolic
 
 
@@ -125,13 +128,6 @@ program bench
                 num_particles, MPI_COMM_WORLD &
             )
             call set_distribution_pointer(replicated, dist)
-
-        case ("domain")
-            domain = new_domain_distribution( &
-                num_particles, (/ 1.0_p, 1.0_p, 1.0_p /), bench_dist_init, &
-                MPI_COMM_WORLD &
-            )
-            call set_distribution_pointer(domain, dist)
 
         case ("systolic")
             systolic = new_systolic_distribution( &
@@ -284,11 +280,11 @@ contains
     ! It may be necessary to trim the returned result.
     !
     ! This is only expected to work with positive integers no
-    ! greater than 10 digits.
+    ! greater than 100 digits.
     !
     function integer_to_string(i)
-        ! Expect no larger than a 10 digit integer.
-        character(len=10) :: integer_to_string
+        ! Expect no larger than a 100 digit integer.
+        character(len=100) :: integer_to_string
 
         integer, intent(in) :: i
 
@@ -328,7 +324,6 @@ contains
 
 
         call dist%individual_operation(bench_dist_init)
-        call dist%individual_operation(bench_force_init)
 
         !call dist%print_particles(print_particle)
 

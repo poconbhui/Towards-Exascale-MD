@@ -17,6 +17,9 @@ module bench_suite
     integer, private :: particle_grid_dim
 
 
+    real(p), allocatable :: bench_force_reduction_init(:)
+
+
 
 contains
     function get_time()
@@ -40,7 +43,13 @@ contains
         system_width  = system_width_in
         time_step     = time_step_in
 
+        ! Initialise integrator
         call integration_init(time_step)
+
+
+        ! Set reduction init
+        allocate(bench_force_reduction_init(size(lj_reduction_init)))
+        bench_force_reduction_init = lj_reduction_init
 
 
         ! Expect the number of particles to be in the form n**(3*n)
@@ -109,36 +118,37 @@ contains
         bench_integrate_2 = verlet_integrate_pt2(p_i, i)
     end function bench_integrate_2
 
-    PURE function bench_force_init(p_i, i)
-        type(particle) :: bench_force_init
 
-        type(particle), intent(in) :: p_i
-        integer, intent(in) :: i
-
-
-        bench_force_init = lj_init(p_i, i)
-    end function bench_force_init
-
-
-    PURE function bench_force_compare(p_i, p_j)
-        type(particle) :: bench_force_compare
+    PURE function bench_force_pair_to_val(p_i, p_j, N)
+        integer, intent(in) :: N
+        real(p) :: bench_force_pair_to_val(N)
 
         type(particle), intent(in) :: p_i
         type(particle), intent(in) :: p_j
 
 
-        bench_force_compare = lj_compare(p_i, p_j)
-    end function bench_force_compare
+        bench_force_pair_to_val = lj_pair_to_val(p_i, p_j, N)
+    end function bench_force_pair_to_val
 
-    PURE function bench_force_merge(p_i, p_j)
-        type(particle) :: bench_force_merge
+    PURE function bench_force_set_val(p_i, force, N)
+        integer, intent(in) :: N
+        type(particle) :: bench_force_set_val
 
         type(particle), intent(in) :: p_i
-        type(particle), intent(in) :: p_j
+        real(p), intent(in) :: force(N)
 
 
-        bench_force_merge = lj_merge(p_i, p_j)
-    end function bench_force_merge
+        bench_force_set_val = lj_set_val(p_i, force, N)
+    end function bench_force_set_val
+
+    PURE function bench_force_gen_reduce_op(dist)
+        integer :: bench_force_gen_reduce_op
+
+        class(abstract_distribution), intent(in) :: dist
+
+
+        bench_force_gen_reduce_op = lj_gen_reduce_op(dist)
+    end function bench_force_gen_reduce_op
 
 
     PURE subroutine print_particle(pi, i, string)

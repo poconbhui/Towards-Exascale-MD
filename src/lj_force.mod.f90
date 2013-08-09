@@ -6,42 +6,37 @@
 module LJ_force
     use global_variables
     use particle_type
+    use abstract_distribution_type
     implicit none
 
 
     ! Delta and Epsilon parameters for the Lennard-Jones potential
     real(p), private :: del=1, eps=1
 
+
+    ! REAL(p) LJ_reduction_init(Ndim)
+    !
+    ! This is the initial value for the LJ force reduction.
+    ! It represents setting the particle force falus to zero.
+    !
+    integer, private :: i
+    real(p), parameter :: LJ_reduction_init(Ndim) = 0
+
 contains
 
 
-    ! FUNCTION LJ_init
+    ! FUNCTION LJ_pair_to_val
     !
-    ! Initialize particle force to zero.
+    ! Calculate the LJ force between two particles and return an
+    ! array representing the force on p1 due to p2
     !
-    PURE function LJ_init(p, i)
-        type(particle) :: LJ_init
-
-        type(particle), intent(in) :: p
-        integer, intent(in) :: i
-
-
-        LJ_init = p
-        LJ_init%force = 0
-    end function LJ_init
-
-
-    ! FUNCTION LJ_compare
-    !
-    ! Calculate the LJ force between two particles and return a
-    ! particle representing the first particle its force set to this
-    ! value.
-    !
-    PURE function LJ_compare(p1, p2)
-        type(particle) :: LJ_compare
+    PURE function LJ_pair_to_val(p1, p2, N)
+        ! Expect N = Ndim
+        integer, intent(in) :: N
+        real(p) :: LJ_pair_to_val(N)
 
         type(particle), intent(in) :: p1
-        type(particle), intent(in)    :: p2
+        type(particle), intent(in) :: p2
 
 
         real(p) :: d(Ndim)
@@ -58,24 +53,35 @@ contains
 
         force = -24*eps * ( 2*(del**12/r**13) - (del**6/r**7) ) * d_unit
 
-        LJ_compare = p1
-        LJ_compare%force = force
-    end function LJ_compare
+        LJ_pair_to_val = force
+    end function LJ_pair_to_val
 
 
-    ! FUNCTION LJ_merge
+    ! FUNCTION LJ_set_val
     !
-    ! Add the partial forces of the particles.
+    ! Set the force of the particle to the new reduced force.
     !
-    PURE function LJ_merge(p1, p2)
-        type(particle) :: LJ_merge
+    PURE function LJ_set_val(p1, force, N)
+        ! Expect N = Ndim
+        integer, intent(in) :: N
+        type(particle) :: LJ_set_val
 
         type(particle), intent(in) :: p1
-        type(particle), intent(in)    :: p2
+        real(p), intent(in) :: force(N)
 
 
-        LJ_merge = p1
-        LJ_merge%force = p1%force + p2%force
-    end function LJ_merge
+        LJ_set_val = p1
+        LJ_set_val%force = force
+    end function LJ_set_val
+
+
+    PURE function LJ_gen_reduce_op(dist)
+        integer :: LJ_gen_reduce_op
+
+        class(abstract_distribution), intent(in) :: dist
+
+
+        LJ_gen_reduce_op = dist%sum
+    end function LJ_gen_reduce_op
 
 end module LJ_force
