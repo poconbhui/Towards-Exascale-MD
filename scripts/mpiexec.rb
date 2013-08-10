@@ -12,6 +12,10 @@ module MpiExec
 
     options[:cores] ||= 1
     options[:cores] = Integer(options[:cores])
+    options[:mpi_procs] ||= options[:cores]
+    options[:mpi_procs] = Integer(options[:mpi_procs])
+    options[:openmp_per_mpi] ||= 1
+    options[:openmp_per_mpi] = Integer(options[:openmp_per_mpi])
 
     args << options
 
@@ -32,14 +36,21 @@ module MpiExec
     hector_max_cores_per_node = 32
 
     cores = options[:cores]
+    mpi_procs = options[:mpi_procs]
+    openmp_per_mpi = options[:openmp_per_mpi]
 
-    cores_per_node = options[:cores_per_node] || options[:cores]
-    cores_per_node = [ hector_max_cores_per_node, options[:cores] ].min
+    procs_per_node = options[:procs_per_node] || mpi_procs
+    if procs_per_node*openmp_per_mpi > hector_max_cores_per_node
+        procs_per_node = (hector_max_cores_per_node/openmp_per_mpi).floor
+    end
 
-    "time aprun -n #{cores} -N #{cores_per_node} #{program}"
+    "OMP_NUM_THREADS=#{openmp_per_mpi}
+        time aprun -n #{mpi_procs} -N #{procs_per_node} -d #{openmp_per_mpi} \
+        #{program}"
   end
 
   def mpiexec(program, options)
-    "time mpiexec -n #{options[:cores]} #{program}"
+    "OMP_NUM_THREADS=#{options[:openmp_per_mpi]} \
+        time mpiexec -n #{options[:mpi_procs]} #{program}"
   end
 end
