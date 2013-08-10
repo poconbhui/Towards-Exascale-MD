@@ -1,3 +1,10 @@
+
+! MODULE force_test
+!
+! This module is for testing that forces specified by force modules
+! behave as expected, and that their functions have the required
+! signatures for the pair_operation method of a distribution.
+!
 module force_test
     use global_variables
     use particle_type
@@ -5,8 +12,21 @@ module force_test
     use test_suite
     implicit none
 
+    private
 
-    interface
+    public :: force_module_test
+
+
+    ! INTERFACE gen_reduce_op_interface
+    !
+    ! Interface for gen_reduce_op function, as expected from a force
+    ! module.
+    !
+    ! The interface is specified here because pgf90 seems to complain
+    ! if the interface is placed in the function when trying to
+    ! declare a procedure as "procedure(fn_interface) :: fn".
+    !
+    interface gen_reduce_op_interface
         PURE function gen_reduce_op_function(dist)
             use abstract_distribution_type
             implicit none
@@ -15,9 +35,18 @@ module force_test
 
             class(abstract_distribution), intent(in) :: dist
         end function gen_reduce_op_function
-    end interface
+    end interface gen_reduce_op_interface
 
 contains
+
+
+    ! SUBROUTINE force_module_test
+    !
+    ! Check that a force module has functions with the appropriate
+    ! signatures for a pair_operation.
+    !
+    ! Check that a force module only changes the force of a particle.
+    !
     subroutine force_module_test( &
         name, pair_to_val, set_val, &
         gen_reduce_op, reduction_init &

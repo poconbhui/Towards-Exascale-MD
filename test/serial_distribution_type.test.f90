@@ -1,9 +1,14 @@
+! PROGRAM serial_distribution_test
+!
+! This program checks that the serial_distribution_type works as expected.
+!
 program serial_distribution_test
+    use serial_distribution_type
+
     use distribution_test
     use test_suite
     use particle_type
     use abstract_distribution_type
-    use serial_distribution_type
     use global_variables
     implicit none
 

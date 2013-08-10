@@ -1,8 +1,13 @@
+! PROGRAM systolic_distribution_test
+!
+! This program checks that the systolic_distribution type works as expected.
+!
 program systolic_distribution_test
+    use systolic_distribution_type
+
     use test_suite
     use particle_type
     use distribution_test
-    use systolic_distribution_type
     use global_variables
     use mpi
     implicit none
@@ -25,15 +30,5 @@ program systolic_distribution_test
     exit_value = end_test()
     call MPI_Finalize(ierr)
     call exit(exit_value)
-
-contains
-    PURE subroutine print_particle(pi, i, string)
-        type(particle), intent(in) :: pi
-        integer, intent(in) :: i
-        character(len=*), intent(out) :: string
-
-
-        write(string,*) i, pi%pos(1), pi%vel(1)
-    end subroutine print_particle
 
 end program systolic_distribution_test

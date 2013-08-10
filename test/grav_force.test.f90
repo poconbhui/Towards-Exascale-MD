@@ -1,9 +1,12 @@
+! PROGRAM grav_force_test
+!
+! Test that the grav_force module behaves as expected.
+!
 program grav_force_test
-    use test_suite
-    use particle_type
-    use abstract_distribution_type
     use grav_force
+
     use force_test
+    use test_suite
     implicit none
 
     call force_module_test( &

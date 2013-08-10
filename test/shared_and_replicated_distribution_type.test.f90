@@ -1,3 +1,8 @@
+! PROGRAM shared_and_replicated_distribution_test
+!
+! This program tests that the shared_and_replicated_distribution type
+! works as expected.
+!
 program shared_and_replicated_distribution_test
     use test_suite
     use particle_type

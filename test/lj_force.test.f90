@@ -1,3 +1,7 @@
+! PROGRAM lj_force_test
+!
+! This program checks that the lj_force module behaves as expected.
+!
 program lj_force_test
     use test_suite
     use particle_type

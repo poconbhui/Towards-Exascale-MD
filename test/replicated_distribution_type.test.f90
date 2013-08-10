@@ -1,3 +1,8 @@
+! PROGRAM replicated_disribution_test
+!
+! This program checks that the replicated_distribution type works
+! as expected.
+!
 program replicated_distribution_test
     use test_suite
     use particle_type
