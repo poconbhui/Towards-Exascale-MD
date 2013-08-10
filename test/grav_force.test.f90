@@ -5,9 +5,11 @@
 program grav_force_test
     use grav_force
 
-    use force_test
     use test_suite
+
+    use force_test
     implicit none
+
 
     call force_module_test( &
         "grav_force", &

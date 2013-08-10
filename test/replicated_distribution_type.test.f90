@@ -3,14 +3,17 @@
 ! This program checks that the replicated_distribution type works
 ! as expected.
 !
+! It should be run with several MPI processes.
+!
 program replicated_distribution_test
-    use test_suite
-    use particle_type
-    use distribution_test
     use replicated_distribution_type
-    use global_variables
     use mpi
+
+    use test_suite
+
+    use distribution_test
     implicit none
+
 
     integer :: num_particles
     type(replicated_distribution) :: dist
@@ -30,15 +33,5 @@ program replicated_distribution_test
     exit_value = end_test()
     call MPI_Finalize(ierr)
     call exit(exit_value)
-
-contains
-    PURE subroutine print_particle(pi, i, string)
-        type(particle), intent(in) :: pi
-        integer, intent(in) :: i
-        character(len=*), intent(out) :: string
-
-
-        write(string,*) i, pi%pos(1), pi%vel(1)
-    end subroutine print_particle
 
 end program replicated_distribution_test

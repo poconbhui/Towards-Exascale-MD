@@ -18,12 +18,22 @@ module test_suite
     use mpi
     implicit none
 
-    INTEGER, PRIVATE :: error_count = 0
+
+    private
+
+
+    ! Export test_suite functions
+    public :: describe
+    public :: expect
+    public :: end_test
+
+
+    ! Variable tracking the number of failed tests so far.
+    integer, private :: error_count = 0
 
 contains
 
 
-    !
     ! SUBROUTINE get_rank
     !
     ! Get the rank of the current process.
@@ -47,6 +57,26 @@ contains
             rank = 0
         end if
     end subroutine get_rank
+
+
+    ! SUBROUTINE print_string
+    !
+    ! Print the passed string to screen from rank 0 of the given comm.
+    !
+    subroutine print_string(string, comm)
+        character(len=*), intent(in) :: string
+        integer, intent(in) :: comm
+
+        integer :: rank
+
+
+        call get_rank(comm, rank)
+
+        if(rank .EQ. 0) write(*,*) string
+    end subroutine print_string
+
+
+        
 
 
     ! SUBROUTINE reduce_expr
@@ -88,7 +118,6 @@ contains
         integer, optional :: comm_in
 
         integer :: comm
-        integer :: rank
 
 
         if(present(comm_in)) then
@@ -97,9 +126,7 @@ contains
             comm = MPI_COMM_WORLD
         end if
 
-        call get_rank(comm, rank)
-
-        if(rank .EQ. 0) write(*,*) "-", string
+        call print_string("- "//string, comm)
     end subroutine describe
 
 
@@ -110,38 +137,38 @@ contains
     ! expect will output string to the screen and PASS is expr evaluates
     ! to true on all processes in comm_in, or FALSE otherwise.
     !
+    ! The comm_in variable is optional. The default is MPI_COMM_WORLD
+    !
     subroutine expect(string, expr, comm_in)
         character(len=*) :: string
         logical :: expr
         integer, optional :: comm_in
 
         integer :: comm
-        integer :: rank
-
-        logical :: global_expr
 
 
+        ! Deal with optional comm_in parameter
         if(present(comm_in)) then
             comm = comm_in
         else
             comm = MPI_COMM_WORLD
         end if
 
-        call get_rank(comm, rank)
 
-        global_expr = expr
-        call reduce_expr(comm, global_expr)
+        ! Find global trueness of expr
+        call reduce_expr(comm, expr)
 
-        if(rank .EQ. 0) then
-            write(*,*) "--", string
 
-            if(global_expr) then
-                write(*,*) "--- Pass"
-            else
-                write(*,*) "--- Failed"
+        ! Output expected message
+        call print_string("-- "//string, comm)
 
-                error_count = error_count + 1
-            end if
+        ! Output pass status
+        if(expr) then
+            call print_string("--- Pass", comm)
+        else
+            call print_string("--- Failed", comm)
+
+            error_count = error_count + 1
         end if
     end subroutine expect
 
@@ -154,16 +181,22 @@ contains
     function end_test()
         integer :: end_test
 
-        integer :: rank
+        character(len=20) error_count_str
 
-
-        call get_rank(MPI_COMM_WORLD, rank)
 
         if(error_count .EQ. 0) then
-            if(rank .EQ. 0) write(*,*) "All tests passed!"
+            call print_string("All tests passed!", MPI_COMM_WORLD)
+
             end_test = 0
         else
-            if(rank .EQ. 0) write(*,*) "Encountered ",error_count,"errors"
+            write(error_count_str,*) error_count
+            error_count_str = adjustl(error_count_str)
+
+            call print_string( &
+                "Encountered "//trim(error_count_str)//" errors", &
+                MPI_COMM_WORLD &
+            )
+
             end_test = 1
         end if
     end function end_test

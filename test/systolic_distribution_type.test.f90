@@ -2,15 +2,17 @@
 !
 ! This program checks that the systolic_distribution type works as expected.
 !
+! This should be called with several MPI processes.
+!
 program systolic_distribution_test
     use systolic_distribution_type
+    use mpi
 
     use test_suite
-    use particle_type
+
     use distribution_test
-    use global_variables
-    use mpi
     implicit none
+
 
     integer :: num_particles
     type(systolic_distribution) :: dist

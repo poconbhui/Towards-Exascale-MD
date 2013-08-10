@@ -3,14 +3,18 @@
 ! This program tests that the shared_and_replicated_distribution type
 ! works as expected.
 !
+! This should be run with several MPI processes and OMP_NUM_THREADS set to
+! something greater than 1.
+!
 program shared_and_replicated_distribution_test
-    use test_suite
-    use particle_type
-    use distribution_test
     use shared_and_replicated_distribution_type
-    use global_variables
     use mpi
+
+    use test_suite
+
+    use distribution_test
     implicit none
+
 
     integer :: num_particles
     type(shared_and_replicated_distribution) :: dist
@@ -30,15 +34,5 @@ program shared_and_replicated_distribution_test
     exit_value = end_test()
     call MPI_Finalize(ierr)
     call exit(exit_value)
-
-contains
-    PURE subroutine print_particle(pi, i, string)
-        type(particle), intent(in) :: pi
-        integer, intent(in) :: i
-        character(len=*), intent(out) :: string
-
-
-        write(string,*) i, pi%pos(1), pi%vel(1)
-    end subroutine print_particle
 
 end program shared_and_replicated_distribution_test

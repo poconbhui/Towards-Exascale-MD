@@ -3,23 +3,24 @@
 ! This program tests that the particle type has all the member variables
 ! expected and is settable using particle(pos=...,vel=..., ...).
 !
-! This program also tests that the MPI_Particle derived types passes
+! This program also tests that the MPI_particle derived types passes
 ! particles across MPI as expected.
+!
+! It should be called with several MPI processes to properly test MPI_particle.
 !
 program particle_type_test
     use particle_type
-
-    use global_variables
     use mpi
+
     use test_suite
     implicit none
+
 
     type(particle) :: test_particle
     integer :: MPI_particle
 
     integer :: comm = MPI_COMM_WORLD
     integer :: rank
-    integer :: nprocs
 
     integer :: exit_value
     integer :: ierror
@@ -28,8 +29,6 @@ program particle_type_test
     call MPI_Init(ierror)
 
 
-    call MPI_Comm_rank(comm, rank, ierror)
-    call MPI_Comm_size(comm, nprocs, ierror)
 
 
     !
@@ -50,9 +49,13 @@ program particle_type_test
     !
     call describe("generate_MPI_particle")
 
+    !
+    ! Generate the MPI_particle
+    !
     call generate_MPI_particle(MPI_particle)
 
     ! Set particle to some rank specific configuration
+    call MPI_Comm_rank(comm, rank, ierror)
     test_particle = particle(pos=rank, vel=2*rank, force=3*rank, mass=4*rank)
 
     ! Get particle from process 1
@@ -68,6 +71,5 @@ program particle_type_test
     exit_value = end_test()
     call MPI_Finalize(ierror)
     call exit(exit_value)
-
 
 end program particle_type_test

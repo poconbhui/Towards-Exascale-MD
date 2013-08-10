@@ -14,34 +14,43 @@ program integration_test
     use integration
 
     use test_suite
+
     use global_variables
     use particle_type
     implicit none
 
-    REAL(p), parameter :: PI = 3.14159265
-    REAL(p) :: total_time = 1000
-    REAL(p) :: time_step = 0.001
-    REAL(p) :: accuracy = 0.001
 
-    INTEGER :: total_steps
-    INTEGER :: current_step
+    real(p), parameter :: PI = 3.14159265
+    real(p) :: total_time = 1000
+    real(p) :: time_step = 0.001
+    real(p) :: accuracy = 0.001
+
+    integer :: total_steps
+    integer :: current_step
 
     type(particle) :: test_particle
-    REAL(p) :: initial_position(Ndim)
+    real(p) :: initial_position(Ndim)
 
+
+    !
+    ! Set a random initial position
+    !
     call random_seed
 
     call random_number(initial_position)
+
 
     !
     ! Initialize test particle
     !
     test_particle = particle(pos=initial_position, vel=0, force=0, mass=1)
 
+
     !
     ! Initialize integration module
     !
     call integration_init(time_step)
+
 
     !
     ! Solve the system for the given number of time steps

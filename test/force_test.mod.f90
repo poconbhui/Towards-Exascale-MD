@@ -1,4 +1,3 @@
-
 ! MODULE force_test
 !
 ! This module is for testing that forces specified by force modules
@@ -6,14 +5,19 @@
 ! signatures for the pair_operation method of a distribution.
 !
 module force_test
+    use test_suite
+
+    use abstract_distribution_type
+
     use global_variables
     use particle_type
-    use abstract_distribution_type
-    use test_suite
     implicit none
+
 
     private
 
+
+    ! Export the force_module_test function
     public :: force_module_test
 
 

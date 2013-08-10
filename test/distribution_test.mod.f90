@@ -1,11 +1,24 @@
+! MODULE distribution_test
+!
+! This module exports a function distribution_module_test which is
+! used to check if a given distribution has the minimum facilities
+! that we expect and that they work.
+!
+! A distribution that passes distribution_module_test is considered
+! to be working.
+!
 module distribution_test
     use test_suite
+
     use abstract_distribution_type
+
     use particle_type
     use global_variables
     implicit none
 
+
     private
+
 
     ! Export the distribution_module_test
     public :: distribution_module_test
@@ -17,6 +30,7 @@ module distribution_test
     ! to set the multiplier used when setting a partile pos.
     !
     real(p) :: init_multiplier = 1
+
 
 contains
 
@@ -201,24 +215,6 @@ contains
             pos=init_multiplier*i, vel=0, force=0, mass=1 &
         )
     end function init
-
-
-    ! SUBROUTINE print_particle
-    !
-    ! This is a throwaway routine for use with a distribution's
-    ! print_particles routine.
-    !
-    ! This is only here for debugging purposes.
-    !
-    PURE subroutine print_particle(pi, i, string)
-        type(particle), intent(in) :: pi
-        integer, intent(in) :: i
-        character(len=*), intent(out) :: string
-
-
-        write(string, *) i, pi%pos(1), pi%vel(1)
-        string = adjustl(string)
-    end subroutine print_particle
 
 
     ! FUNCTION pos_sum_map

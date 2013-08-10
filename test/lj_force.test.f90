@@ -3,12 +3,13 @@
 ! This program checks that the lj_force module behaves as expected.
 !
 program lj_force_test
-    use test_suite
-    use particle_type
-    use abstract_distribution_type
     use lj_force
+
+    use test_suite
+
     use force_test
     implicit none
+
 
     call force_module_test( &
         "lj_force", &
