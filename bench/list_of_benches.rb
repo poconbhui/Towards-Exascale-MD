@@ -13,7 +13,7 @@ def bench_for(num_particles, core_counts)
 
             if distribution_name == "shared_and_replicated"
                 core_counts.each do |num_cores|
-                    if(num_cores >= 8)
+                    if num_cores >= 8
                         bench(
                             distribution_name,
                             num_particles,
@@ -22,6 +22,7 @@ def bench_for(num_particles, core_counts)
                             8
                         )
                     end
+                end
             else
                 core_counts.each do |num_cores|
                     bench(
@@ -31,6 +32,7 @@ def bench_for(num_particles, core_counts)
                         num_cores,
                         1
                     )
+                end
             end
 
         end ]

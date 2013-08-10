@@ -79,10 +79,14 @@ contains
 
             call this%get_chunk_data(this%rank, i_size, i_start, i_end)
 
+
             !$OMP PARALLEL DO &
             !$OMP&  DEFAULT(none) &
             !$OMP&  PRIVATE(reduce_val, tmp_val, i, j) &
-            !$OMP&  SHARED(reduction_identity, this, reduce_func)
+            !$OMP&  SHARED( &
+            !$OMP&      reduction_identity, this, reduce_func, &
+            !$OMP&      i_start, i_end &
+            !$OMP&  )
             !
             do i=i_start, i_end
                 reduce_val = reduction_identity
