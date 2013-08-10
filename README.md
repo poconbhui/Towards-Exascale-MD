@@ -14,11 +14,13 @@ Usage
 
 ### Quick Start ###
 On Morar:
+
     ./configure.rb --FC=pgf90 --MPIFC=mpif90 --mpiexec=mpiexec
     make all
     make run_test
 
 On Hector:
+
     ./configure.rb --FC=crayftn --MPIFC=ftn --mpiexec=aprun
     make all
     bolt -n 4 -s make run_test
