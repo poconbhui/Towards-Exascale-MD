@@ -27,7 +27,7 @@ ifeq ($(FC), crayftn)
 endif
 ifeq ($(FC), gfortran)
     FT_INCLUDES=-I../src
-    FT_FLAGS=-Wall -Wno-unused-dummy-argument
+    FT_FLAGS=-Wall -Wno-unused-dummy-argument -fopenmp
     FT_COMPILE_MODULE=-c
 endif
 ifeq ($(FC), pgf90)

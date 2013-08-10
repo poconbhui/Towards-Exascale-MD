@@ -12,14 +12,14 @@ module replicated_distribution_type
     public :: new_replicated_distribution
 
     type, EXTENDS(abstract_distribution) :: replicated_distribution
-        integer, private :: num_particles
+        integer :: num_particles
 
-        type(particle), private, allocatable :: particles(:)
-        type(particle), private, allocatable :: local_particles(:)
+        type(particle), allocatable :: particles(:)
+        type(particle), allocatable :: local_particles(:)
 
-        integer, private :: rank
-        integer, private :: nprocs
-        integer, private :: comm
+        integer :: rank
+        integer :: nprocs
+        integer :: comm
 
     contains
         procedure :: init
@@ -29,8 +29,8 @@ module replicated_distribution_type
         procedure :: print_particles
         procedure :: print_string
 
-        procedure, private :: sync_particles
-        procedure, private :: get_chunk_data
+        procedure :: sync_particles
+        procedure :: get_chunk_data
     end type replicated_distribution
 
 contains

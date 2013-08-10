@@ -11,7 +11,8 @@ programs = \
 	lj_force.test \
 	serial_distribution_type.test \
 	replicated_distribution_type.test \
-	systolic_distribution_type.test 
+	systolic_distribution_type.test \
+	shared_and_replicated_distribution_type.test
 
 
 particle_type.test: ../src/global_variables.mod.o ../src/particle_type.mod.o test_suite.mod.o
@@ -58,3 +59,9 @@ replicated_distribution_type.test: \
 systolic_distribution_type.test: \
 	$(distribution_test.mod.o) \
 	../src/systolic_distribution_type.mod.o
+
+shared_and_replicated_distribution_type.test: \
+	$(distribution_test.mod.o) \
+	../src/replicated_distribution_type.mod.o \
+	../src/shared_and_replicated_distribution_type.mod.o
+

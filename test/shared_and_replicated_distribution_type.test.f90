@@ -1,14 +1,14 @@
-program replicated_distribution_test
+program shared_and_replicated_distribution_test
     use test_suite
     use particle_type
     use distribution_test
-    use replicated_distribution_type
+    use shared_and_replicated_distribution_type
     use global_variables
     use mpi
     implicit none
 
     integer :: num_particles
-    type(replicated_distribution) :: dist
+    type(shared_and_replicated_distribution) :: dist
 
     integer :: exit_value
     integer :: ierr
@@ -17,7 +17,7 @@ program replicated_distribution_test
     call MPI_Init(ierr)
 
     num_particles = 40
-    dist = new_replicated_distribution(num_particles, MPI_COMM_WORLD)
+    dist = new_shared_and_replicated_distribution(num_particles, MPI_COMM_WORLD)
 
     call distribution_module_test(dist, num_particles)
 
@@ -36,4 +36,4 @@ contains
         write(string,*) i, pi%pos(1), pi%vel(1)
     end subroutine print_particle
 
-end program replicated_distribution_test
+end program shared_and_replicated_distribution_test
