@@ -1,5 +1,5 @@
 #
-# Makefile.in
+# Makefile.inc.in
 #
 # This Makefile contains generic rules, useful for Makefiles
 # used throughout this project.
@@ -7,6 +7,14 @@
 # It is designed to be included at the top of a Makefile.
 #
 
+
+#
+# Set the FC and MPIFC variables.
+#
+# The @FC@ and @MPIFC@ seen in Makefile.inc.in are replaced by configure.rb
+# with the values requested using --FC and --MPIFC when generating
+# Makefile.inc
+#
 FC=@FC@
 MPIFC=@MPIFC@
 
@@ -51,7 +59,8 @@ all: $(programs)
 
 
 #
-# Compile things in the src directory
+# Compile things in the src directory.
+# Useful for Makefiles not in the src directory with dependancies there.
 #
 ../src/%:
 	make -C ../src $*
@@ -67,7 +76,10 @@ all: $(programs)
 #
 # Module compilation rules
 #
+
+# Ensure .mod files are not deleted
 .PRECIOUS: %.mod
+
 %.mod: %.mod.f90
 	$(MPIFC) -c -o $@ $< $(FT_INCLUDES) $(FT_FLAGS)
 
@@ -80,20 +92,25 @@ all: $(programs)
 
 
 
-
 #
 # Cleanup rules
 #
+
+# Files we generally want to remove
 temps = *.o *.mod
+
+# Remove files matched by temps
 .PHONY: clean_temps
 clean_temps:
 	@echo rm *.o *.mod
 	-@rm *.o *.mod 2>/dev/null 1>/dev/null; true
 
+# Remove files specified in the programs variable
 .PHONY: clean_programs
 clean_programs: clean_temps
 	@$(if $(programs), echo rm $(programs))
 	-@$(if $(programs), rm $(programs) 2>/dev/null 1>/dev/null; true)
 
+# Clean all cleanable files
 .PHONY: clean
 clean: clean_programs clean_temps
