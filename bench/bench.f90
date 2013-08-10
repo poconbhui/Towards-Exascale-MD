@@ -44,6 +44,7 @@ end module bench_types
 
 program bench
     use mpi
+    use omp_lib
     use bench_suite
     use bench_types
     use bench_flags
@@ -55,6 +56,7 @@ program bench
     use serial_distribution_type
     use replicated_distribution_type
     use systolic_distribution_type
+    use shared_and_replicated_distribution_type
 
     use integration
 
@@ -63,10 +65,11 @@ program bench
 
     integer :: num_particles
     integer :: num_reps
-    character(len=20)  :: distribution_name
-    character(len=20)  :: benchmark_name
+    character(len=50)  :: distribution_name
+    character(len=50)  :: benchmark_name
     character(len=255) :: output_filename
     integer :: num_procs
+    integer :: total_cores
 
 
     class(abstract_distribution), pointer :: dist
@@ -75,6 +78,7 @@ program bench
     type(serial_distribution), target :: serial
     type(replicated_distribution), target :: replicated
     type(systolic_distribution), target :: systolic
+    type(shared_and_replicated_distribution), target :: shared_and_replicated
 
 
     procedure(bench_type_subroutine), pointer :: bench_ptr => null()
@@ -107,7 +111,19 @@ program bench
     call MPI_Init(ierror)
 
 
+    !
+    ! Find total number of cores between openmp and mpi
+    !
+
+    total_cores = 0
+    !$OMP PARALLEL REDUCTION(+:total_cores)
+    total_cores = total_cores + 1
+    !$OMP END PARALLEL
+
     call MPI_Comm_size(MPI_COMM_WORLD, num_procs, ierror)
+
+    total_cores = total_cores*num_procs
+
 
     call parse_arguments( &
       argc, argv, &
@@ -135,8 +151,15 @@ program bench
             )
             call set_distribution_pointer(systolic, dist)
 
+        case ("shared_and_replicated")
+            shared_and_replicated = new_shared_and_replicated_distribution( &
+                num_particles, MPI_COMM_WORLD &
+            )
+            call set_distribution_pointer(shared_and_replicated, dist)
+
+
         case default
-            write(0,*) "Error: Invalid distribution type"
+            write(0,*) "Error: Invalid distribution type "//distribution_name
             call exit(1)
 
     end select
@@ -317,7 +340,7 @@ contains
 
 
         call gen_output_filename( &
-            distribution_name, benchmark_name, num_particles, num_procs, &
+            distribution_name, benchmark_name, num_particles, total_cores, &
             disable_mpi, disable_calculation, output_filename &
         )
         call dist%print_string("Running "//output_filename)
@@ -395,11 +418,11 @@ contains
             write(88, *) &
                 "# distrubution_name benchmark_name &
                 &num_particles mpi_disabled calculation_disabled &
-                &num_procs num_reps time"
+                &total_cores num_reps time"
 
             write(88, *) &
                 trim(distribution_name)//" ", trim(benchmark_name)//" ", &
-                num_particles, num_procs, &
+                num_particles, total_cores, &
                 disable_mpi, disable_calculation, &
                 num_reps, end_time-start_time
 

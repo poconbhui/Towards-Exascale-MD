@@ -1,4 +1,4 @@
-Distributions = ["replicated", "systolic"]
+Distributions = ["replicated", "systolic", "shared_and_replicated"]
 MinReps = 5
 
 
@@ -11,13 +11,26 @@ def bench_for(num_particles, core_counts)
 
         [ distribution_name, Proc.new do
 
-            core_counts.each do |num_cores|
-                bench(
-                    distribution_name,
-                    num_particles,
-                    MinReps,
-                    num_cores
-                )
+            if distribution_name == "shared_and_replicated"
+                core_counts.each do |num_cores|
+                    if(num_cores >= 8)
+                        bench(
+                            distribution_name,
+                            num_particles,
+                            MinReps,
+                            num_cores/8,
+                            8
+                        )
+                    end
+            else
+                core_counts.each do |num_cores|
+                    bench(
+                        distribution_name,
+                        num_particles,
+                        MinReps,
+                        num_cores,
+                        1
+                    )
             end
 
         end ]
