@@ -3,9 +3,9 @@
 # MODULE MpiExec
 #
 # This provides the run function which is used to run MPI jobs.
-# It is expected to be used with the mpiexec environment variable
-# set to either mpiexec or aprun.
-# If the mpiexec environment variable isn't set, the default action
+# It is expected to be used with the MPIEXEC environment variable
+# set to either "mpiexec" or "aprun".
+# If the MPIEXEC environment variable isn't set, the default action
 # is to use the mpiexec program to run MPI jobs.
 #
 module MpiExec
@@ -14,13 +14,13 @@ module MpiExec
   # DEF self.mpiexec
   #
   # An accessor for the mpiexec variable with a default value
-  # of either the mpiexec environment variable or "default"
+  # of either the MPIEXEC environment variable or "default"
   #
-  def self.mpiexec
-    @mpiexec ||= ENV["mpiexec"] || "default"
+  def self.MPIEXEC
+    @MPIEXEC ||= ENV["MPIEXEC"] || "default"
   end
-  def self.mpiexec=(val)
-    @mpiexec = val
+  def self.MPIEXEC=(val)
+    @MPIEXEC = val
   end
 
 
@@ -36,13 +36,13 @@ module MpiExec
   # The :openmp_per_mpi option defaults to 1.
   #
   # The :mpi_procs option is used to set how many mpi processes the
-  # mpiexec function should spawn.
+  # MPIEXEC function should spawn.
   #
   # The :openmp_per_mpi option is used to set the OMP_NUM_THREADS
   # environment variable.
   #
   # Extra options specified will be passed unaltered to the underlying
-  # mpiexec functions defined here.
+  # MPIEXEC functions defined here.
   #
   def run(*args)
     # Sanitize options
@@ -57,8 +57,8 @@ module MpiExec
 
     args << options
 
-    # Get appropriate mpiexec command
-    case MpiExec.mpiexec
+    # Get appropriate MPIEXEC command
+    case MpiExec.MPIEXEC
       when "aprun"
         shell_command = aprun(*args)
       else
@@ -103,7 +103,7 @@ module MpiExec
         procs_per_node = (hector_max_cores_per_node/openmp_per_mpi).floor
     end
 
-    "OMP_NUM_THREADS=#{openmp_per_mpi}
+    "OMP_NUM_THREADS=#{openmp_per_mpi} \
         time aprun -n #{mpi_procs} -N #{procs_per_node} -d #{openmp_per_mpi} \
         #{program}"
   end

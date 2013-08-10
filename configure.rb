@@ -1,5 +1,19 @@
 #!/usr/bin/env ruby
 
+# ./configure.rb
+#
+# Example usage:
+#   # Configure for use on HECToR
+#   ./configure.rb --FC=crayftn --MPIFC=ftn --MPIEXEC=aprun
+#
+#   # Configure for use in a less exotic environment
+#   ./configure.rb --FC=gfortran --MPIFC=mpif90 --MPIEXEC=mpiexec
+#
+# This script is use to configure some scripts in the scripts folder
+# including exec.sh and Makefile.inc that are used for building,
+# testing and benchmarking the project.
+#
+
 require 'optparse'
 
 #
@@ -7,7 +21,7 @@ require 'optparse'
 #
 @FC = "gfortran"
 @MPIFC = "mpif90"
-@mpiexec = "mpiexec"
+@MPIEXEC = "mpiexec"
 
 #
 # Get command line arguments
@@ -15,7 +29,7 @@ require 'optparse'
 OptionParser.new do |o|
     o.banner =
         "Usage: configure.rb [--FC=<fortran compiler>] 
-        [--MPIFC=<MPI fortran compiler>] [--mpiexec=<mpi execution program>]
+        [--MPIFC=<MPI fortran compiler>] [--MPIEXEC=<mpi execution program>]
         
         Configure the execution environment.
         Compile Makefile.in and scripts/exec.sh.in templates.
@@ -48,11 +62,11 @@ OptionParser.new do |o|
     o.separator ""
 
     o.on(
-        '--mpiexec=[mpiexec, aprun]', [:mpiexec, :aprun],
+        '--MPIEXEC=[mpiexec, aprun]', [:mpiexec, :aprun],
         'MPI execution program to be used.',
         'Only listed execution programs supported.',
         'Default: mpiexec'
-    ) {|mpiexec| @mpiexec=mpiexec }
+    ) {|mpiexec| @MPIEXEC=mpiexec }
 
     o.parse!
 end
@@ -65,7 +79,7 @@ def compile_in(filename, make_executable=false)
     # Make replacements
     infile.gsub!('@FC@', @FC.to_s)
     infile.gsub!('@MPIFC@', @MPIFC.to_s)
-    infile.gsub!('@mpiexec@', @mpiexec.to_s)
+    infile.gsub!('@MPIEXEC@', @MPIEXEC.to_s)
 
     # Write infile
     File.open("#{filename}", "w") do |f|
@@ -80,7 +94,7 @@ end
 puts "Using:
     FC=#{@FC}
     MPIFC=#{@MPIFC}
-    mpiexec=#{@mpiexec}"
+    MPIEXEC=#{@MPIEXEC}"
 
 compile_in("scripts/Makefile.inc")
 compile_in("scripts/exec.sh", true)

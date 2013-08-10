@@ -11,9 +11,9 @@
 #   ./scripts/exec.sh run_benchs.rb 2^9 1-64 replicated
 #
 # exec.sh.in generates exec.sh when configure.rb is run.
-# The values @FC@, @MPIFC@ and @mpiexec@ seen in exec.sh.in
+# The values @FC@, @MPIFC@ and @MPIEXEC@ seen in exec.sh.in
 # are replaced by the values requested through --FC, --MPIFC
-# and --mpiexec when running configure.rb.
+# and --MPIEXEC when running configure.rb.
 #
 # exec.sh may then be used to quickly run scripts in the scripts
 # directory from the command line using ./scripts/exec.sh my_script.rb
@@ -29,7 +29,7 @@
 # Set the environment variables
 export FC=@FC@
 export MPIFC=@MPIFC@
-export mpiexec=@mpiexec@
+export MPIEXEC=@MPIEXEC@
 
 
 # Find the script directory
