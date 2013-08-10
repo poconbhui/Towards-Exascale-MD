@@ -7,11 +7,13 @@
 #
 
 
-# Load relpath
+# Load relpath function
 require File.expand_path('relpath', File.dirname(__FILE__))
 
-# Load mpiexec
+# Load MpiExec module to get run function
 require relpath('./mpiexec')
+
+# Import run function into current scope
 include MpiExec
 
 

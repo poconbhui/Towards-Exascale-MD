@@ -2,9 +2,11 @@
 #
 # MODULE MpiExec
 #
-# This provides the run command which is used to run MPI jobs.
+# This provides the run function which is used to run MPI jobs.
 # It is expected to be used with the mpiexec environment variable
 # set to either mpiexec or aprun.
+# If the mpiexec environment variable isn't set, the default action
+# is to use the mpiexec program to run MPI jobs.
 #
 module MpiExec
 

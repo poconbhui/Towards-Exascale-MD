@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
 
 #
+# Example usage:
+#
+#   # Run test suite
+#   ./scripts/exec.sh run_tests.rb
+#
+#   # Run benchmark for 2^9 particles for the replicated distribution
+#   # on the core ranges 1-64
+#   ./scripts/exec.sh run_benchs.rb 2^9 1-64 replicated
+#
 # exec.sh.in generates exec.sh when configure.rb is run.
 # The values @FC@, @MPIFC@ and @mpiexec@ seen in exec.sh.in
 # are replaced by the values requested through --FC, --MPIFC
