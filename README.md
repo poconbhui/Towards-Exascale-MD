@@ -24,7 +24,7 @@ On a standard machine:
 
     ./configure.rb --FC=gfortran --MPIFC=mpif90 --MPIEXEC=mpiexec
     make all
-    make run_test
+    ./scripts/run_tests.rb
 
 
 This project requires a Fortran compiler capable of compiling
