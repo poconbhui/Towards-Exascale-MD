@@ -14,12 +14,6 @@ Usage
 
 ### Quick Start ###
 
-On Morar:
-
-    ./configure.rb --FC=pgf90 --MPIFC=mpif90 --MPIEXEC=mpiexec
-    make all
-    make run_test
-
 On Hector:
 
     ./configure.rb --FC=crayftn --MPIFC=ftn --MPIEXEC=aprun
@@ -31,6 +25,12 @@ On a standard machine:
     ./configure.rb --FC=gfortran --MPIFC=mpif90 --MPIEXEC=mpiexec
     make all
     make run_test
+
+
+This project requires a Fortran compiler capable of compiling
+a reasonable set of the Fortran 2003 standard.
+The compilers on Morar are, unfortunately,
+too old to successfully compile this project.
 
 
 
