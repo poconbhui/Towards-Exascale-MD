@@ -7,6 +7,13 @@
 #
 
 
+# Hector qsub parameters
+#PBS -l mppwidth=32
+#PBS -N run_tests
+#PBS -A d45
+#PBS -l walltime=0:5:0
+
+
 # Load relpath function
 require File.expand_path('relpath', File.dirname(__FILE__))
 
