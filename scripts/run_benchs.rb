@@ -13,9 +13,6 @@
 # Example usage:
 #   run_benchs.rb 2^9 512 replicated
 #
-# This script relies on an mpiexec environment variable being set.
-# It is suggested it is run as scripts/exec.sh run_benchs.rb ...
-#
 
 # Load the run function
 require File.expand_path('./relpath', File.dirname(__FILE__))

@@ -61,30 +61,50 @@ This may be expanded by editing `scripts/mpiexec.rb`.
 
 ### Running scripts ###
 
-Scripts in the `scripts/` directory rely on certain environment variables
-being set.
-The `configure.rb` scripts generates `scripts/exec.sh` which can be used
-to set up these variables.
-A user may either run a script using
-`./scripts/exec.sh ./scripts/my_script.rb`, `./scripts/exec.sh my_script.rb`
-or using `source ./scripts/exec.sh; ./scripts/...`.
-The latter will add the necessary environment variables to your shell
-so `sctiprs/exec.sh` doesn't need to be used every time a script is used.
+After `configure.rb` has been run, scripts from the `scripts/` directory
+should be configured and ready to run.
 
+    # Run the test suite
+    ./scripts/run_tests.rb 
+
+    # Run a set of benchmarks for 2^9 particles on the range of cores
+    # 1-64 using the replicated data distribution
+    ./scripts/run_benchs.rb 2^9 1-64 replicated
 
 
 ### Compilation and Testing ###
 
 To compile and test everything, the following procedure may be used:
 
-    > ./configure.rb
-    > make all
-    > make run_test
+    ./configure.rb
+    make all
+    make run_test
 
 
 ### Benchmarking ###
 
-Appropriate benchmarks have not yet been decided, but are being planned out.
+To see available benchmarks, run
 
-Difficulties exist in defining appropriate weak scaling benchmarks
-for an algorithm that scales as N^2.
+    ./scripts/run_benchs.rb
+
+The program `bench/bench` outlines a set of tests for a given distribution,
+timing a full calculation time step,
+a single `individual_operation` and
+a single `pair_operation`.
+
+These are done in several regimes. In one, both MPI communications and
+calculations are enabled. In another, MPI communications are disabled
+and calculations are enabled. In another, MPI communications are
+enabled and calculations are disabled.
+This allows for easy separation of MPI communication times from
+calculation times, along with finding the time when both are done.
+
+The script `bench/list_of_benches.rb` outlines an array of benchmarks
+to be performed. Its primary use is to define reasonable particle
+numbers to benchmark, reasonable grouping of core ranges to be
+used in a submission script, and to list the distributions available
+for testing.
+
+Benchmarks can be run using `scripts/run_benchs.rb`.
+Running `./scripts/run_benchs.rb` should provide a list of allowed
+options.

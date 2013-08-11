@@ -36,5 +36,5 @@ clean:
 # Run clean. Remove compiled templates
 #
 distclean: clean
-	rm scripts/exec.sh
+	rm scripts/mpiexec.rb
 	rm scripts/Makefile.inc

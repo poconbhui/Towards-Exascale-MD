@@ -3,18 +3,26 @@
 # ./configure.rb
 #
 # Example usage:
+#
+#   # For help
+#   ./configure.rb --help
+#
 #   # Configure for use on HECToR
 #   ./configure.rb --FC=crayftn --MPIFC=ftn --MPIEXEC=aprun
 #
 #   # Configure for use in a less exotic environment
 #   ./configure.rb --FC=gfortran --MPIFC=mpif90 --MPIEXEC=mpiexec
+#   ./configure.rb
 #
 # This script is use to configure some scripts in the scripts folder
-# including exec.sh and Makefile.inc that are used for building,
+# including mpiexec.rb and Makefile.inc that are used for building,
 # testing and benchmarking the project.
 #
 
+
+# Include OptionParser
 require 'optparse'
+
 
 #
 # Define defaults
@@ -23,26 +31,31 @@ require 'optparse'
 @MPIFC = "mpif90"
 @MPIEXEC = "mpiexec"
 
+
 #
 # Get command line arguments
 #
 OptionParser.new do |o|
+
+    #
+    # Help banner. Use ./configure.rb --help to see this.
+    #
     o.banner =
         "Usage: configure.rb [--FC=<fortran compiler>] 
         [--MPIFC=<MPI fortran compiler>] [--MPIEXEC=<mpi execution program>]
         
         Configure the execution environment.
-        Compile Makefile.in and scripts/exec.sh.in templates.
+        Compile scripts/Makefile.inc.in and scripts/mpiexec.rb.in templates.
         
         After configuration, makefile may be used as normal, eg \"make all\".
-        Scripts may be executed \"./scripts/exec.sh /path/to/script\".
-        Alternatively, use \"source ./scripts/exec.sh\" to import
-        configurations into current environment and simply execute
-        scripts as \"/path/to/script\"."
+        Scripts should be usable from any directory, eg \"/path/to/script.rb\"."
+
 
     o.separator ""
     o.separator "Options:"
 
+
+    # Parse --FC option
     o.on(
         '--FC=[gfortran, pgf90, crayftn]', [:gfortran, :pgf90, :crayftn],
         'FC option used to determine which flags',
@@ -53,6 +66,8 @@ OptionParser.new do |o|
 
     o.separator ""
 
+
+    # Parse --MPIFC option
     o.on(
         '--MPIFC=MPIFC',
         'MPI fortran compiler to be used.',
@@ -61,6 +76,8 @@ OptionParser.new do |o|
 
     o.separator ""
 
+
+    # Parse --MPIEXEC option
     o.on(
         '--MPIEXEC=[mpiexec, aprun]', [:mpiexec, :aprun],
         'MPI execution program to be used.',
@@ -72,6 +89,20 @@ OptionParser.new do |o|
 end
 
 
+# DEF compile_in
+#
+# Example usage:
+#   # Compile my_script.rb.in to my_script.rb
+#   compile_in("my_script.rb")
+#
+#   # Compile my_script.rb.in to my_script.rb and make
+#   # my_script.rb executable
+#   compile_in("my_script.rb", true)
+#
+# Compile *.in templates, replacing @FC@, @MPIFC@ and @MPIEXEC@
+# strings found in the templates with the values passed into
+# this program.
+#
 def compile_in(filename, make_executable=false)
     # Read infile.in
     infile = File.read("#{filename}.in")
@@ -91,11 +122,18 @@ def compile_in(filename, make_executable=false)
     end
 end
 
+
+#
+# Output current configuration to screen
+#
 puts "Using:
     FC=#{@FC}
     MPIFC=#{@MPIFC}
     MPIEXEC=#{@MPIEXEC}"
 
+
+#
+# Compile the required template files
+#
 compile_in("scripts/Makefile.inc")
-compile_in("scripts/exec.sh", true)
 compile_in("scripts/mpiexec.rb")
