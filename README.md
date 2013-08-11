@@ -18,7 +18,7 @@ On Hector:
 
     ./configure.rb --FC=crayftn --MPIFC=ftn --MPIEXEC=aprun
     make all
-    bolt -n 4 -s make run_test
+    qsub ./scripts/run_tests.rb
 
 On a standard machine:
 
