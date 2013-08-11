@@ -62,7 +62,7 @@ This may be expanded by editing `scripts/mpiexec.rb`.
 ### Running scripts ###
 
 After `configure.rb` has been run, scripts from the `scripts/` directory
-should be configured and ready to run.
+should be ready to run.
 
     # Run the test suite
     ./scripts/run_tests.rb 
@@ -78,7 +78,7 @@ To compile and test everything, the following procedure may be used:
 
     ./configure.rb
     make all
-    make run_test
+    ./scripts/run_tests.rb
 
 
 ### Benchmarking ###
