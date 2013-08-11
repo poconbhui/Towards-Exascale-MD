@@ -38,3 +38,4 @@ clean:
 distclean: clean
 	rm scripts/mpiexec.rb
 	rm scripts/Makefile.inc
+	rm scripts/run_tests.qsub.sh

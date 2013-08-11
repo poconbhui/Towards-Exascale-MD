@@ -103,14 +103,21 @@ end
 # strings found in the templates with the values passed into
 # this program.
 #
+# This also replaces the @PROJECT_ROOT@ string with the absolute
+# path of the project root.
+#
 def compile_in(filename, make_executable=false)
     # Read infile.in
     infile = File.read("#{filename}.in")
+
+    # Find project root (the directory this script is in)
+    @PROJECT_ROOT = File.expand_path File.dirname(__FILE__)
 
     # Make replacements
     infile.gsub!('@FC@', @FC.to_s)
     infile.gsub!('@MPIFC@', @MPIFC.to_s)
     infile.gsub!('@MPIEXEC@', @MPIEXEC.to_s)
+    infile.gsub!('@PROJECT_ROOT@', @PROJECT_ROOT.to_s)
 
     # Write infile
     File.open("#{filename}", "w") do |f|
@@ -137,3 +144,4 @@ puts "Using:
 #
 compile_in("scripts/Makefile.inc")
 compile_in("scripts/mpiexec.rb")
+compile_in("scripts/run_tests.qsub.sh")

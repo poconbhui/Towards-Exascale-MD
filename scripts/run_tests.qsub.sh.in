@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+#
+# This script can be submitted with "qsub ./scripts/qsub.run_tests.sh"
+# on both Morar and HECToR to run the full test suite on these machines.
+#
+
+# Morar qsub parameters
+#
+#$ -V
+#$ -l h_rt=:5:
+#$ -pe mpi 32
+#$ -cwd
+#
+
+# HECToR qsub parameters
+#
+#PBS -l mppwidth=32
+#PBS -N run_tests
+#PBS -A d45
+#PBS -l walltime=0:5:0
+#
+
+project_root=@PROJECT_ROOT@
+
+$project_root/scripts/run_tests.rb
