@@ -71,7 +71,7 @@ module MpiExec
 
     # Execute command
     puts "#{shell_command}"
-    puts `#{shell_command}`
+    puts `bash -c "#{shell_command}"`
   end
 
 

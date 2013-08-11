@@ -20,6 +20,13 @@ On Hector:
     make all
     qsub ./scripts/run_tests.rb
 
+On Morar
+
+    module load mpich2-pgi
+    ./configure.rb --FC=pgf90 --MPIFC=mpif90 --MPIEXEC=mpiexec
+    make all
+    qsub -b y -V -l h_rt=:5: -pe mpi 32 -cwd ./scripts/run_tests.rb
+
 On a standard machine:
 
     ./configure.rb --FC=gfortran --MPIFC=mpif90 --MPIEXEC=mpiexec
@@ -29,8 +36,6 @@ On a standard machine:
 
 This project requires a Fortran compiler capable of compiling
 a reasonable set of the Fortran 2003 standard.
-The compilers on Morar are, unfortunately,
-too old to successfully compile this project.
 
 
 
