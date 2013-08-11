@@ -37,7 +37,12 @@ On a standard machine:
 ### configure.rb ###
 
 To configure the package, run
-`./configure.rb --FC=gfortran --MPIFC=mpif90 --MPIEXEC=mpiexec`.
+
+    ./configure.rb --FC=gfortran --MPIFC=mpif90 --MPIEXEC=mpiexec
+
+For help with configuration options, run
+
+    ./configure.rb --help
 
 The `FC` option may be set to whatever underlying compiler you are using.
 Currently, only `gfortran`, `pgf90` and `crayftn` are supported.

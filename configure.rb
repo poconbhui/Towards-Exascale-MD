@@ -98,3 +98,4 @@ puts "Using:
 
 compile_in("scripts/Makefile.inc")
 compile_in("scripts/exec.sh", true)
+compile_in("scripts/mpiexec.rb")

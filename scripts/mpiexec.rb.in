@@ -1,26 +1,28 @@
-# scripts/mpiexec.rb
+# scripts/mpiexec.rb.in
 #
 # MODULE MpiExec
 #
 # This provides the run function which is used to run MPI jobs.
-# It is expected to be used with the MPIEXEC environment variable
-# set to either "mpiexec" or "aprun".
-# If the MPIEXEC environment variable isn't set, the default action
-# is to use the mpiexec program to run MPI jobs.
+# 
+# mpiexec.rb is compiled from mpiexec.rb.in by configure.rb.
+# The value for --MPIEXEC passed to configure.rb determines the
+# value of @MPIEXEC@ in mpiexec.rb.
+#
+# The value of MPIEXEC is expected to be either "mpiexec" or "aprun".
+# If it is neither, the run function will raise an error.
 #
 module MpiExec
 
 
-  # DEF self.mpiexec
+  # DEF self.MPIEXEC
   #
-  # An accessor for the mpiexec variable with a default value
-  # of either the MPIEXEC environment variable or "default"
+  # An accessor for the MPIEXEC variable.
+  #
+  # The template @MPIEXEC@ seen in mpiexec.rb.in is set by
+  # configure.rb when generating mpiexec.rb
   #
   def self.MPIEXEC
-    @MPIEXEC ||= ENV["MPIEXEC"] || "default"
-  end
-  def self.MPIEXEC=(val)
-    @MPIEXEC = val
+    "@MPIEXEC@"
   end
 
 
@@ -61,8 +63,10 @@ module MpiExec
     case MpiExec.MPIEXEC
       when "aprun"
         shell_command = aprun(*args)
-      else
+      when "mpiexec"
         shell_command = mpiexec(*args)
+      else
+        raise "Unknown MPIEXEC: #{MpiExec.MPIEXEC}"
     end
 
     # Execute command

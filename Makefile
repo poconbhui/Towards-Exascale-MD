@@ -1,6 +1,8 @@
 #
-# Before using Makefile, be sure you've set environment variables in
-# config.sh to match the mpi compiler and executor on your system.
+# Before using Makefile, be sure you've run configure.rb to
+# configure the project for your system.
+#
+# For help, run ./configure.rb --help
 #
 
 # Define subdirectories containing programs to be compiled.
@@ -22,7 +24,7 @@ $(SUBDIRS):
 #
 .PHONY: run_test
 run_test: test
-	./scripts/exec.sh ./scripts/run_tests.rb
+	./scripts/run_tests.rb
 
 #
 # Run make clean in all SUBDIRS.
