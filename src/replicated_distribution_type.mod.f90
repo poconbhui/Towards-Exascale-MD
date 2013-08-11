@@ -167,6 +167,14 @@ contains
 
     end subroutine pair_operation
 
+
+    ! FUNCTION reduce_sum
+    !
+    ! This function accepts two arrays and sums them elementwise.
+    !
+    ! This is used by pair_operation so the reduce_op used can
+    ! be changed dynamically.
+    !
     PURE function reduce_sum(arr1, arr2)
         real(p), intent(in) :: arr1(:)
         real(p), intent(in) :: arr2(size(arr1))

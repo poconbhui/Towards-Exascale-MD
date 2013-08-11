@@ -7,10 +7,13 @@ module shared_and_replicated_distribution_type
     use bench_flags
     implicit none
 
+
     private
+
 
     public :: shared_and_replicated_distribution
     public :: new_shared_and_replicated_distribution
+
 
     type, EXTENDS(replicated_distribution) :: shared_and_replicated_distribution
     contains
@@ -116,6 +119,14 @@ contains
 
     end subroutine pair_operation
 
+
+    ! FUNCTION reduce_sum
+    !
+    ! This function accepts two arrays and sums them elementwise.
+    !
+    ! This is used by pair_operation so the reduce_op used can
+    ! be changed dynamically.
+    !
     PURE function reduce_sum(arr1, arr2)
         real(p), intent(in) :: arr1(:)
         real(p), intent(in) :: arr2(size(arr1))

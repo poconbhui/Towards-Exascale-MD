@@ -199,12 +199,12 @@ contains
 
         ! allocate array for reduction values
         if(.NOT. reduce_vals_allocated) then
-            allocate(reduce_vals(this%num_local_particles, N))
+            allocate(reduce_vals(N, this%num_local_particles))
             reduce_vals_allocated = .TRUE.
         end if
         if(N .NE. size(reduce_vals, 2)) then
             deallocate(reduce_vals)
-            allocate(reduce_vals(this%num_local_particles, N))
+            allocate(reduce_vals(N, this%num_local_particles))
         end if
 
 
@@ -215,7 +215,7 @@ contains
         ! Initialise reduction value list
         if(.NOT. disable_calculation) then
             do i=1, this%num_local_particles
-                reduce_vals(i,:) = reduction_identity
+                reduce_vals(:, i) = reduction_identity
             end do
         end if
 
@@ -241,8 +241,8 @@ contains
                             tmp_val &
                         )
 
-                        reduce_vals(i,:) = reduce_func( &
-                            tmp_val, reduce_vals(i,:) &
+                        reduce_vals(:, i) = reduce_func( &
+                            tmp_val, reduce_vals(:, i) &
                         )
 
                     end do
@@ -254,12 +254,20 @@ contains
         if(.NOT. disable_calculation) then
             do i=1, this%num_local_particles
                 this%particles(i) = val_to_particle( &
-                    this%particles(i), reduce_vals(i,:) &
+                    this%particles(i), reduce_vals(:, i) &
                 )
             end do
         end if
     end subroutine pair_operation
 
+
+    ! FUNCTION reduce_sum
+    !
+    ! This function accepts two arrays and sums them elementwise.
+    !
+    ! This is used by pair_operation so the reduce_op used can
+    ! be changed dynamically.
+    !
     PURE function reduce_sum(arr1, arr2)
         real(p), intent(in) :: arr1(:)
         real(p), intent(in) :: arr2(size(arr1))
