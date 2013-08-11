@@ -58,7 +58,7 @@ contains
 
         if(particle_grid_dim**3 .NE. num_particles_in) then
             write(*,*) "num_particles must be a cube."
-            call exit(1)
+            stop 1
         end if
 
 

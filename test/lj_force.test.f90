@@ -17,6 +17,7 @@ program lj_force_test
         lj_gen_reduce_op, lj_reduction_init &
     )
 
-    call exit(end_test())
+
+    if(end_test() .NE. 0) stop 1
 
 end program lj_force_test

@@ -116,7 +116,8 @@ program integration_test
             !
             ! Die
             !
-            call exit(end_test())
+            if(end_test() .NE. 0) stop 1
+
         end if
 
 
@@ -135,8 +136,7 @@ program integration_test
     end do
 
 
-    call exit(end_test())
-
+    if(end_test() .NE. 0) stop 1
 
 contains
 

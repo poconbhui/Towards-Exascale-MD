@@ -82,7 +82,7 @@ contains
             reduce_func => reduce_sum
         else
             call this%print_string("Error: provided reduce_op not supported!")
-            call exit(1)
+            stop 1
         end if
 
 

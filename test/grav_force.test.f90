@@ -17,6 +17,7 @@ program grav_force_test
         grav_gen_reduce_op, grav_reduction_init &
     )
 
-    call exit(end_test())
+
+    if(end_test() .NE. 0) stop 1
 
 end program grav_force_test

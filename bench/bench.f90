@@ -160,7 +160,7 @@ program bench
 
         case default
             write(0,*) "Error: Invalid distribution type "//distribution_name
-            call exit(1)
+            stop 1
 
     end select
 
@@ -463,7 +463,7 @@ contains
         if(argc .NE. 3) then
             write(*,*) &
                 "Usage: ./bench dist_name num_particles num_reps"
-            call exit(1)
+            stop 1
         end if
 
         read(argv(1), *) distribution_name

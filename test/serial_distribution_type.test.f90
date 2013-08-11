@@ -21,6 +21,6 @@ program serial_distribution_test
     call distribution_module_test(dist, num_particles)
 
 
-    call exit(end_test())
+    if(end_test() .NE. 0) stop 1
 
 end program serial_distribution_test

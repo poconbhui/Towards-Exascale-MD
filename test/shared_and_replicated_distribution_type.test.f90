@@ -33,6 +33,7 @@ program shared_and_replicated_distribution_test
 
     exit_value = end_test()
     call MPI_Finalize(ierr)
-    call exit(exit_value)
+
+    if(exit_value .NE. 0) stop 1
 
 end program shared_and_replicated_distribution_test
