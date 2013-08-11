@@ -14,18 +14,20 @@ Usage
 
 ### Quick Start ###
 
+The test suite runs on 32 cores.
+
 On Hector:
 
     ./configure.rb --FC=crayftn --MPIFC=ftn --MPIEXEC=aprun
     make all
-    qsub ./scripts/run_tests.rb
+    qsub ./scripts/run_tests.qsub.sh
 
 On Morar
 
     module load mpich2-pgi
     ./configure.rb --FC=pgf90 --MPIFC=mpif90 --MPIEXEC=mpiexec
     make all
-    qsub -b y -V -l h_rt=:5: -pe mpi 32 -cwd ./scripts/run_tests.rb
+    qsub ./scripts/run_tests.qsub.sh
 
 On a standard machine:
 
@@ -36,7 +38,6 @@ On a standard machine:
 
 This project requires a Fortran compiler capable of compiling
 a reasonable set of the Fortran 2003 standard.
-
 
 
 ### configure.rb ###
