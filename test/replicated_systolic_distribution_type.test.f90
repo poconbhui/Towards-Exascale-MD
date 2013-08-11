@@ -24,7 +24,7 @@ program replicated_systolic_distribution_test
 
     call MPI_Init(ierr)
 
-    num_particles = 10
+    num_particles = 40
     dist = new_replicated_systolic_distribution(num_particles, MPI_COMM_WORLD)
 
     call distribution_module_test(dist, num_particles)
