@@ -14,15 +14,16 @@ of the system such as heat capacity, structure, rigidity, reactivity.
 %
 %Q: Why is modelling molecular systems useful?
 With a deeper understanding of these molecular systems,
-they may be used in novel applications such as
-the development of new drugs,
-the understanding of protein folding and
-genetic engineering.
+researchers are able to develop novel drugs,
+develop a better understanding of protein folding and
+do ever more exciting things in genetic engineering.
 %
 %Q: What modelling methods are there?
-There are many tools to study these systems,
-from molecular modelling by solving energy minimisation problems,
-to molecular dynamics by integrating equations of motion.
+There are many tools to study these systems.
+These range from from molecular modelling methods such as performing
+Monte Carlo over solutions to energy minimisation problems,
+to molecular dynamics methods such as using the \velocityverlet{}
+algorithm to integrate the equations of motion of a system of molecules.
 %
 Each of these tools is useful for
 deriving some information on the system being modelled and
@@ -30,6 +31,8 @@ each has their difficulties and limitations.
 %
 Here, we are interested primarily in molecular dynamics.
 
+
+%
 %Q: What is MD?
 Molecular dynamics (MD) aims to
 gather information about a molecular system by
@@ -37,15 +40,7 @@ simulating the time evolution of that system.
 %
 %Q: Why is MD useful?
 By doing this, it is possible to
-gather spatial and temporal information for the system.
-%
-Compare this to static modelling which may gather only spatial information.
-%
-As the system is allowed to run naturally, rather than being solved,
-MD also avoids the multiple minimum problems
-sometimes present in molecular modelling.
-%
-However, it presents significant new problems.
+gather spatial and temporal information on the system.
 
 
 %
@@ -61,56 +56,64 @@ The force calculation may involve $\bigO{N^2}$ terms or higher.
 The time the system may be stepped forward is
 quite small compared to the length of time it must be run for.
 %
-Each of these represent a unique difficulty.
+Both the force calculation and the time step represent a unique difficulty.
 %
-Here, we are interested mainly in the force calculation.
+This dissertation is interested only in looking at the force calculation.
 
 
-There are many approaches taken to reduce the time complexity of
-the $\bigO{N^2}$ term.
+Many approaches exist to reduce the time complexity of
+the force term.
 %
 This is often done by truncating the effective length of inter-molecular
-forces, leading to $\bigO{N}$ algorithms.
+forces and ignoring interactions between particles outside of a
+cutoff distance,
+leading to $\bigO{N}$ algorithms.
 %
 %Q: Why is truncation bad?
-These trade accuracy for improved complexity.
+This truncation, however, can have adverse effects on the accuracy
+of the simulation.
 %
-Furthermore, the truncation necessary to achieve an efficient implementation
-may be shorter than can be justified for a realistic simulation.
+The truncation necessary to achieve an efficient implementation
+for a given molecular system may be
+shorter than is justifiable for a realistic simulation.
 
 %
 %Q: Why so we want to look at direct solutions?
-With truncation in place, we can liken a simulation to solving a
-large number of isolated systems with direct solutions.
+A domain distributed simulations using force truncations to
+simplify the integration of the equations of motion can be
+likened to a number of isolated systems directly integrating
+the equations of motion for a subset of particles without truncations.
 %
-By finding good direct solutions, it may be possible to use longer force
-truncations without worrying about these isolated system sizes.
-%
-As future HPC architectures are expected to be many core systems,
-we would like to see how well the overall time to solution for
-$\bigO{N^2}$ algorithms can be scaled.
+By finding good direct solutions, it may be possible to use reduce the
+time taken for these isolated systems to run, and so longer
+force truncations may become feasible to use.
+
 
 
 %
 %Q: What will we be doing here?
-In this dissertation we will
+This dissertation will attempt to:
 \begin{itemize}
 \item
     Study parallel force evaluation schemes using
-    the 2 body Lennard-Jones potential with
+    the two body Lennard-Jones potential with
     non-periodic boundary conditions.
 
 \item
-    Study 2 parallelisation schemes:
+    Study two main parallelisation schemes:
     \replicateddata{} and the \systolicloop{}.
 
 \item
-    Attempt to optimise these schemes and
-    evaluate their performance by looking at
-    strong scaling data on system sizes of
-    $10^4$ , $10^5$ , $10^6$ and $10^7$ particles.
-    %
-    In all cases, the minimum time to solution will be
-    considered the most important metric,
-    regardless of the number of cores used.
+    Attempt to evaluate the scalability and
+    identify the bottlenecks of these schemes
+    by looking at strong scaling performance
+    on systems of size
+    $2^{9}$, $2^{12}$ and $2^{15}$, which correspond
+    to systems of approximate size $10^2$, $10^3$ and $10^4$.
+
+\item
+    Present a formulation of a parallel domain distributed code using
+    force truncations in the form of
+    a series of isolated parallel simulations
+    without force truncations.
 \end  {itemize}
