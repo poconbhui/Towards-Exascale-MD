@@ -79,8 +79,8 @@ epcc.sty : $(logos_pdf)
 
 # Clean up
 .PHONY: clean
-clean_exts = .aux .log .pdf .plt.eps .plt.tex
-clean_all=$(foreach dir, $(subdirs), $(addprefix $(dir)/*, $(clean_exts)))
+clean_exts = .aux .log .toc .fdb_latexmk .fls .pdf .plt.eps .plt.tex .plt.pdf
+clean_all=$(foreach dir, . $(subdirs), $(addprefix $(dir)/*, $(clean_exts)))
 clean:
 	@echo rm $(clean_all)
 	@rm $(clean_all) 2>/dev/null; true
