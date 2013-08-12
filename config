@@ -1,0 +1,5 @@
+--FC=gfortran
+--MPIFC=mpif90
+--MPIEXEC=mpiexec
+
+--ACCOUNT=d45
