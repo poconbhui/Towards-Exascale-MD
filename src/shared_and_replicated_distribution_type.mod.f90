@@ -16,7 +16,9 @@ module shared_and_replicated_distribution_type
 
 
     type, EXTENDS(replicated_distribution) :: shared_and_replicated_distribution
+        integer :: num_openmp
     contains
+        procedure :: init
         procedure :: pair_operation
     end type shared_and_replicated_distribution
 
@@ -29,6 +31,53 @@ contains
 
         call new_shared_and_replicated_distribution%init(particle_count, comm)
     end function new_shared_and_replicated_distribution
+
+
+    subroutine init(this, num_particles, comm)
+        class(shared_and_replicated_distribution), intent(out) :: this
+        integer, intent(in) :: num_particles
+        integer, intent(in) :: comm
+
+        integer :: num_openmp
+        integer :: num_cores
+
+
+        !
+        ! Initialise as a replicated distribution
+        !
+        call this%replicated_distribution%init(num_particles, comm)
+
+
+        !
+        ! Find the number of OpenMP thread per MPI process
+        !
+
+        ! Find the number of OpenMP cores per MPI process
+        num_openmp = 0
+        !$OMP PARALLEL REDUCTION(+:num_openmp)
+            num_openmp = num_openmp + 1
+        !$OMP END PARALLEL
+
+        this%num_openmp = num_openmp
+
+
+        !
+        ! Require num_particles <= total number of cores
+        !
+
+        ! Find the total number of cores used
+        num_cores = this%num_openmp*this%nprocs
+
+        if(this%num_particles .LT. num_cores) then
+            call this%print_string( &
+                "Error: The total number of cores requested is less than &
+                &the number of particles in the system" &
+            )
+            stop 1
+        end if
+
+
+    end subroutine init
 
 
     subroutine pair_operation( &
