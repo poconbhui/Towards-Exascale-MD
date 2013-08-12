@@ -330,7 +330,9 @@ contains
         !
         ! Do initial swap
         !
-        call this%do_initial_swap(pulse_offset_start)
+        if(.NOT. disable_mpi) then
+            call this%do_initial_swap(pulse_offset_start)
+        end if
 
 
         !
@@ -399,12 +401,16 @@ contains
         ! Globally reduce values and set values for local particles.
         !
 
-        ! Reduce partial solutions across equivalent elements
-        call MPI_Allreduce( &
-            local_reduce_vals, global_reduce_vals, &
-            size(reduction_identity)*this%num_local_particles, MPI_REAL_P, &
-            reduce_op, this%equiv_elem_comm, ierror &
-        )
+        if(.NOT. disable_mpi) then
+
+            ! Reduce partial solutions across equivalent elements
+            call MPI_Allreduce( &
+                local_reduce_vals, global_reduce_vals, &
+                size(reduction_identity)*this%num_local_particles, MPI_REAL_P, &
+                reduce_op, this%equiv_elem_comm, ierror &
+            )
+
+        end if
 
         ! Set particle values with global reduction values
         if(.NOT. disable_calculation) then
