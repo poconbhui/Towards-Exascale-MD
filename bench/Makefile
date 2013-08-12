@@ -40,7 +40,8 @@ bench.o = \
 	../src/serial_distribution_type.mod \
         ../src/replicated_distribution_type.mod \
         ../src/systolic_distribution_type.mod \
-        ../src/shared_and_replicated_distribution_type.mod
+        ../src/shared_and_replicated_distribution_type.mod \
+        ../src/replicated_systolic_distribution_type.mod
 
 bench = \
 	$(bench_suite.mod.o) \
@@ -50,6 +51,7 @@ bench = \
 	../src/serial_distribution_type.mod.o \
         ../src/replicated_distribution_type.mod.o \
         ../src/systolic_distribution_type.mod.o \
-        ../src/shared_and_replicated_distribution_type.mod.o
+        ../src/shared_and_replicated_distribution_type.mod.o \
+        ../src/replicated_systolic_distribution_type.mod.o
 
 bench: $(bench)

@@ -57,6 +57,7 @@ program bench
     use replicated_distribution_type
     use systolic_distribution_type
     use shared_and_replicated_distribution_type
+    use replicated_systolic_distribution_type
 
     use integration
 
@@ -79,6 +80,7 @@ program bench
     type(replicated_distribution), target :: replicated
     type(systolic_distribution), target :: systolic
     type(shared_and_replicated_distribution), target :: shared_and_replicated
+    type(replicated_systolic_distribution), target :: replicated_systolic
 
 
     procedure(bench_type_subroutine), pointer :: bench_ptr => null()
@@ -156,6 +158,12 @@ program bench
                 num_particles, MPI_COMM_WORLD &
             )
             call set_distribution_pointer(shared_and_replicated, dist)
+
+        case ("replicated_systolic")
+            replicated_systolic = new_replicated_systolic_distribution( &
+                num_particles, MPI_COMM_WORLD &
+            )
+            call set_distribution_pointer(replicated_systolic, dist)
 
 
         case default

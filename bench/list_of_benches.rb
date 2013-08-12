@@ -13,7 +13,7 @@
 
 
 # A list of the distributions allowed by bench.
-Distributions = ["replicated", "systolic", "shared_and_replicated"]
+Distributions = ["replicated", "systolic", "shared_and_replicated", "replicated_systolic"]
 
 # The minimum reps a distribution is expected to complete.
 MinReps = 5
