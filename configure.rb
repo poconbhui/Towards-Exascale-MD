@@ -31,11 +31,14 @@ require 'optparse'
 @MPIFC = "mpif90"
 @MPIEXEC = "mpiexec"
 
+@ACCOUNT = "d45"
+
 
 #
 # Get command line arguments
 #
 OptionParser.new do |o|
+
 
     #
     # Help banner. Use ./configure.rb --help to see this.
@@ -85,6 +88,18 @@ OptionParser.new do |o|
         'Default: mpiexec'
     ) {|mpiexec| @MPIEXEC=mpiexec }
 
+    o.separator ""
+
+
+    # Parse --ACCOUNT option
+    o.on(
+        '--ACCOUNT=ACCOUNT',
+        'Account to be used for submitting scripts.',
+        'Default: d45'
+    ) {|account| @ACCOUNT=account }
+
+
+    o.load(filename = "./config")
     o.parse!
 end
 
@@ -117,6 +132,7 @@ def compile_in(filename, make_executable=false)
     infile.gsub!('@FC@', @FC.to_s)
     infile.gsub!('@MPIFC@', @MPIFC.to_s)
     infile.gsub!('@MPIEXEC@', @MPIEXEC.to_s)
+    infile.gsub!('@ACCOUNT@', @ACCOUNT.to_s)
     infile.gsub!('@PROJECT_ROOT@', @PROJECT_ROOT.to_s)
 
     # Write infile
@@ -136,7 +152,8 @@ end
 puts "Using:
     FC=#{@FC}
     MPIFC=#{@MPIFC}
-    MPIEXEC=#{@MPIEXEC}"
+    MPIEXEC=#{@MPIEXEC}
+    ACCOUNT=#{@ACCOUNT}"
 
 
 #
