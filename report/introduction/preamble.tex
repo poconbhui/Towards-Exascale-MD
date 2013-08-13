@@ -17,13 +17,16 @@ With a deeper understanding of these molecular systems,
 researchers are able to develop novel drugs,
 develop a better understanding of protein folding and
 do ever more exciting things in genetic engineering.
+
 %
 %Q: What modelling methods are there?
-There are many tools to study these systems.
+There are many tools to study systems of interacting particles.
 These range from from molecular modelling methods such as performing
 Monte Carlo over solutions to energy minimisation problems,
 to molecular dynamics methods such as using the \velocityverlet{}
-algorithm to integrate the equations of motion of a system of molecules.
+algorithm to integrate the classical equations of motion of a
+system of particles, or ab initio methods to solve for quantum systems
+using density functional theory.
 %
 Each of these tools is useful for
 deriving some information on the system being modelled and
@@ -58,16 +61,16 @@ quite small compared to the length of time it must be run for.
 %
 Both the force calculation and the time step represent a unique difficulty.
 %
-This dissertation is interested only in looking at the force calculation.
+This dissertation focuses on the force calculation.
 
 
 Many approaches exist to reduce the time complexity of
 the force term.
 %
-This is often done by truncating the effective length of inter-molecular
-forces and ignoring interactions between particles outside of a
-cutoff distance,
-leading to $\bigO{N}$ algorithms.
+One such approach is to truncate the effective length of inter-molecular
+forces and to avoid computing interactions between particles outside of a
+force-dependant cutoff distance.
+This can be used to produce $\bigO{N}$ algorithms.
 %
 %Q: Why is truncation bad?
 This truncation, however, can have adverse effects on the accuracy
@@ -75,19 +78,19 @@ of the simulation.
 %
 The truncation necessary to achieve an efficient implementation
 for a given molecular system may be
-shorter than is justifiable for a realistic simulation.
+too short to accurately model the physics involved.
 
 %
 %Q: Why so we want to look at direct solutions?
-A domain distributed simulations using force truncations to
-simplify the integration of the equations of motion can be
-likened to a number of isolated systems directly integrating
-the equations of motion for a subset of particles without truncations.
+One popular approach which uses force truncation is the
+domain distribution scheme.
+It will be shown how one such implementation can be cast as
+a series of isolated systems
+directly solving the equations of motion without truncations.
 %
 By finding good direct solutions, it may be possible to use reduce the
 time taken for these isolated systems to run, and so longer
 force truncations may become feasible to use.
-
 
 
 %

@@ -3,52 +3,98 @@
 %
 \subsection{Molecular Dynamics}
 
-
-Here, we consider only classical MD simulations.
 %
 %Q: What exactly is an MD simulation?
 A classical MD simulation is performed by
 solving the Newtonian equations of motion for
-a molecular system.
+an atomic system.
 %
 As there are typically more than 3 bodies interacting in the simulation,
 it is not possible to solve these equations analytically.
 %
 The system must be solved numerically.
 
-
 %
 %Q: What bits do we need to make a simulation?
-A parallel MD simulation typically consists of three parts:
-a particle distribution scheme,
-a force evaluation scheme and
-a numerical integration scheme.
+An example classical MD loop is outlined in \FIG{fig:md_loop_flow_chart}.
 %
-The particle distribution and force finding schemes are
-the parts we will be most interested in here.
+A simulation typically requires a force evaluation scheme
+and a numerical integration scheme.
 %
-In this study, we use the \velocityverlet{} integration scheme.
+This study will evaluate several parallel force evaluation schemes.
+%
+Of particular interest will be force evaluation schemes based on
+the replicated data and systolic loop patterns.
+%
+The \velocityverlet{} scheme will be used to perform the integration steps.
+%
+As will be seen, the \velocityverlet{} scheme deviates slightly from
+the loop outlined in \FIG{fig:md_loop_flow_chart}, but not significantly.
+
+\begin{figure}[!h]
+    \begin{center}
+        \begin{tikzpicture}[node distance = 3.5cm, auto]
+            % Place nodes
+            \node [block] (forces) {Determine forces};
+            \node [block, below of=forces] (step) {Integrate time step};
+            \node [block, below of=step] (measure) {Measure system};
+            \node [decision, right of=step] (isdone) {Simulation finished?};
+            \node [block, right of=isdone] (exit) {End simulation};
+            % Draw edges
+            \path [line] (forces) -- (step);
+            \path [line] (step) -- (measure);
+            \path [line] (measure) -| (isdone);
+            \path [line] (isdone) |- node [near start] {no} (forces);
+            \path [line] (isdone) -- node {yes} (exit);
+        \end{tikzpicture}
+    \end{center}
+    \caption{An example MD simulation loop.}
+    \label{fig:md_loop_flow_chart}
+\end{figure}
 
 
 %
 %Q: What do we need to do with those bits to get data?
-An MD simulation typically consists of three phases:
-setting up the particle distribution,
-simulating the system until it comes to thermodynamic equilibrium and
-taking measurements of the system.
+An MD simulation typically consists of three phases as outlined in
+\FIG{fig:phases_of_md_simulation}:
+Initialise the system of particles;
+simulate the system until it comes to thermodynamic equilibrium; and
+simulate and measure the system.
 %
 %Q: Why do we need the system to reach thermodynamic equilibrium?
 The system must be allowed to reach thermodynamic equilibrium because
 the initial distribution of particles may be a statistically unlikely
 configuration.
 %
-If measurements of the system are taken before this stage, statistically
-unlikely ensembles will be sampled more frequently than they should be when
-performing measurements.
+The system must be allowed some time to traverse the phase space to
+a likely configuration.
 %
-Measurements such as temperature and energy will not be representative
-of the system being studied.
+If measurements of the system are taken before this stage,
+statistically unlikely ensembles will be sampled more frequently than
+they should be when performing measurements.
+%
+Measurements such as
+temperature and energy
+taken at this stage will not be
+representative of the system being studied.
 
+\begin{figure}[!h]
+    \begin{center}
+        \begin{tikzpicture}[node distance = 4cm, auto]
+            % Place nodes
+            \node [block] (init) {Initialise simulation};
+            \node [block, right of=init] (equilibriate) {Equilibriate system};
+            \node [block, right of=equilibriate] (perform) {
+                Simulate and measure system
+            };
+            % Place paths
+            \path [line] (init) -- (equilibriate);
+            \path [line] (equilibriate) -- (perform);
+        \end{tikzpicture}
+    \end{center}
+    \caption{The phases of a classical MD simulation}
+    \label{fig:phases_of_md_simulation}
+\end{figure}
 
 
 %
@@ -65,7 +111,7 @@ determine the ``health'' of a simulation.
 %
 %Q: What does the conformance to these tell us about our simulation?
 If any of these values change over the course of a simulation,
-it is an indicator that either the system is unphysical or
+it is an indicator that either the system has become unphysical or
 significant numerical error is creeping into the simulation.
 %
 %Q: If it necessarily conforms to these, is it still a valid simulation?
@@ -73,7 +119,8 @@ However, simply because these symmetries are conserved does not mean
 the simulation is producing a correct result.
 %
 Indeed, a simulation may proceed perfectly, but not accurately reflect
-the system it supposes to model.
+the system it supposes to model due to
+inappropriate approximations and truncations of potentials.
 
 
 
@@ -82,27 +129,29 @@ the system it supposes to model.
 
 %
 %Q: What is a potential?
-In a molecular system, each particle will generate a potential field
+In a molecular system, each particle generates a potential field
 which permeates throughout the system.
 %
-A given particle will have a potential energy as a sum of these fields.
+A particle has a potential energy determined by the sum
+of the fields it experiences from the other particles in the system.
 %
 The gradient of that potential energy then determines
 the force felt by that particle.
+
 %
 %Q: How do potentials differ for different systems?
 The exact form of the potential depends on the system being studied.
 %
 Systems studied using Coulomb interactions, for example,
-will have potentials that drop to zero at relatively long distances
+will have potentials that reach a constant value at relatively long distances
 from a particle.
 %
 Systems studied using Van der Waals interactions will have
-potentials that drop to zero at relatively short distances from
+potentials that reach a constant value at relatively short distances from
 a particle.
 %
-Several inter-molecular and intra-molecular forces may
-calculated in a simulation to more accurately model underlying behaviours.
+Several different inter-molecular and intra-molecular potentials may be used
+in a simulation to more accurately model certain underlying behaviours.
 
 
 %
@@ -110,7 +159,7 @@ calculated in a simulation to more accurately model underlying behaviours.
 The Hamiltonian for a system of $N$ bodies
 interacting under a 2-body potential can be written
 \begin{equation}
-    H = \sum_{i=1}^N \frac{\vec{p}_i^2}{2 m}
+    H = \sum_{i=1}^N \frac{\vec{p}_i^{,2}}{2 m}
         + \sum_{i=1}^N \sum_{j<i}^N V(\vec{x}_i, \vec{x}_j)
 \end  {equation}
 where $H$ is the Hamiltonian,
@@ -118,14 +167,15 @@ $N$ is the number of bodies,
 $m_i$ is the mass of body $i$,
 $p_i$ is the momentum of body $i$,
 $x_i$ is the position of body $i$ and
-$V(\vec{x}_i, \vec{x}_j)$ is the interaction potential between two bodies.
-This formula assumes a scalar potential and
-that the potential is solely a function of distance.
+$V(\vec{x}_i, \vec{x}_j)$ is the 2-body interaction potential
+between two bodies.
 %
-This may be easily extended include terms involving charges,
-but is ignored here.
+This equation assumes a scalar potential which is
+a function of the distance between the particles.
 %
-We may then derive the equations of motion
+This may be easily extended include terms involving charges.
+%
+The equations of motion may then be written
 \begin{equation}
     m_i \vec{a}_i = -\sum_{\substack{j=1\\j\ne{}i}}^N
                     \vec{\nabla}_i V(\vec{x}_i, \vec{x}_j)
@@ -136,10 +186,16 @@ We may then derive the equations of motion
 %Q: What is the Velocity Verlet integration scheme?
 The equations of motion may be discretise and solved numerically
 by using an appropriate integration scheme.
+%
 The integration scheme used in this dissertation is
-the \velocityverlet{} scheme
-\begin{align}
+the \velocityverlet{} scheme.
+%
+Using this scheme, a system of classical particles using a 2-body potential
+may be stepped forward a time step $h$ using the equations
+%
+\begin{subequations}
 \label{eqn:velocity_verlet_scheme}
+\begin{align}
     \vec{v}_i(t + \tfrac{1}{2} h) &=
         \vec{v}_i(t) + \tfrac{1}{2}\vec{a}_i h
     \\
@@ -149,10 +205,12 @@ the \velocityverlet{} scheme
     m_i \vec{a}_i(t + h) &=
         - \sum_{\substack{j=1\\j\ne{}i}}^N
             \vec{\nabla}_i V(\vec{x}_i(t+h), \vec{x}_j(t+h))
+    \label{eqn:velocity_verlet_force_eval}
     \\
     \vec{v}_i(t+h) &=
         \vec{v}_i(t + \tfrac{1}{2} h) + \tfrac{1}{2} \vec{a}_i(t + h) h
 \end  {align}
+\end{subequations}
 where $t$ is the time,
 $h$ is the step size,
 $\vec{v}_i(t)$ is the velocity of body $i$ at time $t$,
@@ -166,42 +224,37 @@ The local error for this scheme is $\bigO{h^4}$ while the local error
 is $\bigO{h^3}$.
 %
 %Q: What is the time to solution for the VV scheme?
-As can be seen, for a 2-body potential,
-this produces an $\bigO{N^2}$ algorithm.
+As can be seen from
+\EQN{eqn:velocity_verlet_force_eval},
+this produces an $\bigO{N^2}$ algorithm per time step when used with a
+two body potential.
 
 %
 %Q: What time step do we need for the VV scheme?
-The timescale at which atomic forces manifest compared to
-the timescale at which properties of a molecular system may emerge
-requires out numerical integrator use very short steps and be run for
-a very large number of them.
+The timescale at which atomic forces manifest is very short compared to
+the timescale at which properties of a molecular system may emerge.
 %
-This in itself introduces a significant amount of challenge to computations.
+As a result, the numerical integrator must use very short steps to
+pick up atomic level effects, but must run for a long
+time to pick up system level effects.
 %
-As a classical molecular system can be considered a chaotic one,
-we see that any significant error introduced as a result of
-increasing time steps may result in
-vastly different results in a simulation.
-%
-Therefore, great care must be taken when choosing time steps, and
-indeed a numerical integrator,
-that it does not introduce so much error to a simulation as to render it
-an unreliable source of information.
-%
+This results in very many time steps to calculate, which
+in itself introduces a significant challenge to performing simulations.
+
 Some schemes attempt to address this issue by
 using different time steps for phenomenon that occur on
 different time scales within the same simulation.
 %
-However, these won’t be discussed here.
-%
-Indeed, beyond ensuring our numerical integrator and time steps provide
+However, beyond ensuring our numerical integrator and time steps provide
 reasonable results for our simulation,
-they will be outside the scope of this discussion.
+the accuracy of numerical integrators will be
+outside the scope of this discussion.
 
 
+\subsubsection{The Lennard-Jones potential}
 %
 %Q: What is the Lennard-Jones potential?
-In this dissertation, we will consider the two body Lennard-Jones potential
+In this dissertation, the two body Lennard-Jones potential is used
 \begin{equation}
     V_{LJ}(r) = 4\epsilon \left[
         \left( \frac{\delta}{r} \right)^{12}
@@ -214,11 +267,14 @@ $r$ is the distance between two bodies,
 $\epsilon$ is the depth of the potential well and
 $\delta$ is the distance at which
 the potential switches from being attractive to repulsive.
-Typically, $\epsilon$ and $\delta$ are determined for a system by
-fitting them to experimental data.
+
 %
 %Q: What is the LJ potential useful for?
-The Lennard-Jones is useful for modelling simple particle interactions.
+The Lennard-Jones is useful for modelling simple particle interactions such as
+Van der Waals interactions.
+%
+Typically, $\epsilon$ and $\delta$ are determined for a system by
+fitting them to experimental data.
 %
 Due to the simplicity of this potential,
 it is well studied and there exists good data on
@@ -226,28 +282,30 @@ reasonable values for $\epsilon$ and $\delta$ for
 different molecular systems.
 %
 \begin{figure}
-    \label{fig:lennard_jones_potential}
     \input{background/lennard_jones_potential.plt}
     \caption{The Lennard-Jones Potential with $\epsilon = 1$ and $\delta = 1$}
+    \label{fig:lennard_jones_potential}
 \end  {figure}
 
 %
 %Q: What are the equations of motion for the LJ potential under VV?
-Using the Lennard Jones potential, we can write
+Using the Lennard-Jones potential, the two body term in the Hamiltonian
+becomes
 \begin{equation}
     V(\vec{x}_i(t), \vec{x}_j(t)) = V_{LJ}(|\vec{x}_i(t) - \vec{x}_j(t)|)
 \end  {equation}
-and writing $\vec{r}_{ij} = \vec{x}_j - \vec{x}_i$,
+and writing $\vec{r}_{ij} = \vec{x}_j - \vec{x}_i$, the gradient of this is
 $r_{ij} = |\vec{r}_{ij}|$, $\hat{r}_{ij} = \frac{\vec{r}_{ij}}{r_{ij}}$
 \begin{equation}
-    \vec{\nabla}_i V(r_{ij}) = 4\epsilon \left[
+    \vec{\nabla}_i V_{LJ}(r_{ij}) = 4\epsilon \left[
         - \frac{12}{r_{ij}} \left( \frac{\delta}{r_{ij}} \right)^{12}
         + \frac{6}{r_{ij}} \left( \frac{\delta}{r_{ij}} \right)^{6}
-    \right]
+    \right] \hat{r}
 \end  {equation}
-which may be used in \EQN{eqn:velocity_verlet_scheme} to describe
+which may be substituted into \EQN{eqn:velocity_verlet_force_eval} to describe
 the discretised equations of motion of $N$ bodies interacting under the
 Lennard-Jones potential.
+
 %
 %Q: How do these equations affect our time to solution?
 One may imagine a situation where two bodies are distant enough
@@ -255,11 +313,11 @@ that the potential difference between them is negligible compared
 to the contributions from closer bodies.
 %
 In this case, it may be possible to approximate this potential difference
-to zero, and in fact, not calculate it.
+to zero, and leave this term out of the calculation.
 %
-By doing this, we may reduce the time complexity of our simulation.
+By doing this, the time complexity of our simulation may be reduced.
 %
-This process is called truncation.
+When this is done, the forces are said to be truncated.
 
 
 \subsubsection{Truncation of Forces}
