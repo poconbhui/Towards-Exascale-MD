@@ -2,15 +2,13 @@
 
 %
 %Q: Can we parallelize the force calculation?
-As discussed, the \velocityverlet{} scheme
+The \velocityverlet{} scheme with a \twobody{} potential
 immediately provides an algorithm for
 performing MD simulations of long ranged forces in isolated systems.
 %
-We would like to explore parallel implementations of this algorithm.
+This dissertation will explore parallel implementations of this algorithm.
 %
-In this dissertation, we begin by focusing on two particular schemes
-that directly evaluate the \velocityverlet{} algorithm:
-\replicateddata{} and the \systolicloop{}.
+Here, the \replicateddata{} and \systolicloop{} schemes will be outlined.
 
 
 
@@ -19,25 +17,91 @@ that directly evaluate the \velocityverlet{} algorithm:
 
 %
 %Q: What is the replicated data scheme?
-In the \replicateddata{} scheme,
+In the \replicateddata{} scheme, illustrated in
+\FIG{fig:replicated_data_illustration},
 the entire system of particles is replicated across all processors.
 %
 This is useful for the force update, as each particle must have a view of
 every other particle to determine its instantaneous force.
 %
-The general approach is, in $P$ replicated processes, for each processor
-to determine the force for $1/P$ of the particles.
+Given $P$ replicated processes, for each process
+determines the force for $1/P$ of the particles.
 %
-Each process may then either update the particles whose forces it has
-determined and then share them, or share them and then update the entire
-list of particles.
+The processes then share these newly determined forces with each other
+such that each processor will have a copy of the system where every
+particle has its force set to the correct value for that time step.
 %
-In this way, it may provide an $\bigO{N^2/P}$ algorithm.
+The processes may then step their system forward in time.
+%
+In this way, the \replicateddata{} scheme may provide
+an $\bigO{N^2/P}$ algorithm.
+
+
+\begin{figure}[!ht]
+    \begin{center}
+    \begin{tikzpicture}[scale=.5]
+        \newcommand{\drawRect}[1]{
+            \draw [block] (6*#1,0) rectangle (6*#1+4,4);
+            \draw [block, redfill] (6*#1,#1) rectangle (6*#1+4,#1+1);
+        }
+        % Draw replicated blocks and force areas
+        \drawRect{0}
+        %
+        \drawRect{1}
+        %
+        \drawRect{2}
+        %
+        \drawRect{3}
+        %
+        % Draw arrows
+        \newcommand{\drawArr}[1]{
+            \draw [<->, thick] (4 + 6*#1+0.2,2) -- (4 + 6*#1+1.8,2);
+        }
+        \drawArr{0}
+        \drawArr{1}
+        \drawArr{2}
+        %
+        % Draw home block
+%        \draw [block] (9,8) rectangle (13,12);
+%        \newcommand{\drawFromHome}[1]{
+%            \draw [->, thick] (9.5+#1,8-0.2) -- (2 + 6*#1,4+0.2);
+%        }
+%        \drawFromHome{0}
+%        \drawFromHome{1}
+%        \drawFromHome{2}
+%        \drawFromHome{3}
+        %
+        % Draw text
+%        \node at (11,13) {Initial system};
+        %\node at (11, -2) {Replicas};
+        \newcommand{\drawReplicaNum}[1]{
+            \node at (2 + 6*#1, -1) {#1};
+        }
+        \drawReplicaNum{0}
+        \drawReplicaNum{1}
+        \drawReplicaNum{2}
+        \drawReplicaNum{3}
+    \end{tikzpicture}
+    \end{center}
+    %
+    \caption{
+        An outline of the replicated data scheme.
+        Each process, numbered 0-4,
+        holds a copy of the entire system of particles,
+        represented here in blue.
+        Each process is responsible for updating a subset of the
+        particles in the system, represented here in red.
+        Processes then communicate these changes to each other
+        to keep each copy of the system up to date.
+    }
+    \label{fig:replicated_data_illustration}
+\end{figure}
+
 
 %
 %Q: What are the scaling challenges of replicated data?
-Ideally, we would like to simply use $P = N^2$ processes and produce an
-$\bigO{1}$ algorithm, however, this is not possible for several reasons.
+When communication times are taken into account, however, it becomes
+clear that this scheme will not scale as $\bigO{N^2/P}$ indefinitely.
 %
 An immediate concern is that each process must have the same view of the
 system at all times.
@@ -45,18 +109,23 @@ system at all times.
 As a result, all processes must share their updated particles at
 every time step and receive updated particles from other processes.
 %
-This results in a large amount of communications occurring very frequently,
-with a size growing as $\bigO{N}$ and as $\bigO{\log{P}}$,
+This results in a number of system-wide of communications occurring
+at every time step,
+with $\log{P}$ communications of $N$ particles
 yielding a communication time of $\bigO{N \log{P}}$.
 
-Further problems arising from this algorithm is that every process has
+A further problem arising from this algorithm is that every process has
 an individual copy of the system.
 %
 For large systems running on a large number of cores,
 this can stretch the memory of the machine it is running on.
 %
-Imagining a system of particles where each particle contains double
-precision floating point (8~B) data for position, velocity, force and mass,
+For a system of particles where each particle uses double
+precision floating point (8~B) data to store
+a position vector,
+a velocity vector,
+a force vector and
+a scalar mass,
 amounting to 80~B per particle, a 32~GB system could hold around $10^8$
 particles.
 %
@@ -65,11 +134,9 @@ with the replicated scheme,
 it can now hold a maximum of around $10^7$ particles
 as each core will be holding a full system.
 %
-Essentially, the maximum size of the system becomes inversely proportional
-to the number of cores used per GB of memory.
-%
-This increased use of memory can cause other issues such as poor caching
-due to the increased memory use.
+As a result, the maximum possible size of the system is
+inversely proportional to
+the number of cores used per GB of memory per node.
 
 We further encounter the problem that all processes must communicate
 with every other process at every time step.
@@ -82,16 +149,17 @@ significant overhead for the calculation.
 %
 %Q: Why are the scaling challenges of replicated data concerning for exascale?
 These drawbacks are particularly important when considering exascale systems
-where we expect large numbers of cores per node.
+where systems are expected to have large numbers of cores per node.
 %
-As we expect memory per node to grow at a much lower rate, a \replicateddata{}
-scheme may have difficulties utilising every core on a node.
+As memory per node is expected to grow at a much lower rate than
+the number of cores per node,,
+a \replicateddata{} scheme may have difficulties utilising every core on a node.
 %
 Indeed, even in current systems, nodes are often requested and only a
 subset of cores used due to memory per core considerations in applications.
 %
-Even if all the cores in the node are utilised, global synchronisation
-points do not scale well to large numbers of processes.
+Even if all the cores in the node are utilised, frequent global synchronisation
+points may not scale well to large numbers of processes.
 
 
 
@@ -104,6 +172,89 @@ In the \systolicloop{} scheme, the system is split up and distributed among
 all the processes.
 %
 Force updates are performed by passing list data around a ring in pulses.
+%
+This is illustrated in \FIG{fig:systolic_loop_illustration}.
+
+\begin{figure}[!ht]
+    \begin{center}
+    \begin{tikzpicture}
+        \newcommand{\smallRectangle}[3]{
+            \draw [block, #3] (#1+0.1,#2+0.1) rectangle (#1+1-0.1,#2+1-0.1);
+        }
+        %
+        % Draw bounding boxes
+        \draw [draw, rounded corners] (-1,0) rectangle (1, 1);
+        %
+        \draw [draw, rounded corners] (2,1) rectangle (3, 3);
+        \draw [draw, rounded corners] (4,1) rectangle (5, 3);
+        %
+        \draw [draw, rounded corners] (6,0) rectangle (8, 1);
+        %
+        \draw [draw, rounded corners] (4,0) rectangle (5, -2);
+        \draw [draw, rounded corners] (2,0) rectangle (3, -2);
+        %
+        % Draw outer ring
+        \smallRectangle{-1}{0}{bluefill}
+        %
+        \smallRectangle{2}{2}{bluefill}
+        \smallRectangle{4}{2}{bluefill}
+        %
+        \smallRectangle{7}{0}{bluefill}
+        %
+        \smallRectangle{4}{-2}{bluefill}
+        \smallRectangle{2}{-2}{bluefill}
+        %
+        % Draw inner ring
+        \smallRectangle{0}{0}{redfill}
+        %
+        \smallRectangle{2}{1}{redfill}
+        \smallRectangle{4}{1}{redfill}
+        %
+        \smallRectangle{6}{0}{redfill}
+        %
+        \smallRectangle{4}{-1}{redfill}
+        \smallRectangle{2}{-1}{redfill}
+        %
+        % Draw circle
+        \newcommand{\off}{0.1}
+        \path [line] (0.5, 0.5+\off) |- (2.5, 1.5);
+        %
+        \path [line] (2.5+\off, 1.5) -- (4.5, 1.5);
+        \path [line] (4.5+\off, 1.5) -| (6.5, 0.5);
+        %
+        \path [line] (6.5, 0.5-\off) |- (4.5, -0.5);
+        %
+        \path [line] (4.5-\off, -0.5) -- (2.5, -0.5);
+        \path [line] (2.5-\off, -0.5) -| (0.5, 0.5);
+        %
+        % Draw labels
+        \newcommand{\drawNode}[3]{
+            \node at (#1, #2) {#3};
+        }
+        \drawNode{-1.5}{0.5}{0}
+        %
+        \drawNode{2.5}{3.5}{1}
+        \drawNode{4.5}{3.5}{2}
+        %
+        \drawNode{8.5}{0.5}{3}
+        %
+        \drawNode{4.5}{-2.5}{4}
+        \drawNode{2.5}{-2.5}{5}
+    \end{tikzpicture}
+    \end{center}
+    \caption{
+        A representation of the systolic loop model.
+        Each process, numbered 0-5, holds a subset of the entire
+        system of particles, represented in blue.
+        Processes pass packets of particles, represented in red,
+        around the loop.
+        When a process receives a packet, it partially updates its local
+        system of particles.
+        When it has received every packet, it will have fully updated
+        its local particles.
+    }
+    \label{fig:systolic_loop_illustration}
+\end{figure}
 
 Initially, a process will make a copy of its list of particles,
 and then use that to perform a partial force update on its local list.

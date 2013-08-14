@@ -29,18 +29,21 @@ the replicated data and systolic loop patterns.
 The \velocityverlet{} scheme will be used to perform the integration steps.
 %
 As will be seen, the \velocityverlet{} scheme deviates slightly from
-the loop outlined in \FIG{fig:md_loop_flow_chart}, but not significantly.
+the loop outlined in \FIG{fig:md_loop_flow_chart} by sandwiching the
+force finding step with two partial integration steps.
 
 \begin{figure}[!h]
     \begin{center}
         \begin{tikzpicture}[node distance = 3.5cm, auto]
             % Place nodes
-            \node [block] (forces) {Determine forces};
+            \node [block] (init) {Initialise simulation};
+            \node [block, right of=init] (forces) {Determine forces};
             \node [block, below of=forces] (step) {Integrate time step};
             \node [block, below of=step] (measure) {Measure system};
             \node [decision, right of=step] (isdone) {Simulation finished?};
             \node [block, right of=isdone] (exit) {End simulation};
             % Draw edges
+            \path [line] (init) -- (forces);
             \path [line] (forces) -- (step);
             \path [line] (step) -- (measure);
             \path [line] (measure) -| (isdone);
@@ -226,8 +229,10 @@ is $\bigO{h^3}$.
 %Q: What is the time to solution for the VV scheme?
 As can be seen from
 \EQN{eqn:velocity_verlet_force_eval},
-this produces an $\bigO{N^2}$ algorithm per time step when used with a
-two body potential.
+this produces an $\bigO{N^2}$ algorithm per time step
+when used with a \twobody{} potential as
+determining each of the $N$ accelerations $\vec{a}_i$ involves
+perforing a summation over $N-1$ positions $\vec{x}_j$.
 
 %
 %Q: What time step do we need for the VV scheme?
@@ -251,26 +256,36 @@ the accuracy of numerical integrators will be
 outside the scope of this discussion.
 
 
-\subsubsection{The Lennard-Jones potential}
+\subsubsection{The \LennardJones{} potential}
 %
 %Q: What is the Lennard-Jones potential?
-In this dissertation, the two body Lennard-Jones potential is used
+In this dissertation, the \twobody{} potential used is
+the \LennardJones{} potential
 \begin{equation}
+    \label{eqn:the_lennard_jones_potential}
     V_{LJ}(r) = 4\epsilon \left[
         \left( \frac{\delta}{r} \right)^{12}
         - \left( \frac{\delta}{r} \right)^{6}
     \right]
 \end  {equation}
-where $V_{LJ}(r)$ is the Lennard-Jones potential as
+where $V_{LJ}(r)$ is the \LennardJones{} potential as
 a function of the distance $r$,
 $r$ is the distance between two bodies,
 $\epsilon$ is the depth of the potential well and
 $\delta$ is the distance at which
 the potential switches from being attractive to repulsive.
 
+\begin{figure}
+    \input{background/lennard_jones_potential.plt}
+    \caption{The \LennardJones{} Potential with $\epsilon = 1$ and $\delta = 1$}
+    \label{fig:lennard_jones_potential}
+\end  {figure}
+
 %
 %Q: What is the LJ potential useful for?
-The Lennard-Jones is useful for modelling simple particle interactions such as
+The \LennardJones{} potential, sketched in
+\FIG{fig:lennard_jones_potential},
+is useful for modelling simple particle interactions such as
 Van der Waals interactions.
 %
 Typically, $\epsilon$ and $\delta$ are determined for a system by
@@ -280,16 +295,10 @@ Due to the simplicity of this potential,
 it is well studied and there exists good data on
 reasonable values for $\epsilon$ and $\delta$ for
 different molecular systems.
-%
-\begin{figure}
-    \input{background/lennard_jones_potential.plt}
-    \caption{The Lennard-Jones Potential with $\epsilon = 1$ and $\delta = 1$}
-    \label{fig:lennard_jones_potential}
-\end  {figure}
 
 %
 %Q: What are the equations of motion for the LJ potential under VV?
-Using the Lennard-Jones potential, the two body term in the Hamiltonian
+Using the \LennardJones{} potential, the \twobody{} term in the Hamiltonian
 becomes
 \begin{equation}
     V(\vec{x}_i(t), \vec{x}_j(t)) = V_{LJ}(|\vec{x}_i(t) - \vec{x}_j(t)|)
@@ -304,77 +313,76 @@ $r_{ij} = |\vec{r}_{ij}|$, $\hat{r}_{ij} = \frac{\vec{r}_{ij}}{r_{ij}}$
 \end  {equation}
 which may be substituted into \EQN{eqn:velocity_verlet_force_eval} to describe
 the discretised equations of motion of $N$ bodies interacting under the
-Lennard-Jones potential.
-
-%
-%Q: How do these equations affect our time to solution?
-One may imagine a situation where two bodies are distant enough
-that the potential difference between them is negligible compared
-to the contributions from closer bodies.
-%
-In this case, it may be possible to approximate this potential difference
-to zero, and leave this term out of the calculation.
-%
-By doing this, the time complexity of our simulation may be reduced.
-%
-When this is done, the forces are said to be truncated.
+\LennardJones{} potential.
 
 
 \subsubsection{Truncation of Forces}
-%
-%Q: What is the importance of the effective length of our potentials?
-As can be seen from the form of the Lennard-Jones potential,
-after a given distance from a particle, the potential tends towards
-zero.
-%
-This presents the opportunity to consider only interactions between
-``close'' particles.
-%
-This is achieved by setting a cutoff distance and evaluating potentials
-between particles within this distance from each other.
-%
-Several schemes for tailoring a potential to a cutoff exist, and several
-schemes for limiting calculations performed to ``close'' particles
-exist.
-%
-The \verletlist{} scheme, for example, involves using some bookkeeping to
-maintain lists of particles that are within the cutoff.
-%
-Typically, \verletlist{} implementations scale near $\bigO{N}$ with the
-number of particles in the simulation, but $\bigO{N^2}$ in memory used.
-%
-Another example is a domain distributed parallel decomposition.
-%
-Particles that are physically close are placed on processes that are ``close''.
-%
-In this manner, processes may limit communications to other close processes.
-%
-Finally, direct solutions are performed between these close particles.
 
 %
-%Q: When we truncate our forces, what are the effects?
-Overzealous truncation of forces may overly approximate the forces in play.
+%Q: What is truncation?
+When interacting under the \LennardJones{} potential,
+when the distance between two bodies is large enough,
+the addition of the potential difference between to their overall
+potential energies them becomes negligible compared
+to the contributions from closer bodies.
 %
-In particular, some molecular systems may be of interest, but the forces
-are too long ranged to allow for simulations to be performed in
-a reasonable time frame.
-% W%here is this ok and where is it not ok?
+In this case, it may be possible to approximate this potential difference
+to zero, and leave this term out of the calculation entirely.
+%
+Several schemes exist to tailoring a potential to smoothly approach zero at
+cutoff distance exist to avoid discrete jumps to zero at
+the cutoff distance which can cause instabilities
+in the energy of the system.
+%
+By implementing this approximation,
+the time complexity of the simulation may be reduced.
+%
+When this is done, the forces are said to be truncated.
+
+%
+%Q: What is the importance of the effective length of our potentials?
+Truncation is often implemented by
+setting a cutoff distance and only evaluating potentials
+between particles within this distance from each other.
+%
+Several schemes such as the \verletlist{} and domain distribution
+schemes exist for limiting calculations performed to
+particles within the cutoff distance of each other.
+%
+In this manner, each particle can be described as generating its own
+isolated system of particles within its cutoff distance
+at each time step
+to be solved, without truncations, to step that particle forward in time.
+
+The \verletlist{} scheme, as an example, involves using some bookkeeping to
+maintain lists of particles that are within the cutoff distance of each other.
+%
+Typically, the time complexity of \verletlist{} implementations scale
+near $\bigO{N}$ with
+the number of particles in the simulation,
+but use $\bigO{N^2}$ memory.
+%
+The domain distributed scheme will be outlined later.
 
 %
 %Q: What happens if we have periodic systems?
-Truncation may be used to effectively simulate very large
-systems by implementing periodic boundary conditions, but ensuring
-that no particle interacts with the same particle twice.
+Truncation may be used to effectively simulate very large systems by using
+a relatively small system with periodic boundary conditions,
+and a potential with a cutoff distance that ensures that
+no particle interacts with the same particle twice.
+%
+This can be done by ensuring the cutoff distance is less than half the width
+of the system.
 %
 With this approach, one hopes to simulate what looks like an infinite system
 without introducing periodic effects.
 %
-Of course, as we have done this by using periodic boundary conditions,
-we can not completely remove periodic effects.
+Of course, as this is implemented by using periodic boundary conditions,
+periodic effects cannot be completely removed or ruled out.
 %
 %Q: When we shrink our system sizes, what are the effects?
 These periodic systems must be of a minimum size to avoid introducing
-large finite size effects.
+significant finite size effects.
 %
 A system will often, however, experience some finite size effects
 regardless of the system size simply because the system is not actually
@@ -382,19 +390,19 @@ infinite.
 
 %
 %Q: What happens if we have long range potentials?
-Of course, we can't reasonably truncate our potentials if they are long ranged.
+Potentials can't be reasonably truncated if they are long ranged.
 %
-For non-periodic systems, we must directly solve the equations of motion.
+For non-periodic systems, the equations of motion must be solved directly.
 %
-Further, we must approach the problem from a very different angle if we
-are using a periodic system.
+For periodic systems, a very different approach must be used, as each particle
+will interact with an infinite number of copies of every particle in the
+system in every direction.
 %
-Schemes, such as Ewald summation, exist to tackle the problem.
+The problem of computing these infinite sums can be addressed using
+schemes such as Ewald summation.
 %
-This will not be discussed here, but it is worth noting the limitations of
-long ranged potentials and periodic systems as we are effectively using
-truncation to describe short ranged potentials in periodic systems as
-long ranged forces in many non-periodic systems.
+However,the discussion of evaluating long ranged potentials in periodic systems
+is out of the scope of this dissertation.
 
 
 \subsubsection{Approximations and Sensitivity}
@@ -429,8 +437,13 @@ the simulation may still be useful.
 The system may be used to derive information on
 thermodynamic variables or to simulate general trends.
 
-Indeed, here, we seek to improve the time to solution for direct solutions
-to allow us to increase the cutoff distance to two-body potentials.
+Overzealous truncation may lead to a simulation that supposes to
+model a particular system of particles, but instead overapproximates
+the physics involved and produces incorrect results.
+%
+Indeed, here, we seek to evaluate the time to solution for direct solutions
+to allow us to increase the cutoff distance of two-body potentials
+and maintain an acceptable run time for a simulation.
 %
 By increasing this cutoff distance, we may slightly improve the accuracy
 of our simulation.

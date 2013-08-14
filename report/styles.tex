@@ -21,11 +21,15 @@
 
 % Styles gratefully stolen from
 % http://www.texample.net/tikz/examples/simple-flow-chart/
-\tikzstyle{decision} = [diamond, draw, fill=blue!20, 
+\tikzstyle{redcolor} = [red!80]
+\tikzstyle{bluecolor} = [blue!20]
+\tikzstyle{redfill} = [fill=red!80]
+\tikzstyle{bluefill} = [fill=blue!20]
+\tikzstyle{decision} = [diamond, draw, bluefill, 
     text width=4.5em, text badly centered, node distance=3cm, inner sep=0pt]
-\tikzstyle{block} = [rectangle, draw, fill=blue!20, 
+\tikzstyle{block} = [rectangle, draw, bluefill, 
     text width=5em, text centered, rounded corners, minimum height=4em]
-\tikzstyle{line} = [draw, -latex']
+\tikzstyle{line} = [draw, -latex', rounded corners, thick]
 
 
 \def\configurationHeader{0}
