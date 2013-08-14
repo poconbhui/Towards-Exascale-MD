@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+basedir=$(readlink -f $(dirname $0))
+
+
 
 
 function gen_plotfile() {
@@ -10,6 +13,10 @@ function gen_plotfile() {
 
     local output_tex=$output_base.$graph_type.plt.tex
     local output_gnu=$output_base.$graph_type.plt.gnu
+
+    compile_normal=$(echo $basedir/compile_data.sh $data_base.*.false.false.bench.dat)
+    compile_calc_only=$(echo $basedir/compile_data.sh $data_base.*.true.false.bench.dat)
+    compile_mpi_only=$(echo $basedir/compile_data.sh $data_base.*.false.true.bench.dat)
 
 
     # Print stuff common to all plots
@@ -55,11 +62,11 @@ function gen_plotfile() {
         # Print linear time
         #
         if [ "$graph_type" = "time" ] ; then
-            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"total time\" with lp ls 1, \\
+            echo 'plot "<'$compile_normal'" using 1:($3/$2) title "total time" with lp ls 1, '\\
 
-            echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"calculation only\" with lp ls 2, \\
+            echo '"<'$compile_calc_only'" using 1:($3/$2) title "calculation only" with lp ls 2, '\\
 
-            echo \"$data_base.onlympi.dat\" using 1:'($3/$2)' title \"mpi only\" with lp ls 3
+            echo '"<'$compile_mpi_only'" using 1:($3/$2) title "mpi only" with lp ls 3'
         fi
 
 
@@ -70,11 +77,11 @@ function gen_plotfile() {
             # Set log scales on both axes.
             echo set logscale y 10
 
-            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"total time\" with lp ls 1, \\
+            echo 'plot "<'$compile_normal'" using 1:($3/$2) title "total time" with lp ls 1, '\\
 
-            echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"calculation only\" with lp ls 2, \\
+            echo '"<'$compile_calc_only'" using 1:($3/$2) title "calculation only" with lp ls 2, '\\
 
-            echo \"$data_base.onlympi.dat\" using 1:'($3/$2)' title \"mpi only\" with lp ls 3
+            echo '"<'$compile_mpi_only'" using 1:($3/$2) title "mpi only" with lp ls 3'
 
         fi
 
@@ -90,7 +97,7 @@ function gen_plotfile() {
 
         # Find lowest core time
         lowest_time=$(
-            cat $data_base.normal.dat \
+            $compile_normal \
             | head -n 1 \
             | awk '{print $1*$3/$2}'
         )
@@ -106,9 +113,9 @@ function gen_plotfile() {
         # Print linear speedup graph
         #
         if [ "$graph_type" = "speedup" ] ; then
-            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"total time\" with lp ls 1, \\
+            echo 'plot "<'$compile_normal'" using 1:('$lowest_time'/($3/$2)) title "total time" with lp ls 1, '\\
 
-            echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"calculation only\" with lp ls 2, \\
+            echo '"<'$compile_calc_only'" using 1:('$lowest_time'/($3/$2)) title "calculation only" with lp ls 2, '\\
 
             echo 'f(x) ti "f(x) = x" ls 4'
         fi
@@ -122,9 +129,9 @@ function gen_plotfile() {
             # set logarithmix axes
             echo set logscale y 10
 
-            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"total time\" with lp ls 1, \\
+            echo 'plot "<'$compile_normal'" using 1:('$lowest_time'/($3/$2)) title "total time" with lp ls 1, '\\
 
-            echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"calculation only\" with lp ls 2, \\
+            echo '"<'$compile_calc_only'" using 1:('$lowest_time'/($3/$2)) title "calculation only" with lp ls 2, '\\
 
             echo 'f(x) ti "f(x) = x" ls 4'
         fi
@@ -132,3 +139,6 @@ function gen_plotfile() {
     fi >> $output_gnu
 
 }
+
+
+gen_plotfile "$1" "$2" "$3"

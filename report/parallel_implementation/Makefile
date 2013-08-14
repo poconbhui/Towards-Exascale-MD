@@ -20,6 +20,7 @@ parallel_implementation.tex = \
 parallel_implementation.tex: $(parallel_implementation.tex)
 	touch parallel_implementation.tex
 
+
 .PHONY: clean
 clean:
 	@echo rm v0/*.plt.{tex,pdf}

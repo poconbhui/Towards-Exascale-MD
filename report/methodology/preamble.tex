@@ -1,41 +1,46 @@
-We will outline our initial implementations of
-the \replicateddata{} and \systolicloop{} MD codes
-along with our methods for extracting performance data from our codes.
+An outline of a Fortran program will be introduced capable
+of performing an MD simulation which will be extended as appropriate
+to implement different parallel schemes for this dissertation.
+%
+An outline of the data to be gathered will also be presented here
+along with the method by which it is gathered.
 
 \section{Implementation}
 \label{sec:methodology:subsec:implementation}
 
-The code is implemented in Fortran.
+The simulation for this dissertation will be implemented in Fortran.
 %
-In an attempt to decouple our simulation from the underlying code,
-we try to abstract our underlying
-particle distribution,
-particle comparison schemes and
-data gathering schemes
-from our numerical integrator and pair force finding scheme.
+To allow for arbitrary parallel schemes to be implemented,
+the logic of how an individual particle is stepped forward
+in time and when and where that stepping should be applied
+should be separated.
 %
-To allow for arbitrary distribution schemes to be implemented,
-we must ensure that potential redundant calculations and reductions
-across processes may be easily implemented.
+Similarly, the logic for finding the force between two particles
+should be separated from the logic for combining all of these
+inter-particle forces to find the entire force on a particle.
 
-To this end, we implement a distribution class
+To address this, a ``distribution class'' is implemented,
 representing a distributed list of particles
-along with a set of interfaces for applying transformations over the particles.
+along with a set of interfaces for
+applying transformations over the particles.
 %
-These interfaces accept user defined functions which provide
-a mapping over particles returning partial results,
-predefined reduction operators and
-a mapping from fully reduced values back onto the particles.
+These interfaces accept user defined functions which may specify
+mappings over particles returning partial results,
+predefined reduction operations and
+mappings from fully reduced values back onto the particles.
 %
-This allows us to gracefully handle arbitrary user defined operations while
-leaving us free to change our underlying distribution and operations
-at will.
+The interfaces will then apply these mappings and reductions
+as appropriate.
+%
+This allows for gracefully handle arbitrary user defined operations while
+allowing the underlying parallel scheme to be changed as necessary.
 
 %
 %Q: What does an implementation look like?
-Our approach suggests a minimum number of operations we must implement,
+This approach suggests a minimum number of operations to be implemented,
 namely individual particle operations and particle list comparison
-operations.
+operations representing the integration and force update sections
+of the MD simulation loop outlined in \FIG{fig:md_loop_flow_chart}.
 
 
 \subsection{The \individualoperation{} Method}
@@ -83,16 +88,17 @@ An example serial implementation is in
 ]
     subroutine pair_operation(                     &
         pair_to_value, particle_value_to_particle, &
-        reduction_type                             &
+        reduction_type, reduction_init             &
     )
         ...
 
         do i=1, num_particles
-            value = reduction_identity(reduction_type)
+            value = reduction_init
 
             do j=1, num_particles
-                tmp_value = pair_to_value(     &
-                    particles(i), particles(j) &
+                call pair_to_value(     &
+                    particles(i), particles(j), &
+                    tmp_value &
                 )
 
                 value = reduce(       &
@@ -108,28 +114,36 @@ An example serial implementation is in
     end subroutine pair_operation
 \end{lstlisting}
 
-As can be seen, we have taken several design choices which limit how
+As can be seen, some design choices have been taken which limit how
 general the user defined operations can be.
 %
-This is primarily due to language restrictions.
+There are also some unfortunate inconsistencies in the signatures of
+user defined operations.
 %
-However, as we are focusing primarily on implementing
-the \velocityverlet{} algorithm, this is not a major concern for us.
+These are primarily due to language restrictions.
+%
+However, the minimum requirement is for the distribution to be able
+to implement the \velocityverlet{} algorithm,
+these problems are not a major concern.
 
 
 \subsection{Errata and an Example}
 
-We further provide an interface for printing information on the particles
-out to disk.
+Interfaces for printing information on the particles
+out to disk and for performing some map-reduce operations over
+the particles are also provided.
 %
-We are not particularly concerned with IO efficiency in this dissertation,
-so we simply print out to the screen.
-%
-This is noted for completeness, and implementations for specific distributions
-will not be documented.
+These are noted for completeness and are used for testing and debugging,
+however they will not be used during benchmarking.
 
 An example of an MD simulation using this model is provided in
 \LST{lst:distribution_operation}.
+%
+Presented is an example of creating a distribution,
+initialising the particles in the simulation,
+an MD update loop and
+printing the list of particles out to disk.
+
 
 \begin{lstlisting}[
     caption=An example MD simulation,
@@ -148,8 +162,8 @@ program MD
 
         ! Find forces between particles due to
         ! LJ potential
-        call dist%pair_operation(            &
-            map_force, unmap_force, dist%sum &
+        call dist%pair_operation(                      &
+            map_force, unmap_force, dist%sum, zero_arr &
         )
 
         ! Perform second half of velocity Verlet scheme
@@ -172,12 +186,14 @@ contains
     end function init_particles
 
     ! Find the force on particle1 due to particle2
-    PURE function map_force(particle_i, particle_j)
+    PURE subroutine map_force(        &
+        particle_i, particle_j, force &
+    )
         ...
-        map_force = find_LJ_force_between( &
-            particle_i, particle_j           &
+        call find_LJ_force_between(        &
+            particle_i, particle_j, force  &
         )
-    end function map_force
+    end subroutine map_force
 
     ! Expect all the forces to have been summed together
     ! in the "total_force" parameter.
@@ -213,9 +229,9 @@ This suggests a 2D space over which we might evaluate performance.
 
 %
 %Q: What will we measure?
-As successful MD simulations can be carried out on already well defined
-systems, we are not so interested in evaluating just how large we can
-make our simulations.
+As successful MD simulations can be carried out on well defined
+systems sizes, evaluating just how large a simulation can be run
+is not particularly interesting.
 %
 As such, we choose several fixed system sizes to test, namely
 $2^{9} = 512$, $2^{12} = 4096$, $2^{15} = 32768$ particles.
