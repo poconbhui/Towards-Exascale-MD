@@ -114,11 +114,9 @@ at every time step,
 with $\log{P}$ communications of $N$ particles
 yielding a communication time of $\bigO{N \log{P}}$.
 
-A further problem arising from this algorithm is that every process has
-an individual copy of the system.
-%
-For large systems running on a large number of cores,
-this can stretch the memory of the machine it is running on.
+As every process has an individual copy of the system of particles,
+when large systems are simulated using a large number of cores,
+the memory of the machine it is running on can be stretched rather thin.
 %
 For a system of particles where each particle uses double
 precision floating point (8~B) data to store
@@ -264,7 +262,7 @@ It will then pass the copied list to the ``right'' process and
 receive a new list from the ``left'' process and use that to perform
 another partial force update on its local list.
 %
-This process continues until a process receives its own system again from
+These ``pulses'' continue until a process receives its own system again from
 the ``left'' process, signifying that it has at some stage received
 a copy of every list on every process.
 %
@@ -274,9 +272,9 @@ every particle in the system to the particles in its local list.
 From here, a process may update the position and velocity of these local
 particles, thereby stepping the system forward.
 %
-As we are performing an $\bigO{\left(\frac{N}{P}\right)^2}$ operation
-when comparing particles and perform this $\bigO{P}$ times, we
-get an $\bigO{N^2/P}$ algorithm.
+As comparing lists of particles on each pulse is an $\bigO{(N/P)^2}$ operation
+and each time step requires $P$ pulses, the calculation is expected to take
+$\bigO{N^2/P}$ time.
 
 
 %
@@ -285,42 +283,39 @@ As the system is distributed over a number of processes, this allows
 us to work on very large systems.
 %
 Taking the systems and figures from the previous section,
-rather than being limited to $10^7$ particles for the system,
-we are limited to $10^7$ particles per core.
+rather than the simulation being limited to $10^7$ particles for the system,
+it is instead limited to $10^7$ particles per core per 32~GB node.
 %
-As a result, we have an upper limit on particles per core, but no
+As a result, there is an upper limit on particles per core, but no
 upper limit on the actual system being studied.
-%
-Further, communications between processes is more limited than the
-replicated case.
-%
-Here, we have each process communicating with only two other processes
-and sending only $N/P$ particles.
-%
-By this mechanism, we simultaneously reduce the volume of data
-being communicated between every process and
-remove a hard global synchronisation
-when compared to the \replicateddata{} scheme.
-%
-However, we must perform $P$ communications.
 
-Ideally, we could set $P = N$ and have a $\bigO{1}$ operation performed
-$\bigO{P = N}$ times.
+Another benefit is that
+communications between processes are more limited than
+the replicated case.
 %
-The primary limitation here is the overhead of performing the systolic
-pulses.
+Here, each process communicates with only two other neighbouring processes
+and sends and receives only $N/P$ particles.
 %
-As communications have a given latency, we would like to reduce the number
-of communications performed.
+By this mechanism, volume of data
+being communicated across the machine is limited
+and and there are no hard global synchronisation points.
 %
-In a \systolicloop{}, the number of operations performed reduces with
-the square of the processes, but the communications performed scales linearly.
+However, the number of communications performed per time step
+scales linearly with the number of processes.
+
+When factoring in the number of systolic pulses per time step,
+it becomes clear that the $\bigO{N^2/P}$ scaling will not last indefinitely.
 %
-As such, we quickly reach a point where latency dominates over computation.
+As a result of communication latency, a communication term of
+$\bigO{P}$ exists.
+%
+As the calculation scales inversely with the number of processes
+and the communication linearly, it is clear that communication time will
+eventually dominate over calculation.
 %
 Even for very large $N$, a modest $P$ can incur large latency overheads.
 %
 %Q: Why are the scaling challenges of systolic loop concerning for exascale?
 As increasing the number of processes to a large value
-can quickly result in calculations having significant latency,
-we see an immediate concern for exascale system.
+can quickly result in calculations having significant communication overhead,
+this raises an immediate concern for exascale system.
