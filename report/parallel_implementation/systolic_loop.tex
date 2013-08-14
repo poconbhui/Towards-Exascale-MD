@@ -2,8 +2,10 @@
 
 The \systolicloop{} scheme, as described in
 \SEC{sec:background:subsec:systolic_loop},
-is initialised by allocating 3 arrays of
-size $N/P$ on every process.
+is initialised by allocating 3 arrays of particles of
+size $N/P$ on every process for storing and transferring particles
+along with an array of double precision values of size $3*N/P$ for
+partial results for reduction operations.
 %
 The system is then split roughly evenly across all the processes
 and is held, updated and shared using these three lists.

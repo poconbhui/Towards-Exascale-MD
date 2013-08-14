@@ -216,9 +216,9 @@ of 512 particles is approximately $10^{-4}$ seconds,
 of 4096 particles is approximately $10^{-3}$ seconds and
 of 32768 particles is approximately $10^{-2}$ seconds.
 %
-Thus as scaling begins dropping off at $P = N$,
-the minimum execution time for this distribution,
-for the system sizes tested,
-scales as $N\log{N}$
-where $N$ is the number of particles in the system.
-
+Thus as scaling begins dropping off at $P = N$ for the system syzes tested,
+the minimum execution time for this distribution appears to scale as $N$,
+although this could also be $N\log{N}$ which would be expected from
+a dominating communication term.
+%
+However, there is not enough data presented here to make the distinction.
