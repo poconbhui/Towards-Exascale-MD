@@ -3,6 +3,8 @@
 set term epslatex color
 set output "background/lennard_jones_potential.plt.tex"
 
+load "gnuplot_styles.plt"
+
 epsilon = 1
 delta   = 1
 
@@ -15,4 +17,4 @@ set ylabel 'V(r)/$\epsilon$'
 set xlabel 'r/$\delta$'
 
 set arrow from 1,-1.5 to 1,2 nohead
-plot V(x) title '$V_{LJ}(r)/\epsilon$' lw 2, 0 notitle, -epsilon notitle
+plot V(x) title '$V_{LJ}(r)/\epsilon$' ls 1, 0 notitle ls 2, -epsilon notitle ls 3

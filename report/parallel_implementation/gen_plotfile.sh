@@ -15,13 +15,26 @@ function gen_plotfile() {
     # Print stuff common to all plots
     {
         echo '#!/usr/bin/env gnuplot'
+
+        #
+        # Set output terminal and files
+        #
         echo set term epslatex color
         echo set output \"$output_tex\"
+        #echo set term pngcairo enhanced
+        #echo set output \"$output_base.$graph_type.plt.png\"
         #echo set term dumb
 
+        #
+        # Set tick styles
+        #
         echo set logscale x 2
+        echo set mxtics 2
 
-        echo set format y \"%.2e\"
+        echo 'set format y "$10^{%L}$"'
+
+        # Import common gnuplot styles
+        cat ../gnuplot_styles.plt
 
     } > $output_gnu
 
@@ -42,11 +55,11 @@ function gen_plotfile() {
         # Print linear time
         #
         if [ "$graph_type" = "time" ] ; then
-            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"total time\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"total time\" with lp ls 1, \\
 
-            echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"calculation only\" with lp, \\
+            echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"calculation only\" with lp ls 2, \\
 
-            echo \"$data_base.onlympi.dat\" using 1:'($3/$2)' title \"mpi only\" with lp
+            echo \"$data_base.onlympi.dat\" using 1:'($3/$2)' title \"mpi only\" with lp ls 3
         fi
 
 
@@ -55,13 +68,13 @@ function gen_plotfile() {
         #
         if [ "$graph_type" = "logtime" ] ; then
             # Set log scales on both axes.
-            echo set logscale xy 2
+            echo set logscale y 10
 
-            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"total time\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'($3/$2)' title \"total time\" with lp ls 1, \\
 
-            echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"calculation only\" with lp, \\
+            echo \"$data_base.nompi.dat\" using 1:'($3/$2)' title \"calculation only\" with lp ls 2, \\
 
-            echo \"$data_base.onlympi.dat\" using 1:'($3/$2)' title \"mpi only\" with lp
+            echo \"$data_base.onlympi.dat\" using 1:'($3/$2)' title \"mpi only\" with lp ls 3
 
         fi
 
@@ -93,11 +106,11 @@ function gen_plotfile() {
         # Print linear speedup graph
         #
         if [ "$graph_type" = "speedup" ] ; then
-            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"total time\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"total time\" with lp ls 1, \\
 
-            echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"calculation only\" with lp, \\
+            echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"calculation only\" with lp ls 2, \\
 
-            echo 'f(x) ti "f(x) = x"'
+            echo 'f(x) ti "f(x) = x" ls 4'
         fi
 
 
@@ -107,13 +120,13 @@ function gen_plotfile() {
         if [ "$graph_type" = "logspeedup" ] ; then
 
             # set logarithmix axes
-            echo set logscale xy 2
+            echo set logscale y 10
 
-            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"total time\" with lp, \\
+            echo plot \"$data_base.normal.dat\" using 1:'('$lowest_time'/($3/$2))' title \"total time\" with lp ls 1, \\
 
-            echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"calculation only\" with lp, \\
+            echo \"$data_base.nompi.dat\" using 1:'('$lowest_time'/($3/$2))' title \"calculation only\" with lp ls 2, \\
 
-            echo 'f(x) ti "f(x) = x"'
+            echo 'f(x) ti "f(x) = x" ls 4'
         fi
 
     fi >> $output_gnu
