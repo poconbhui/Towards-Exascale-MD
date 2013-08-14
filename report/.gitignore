@@ -3,6 +3,7 @@
 *.aux
 *.log
 *.toc
+*.lof
 
 # Image stuff
 *.plt.eps
