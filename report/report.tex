@@ -6,7 +6,7 @@
 %          Padraig O Conbhui          %
 % % % % % % % % % % % % % % % % % % % %
 
-\documentclass[12pt, a4paper]{article}
+\documentclass[12pt,a4paper]{report}
 
 \input{macros}
 \input{packages}
@@ -14,18 +14,93 @@
 
 \begin{document}
 
-\author{P\'{a}draig \'{O} Conbhu\'{\i}}
-\title{Towards Exascale Molecular Dynamics}
 
-\makeEPCCtitle
-\thispagestyle{empty}
-\pagebreak
+%
+% Begin roman numerals
+%
 
 \pagenumbering{roman}
-\tableofcontents
-\pagebreak
 
+
+%
+% Make front page
+%
+
+\author{P\'{a}draig \'{O} Conbhu\'{\i}}
+\title{Towards Exascale Molecular Dynamics}
+\date{\today}
+
+\makeEPCCtitle
+
+\thispagestyle{empty}
+
+\vspace{12cm}
+
+\begin{center}
+
+\large{MSc in High Performance Computing}
+
+\large{The University of Edinburgh}
+
+\large{Year of Presentation: 2007}
+
+\end{center}
+
+\newpage
+
+
+%
+% Project Abstract
+%
+
+\begin{abstract}
+Nothing so far.
+\end{abstract}
+
+
+% Restart numbering
+\pagenumbering{roman}
+
+
+%
+% Content list pages
+%
+
+\tableofcontents
+%\listoftables
+\listoffigures
+
+
+%
+% Title page
+%
+
+\begin{titlepage}
+\vspace*{2in}
+% an acknowledgements section is completely optional but if you decide
+% not to include it you should still include an empty {titlepage}
+% environment as this initialises things like section and page numbering.
+
+%
+% Acknowledgements
+%
+
+\section*{Acknowledgements}
+
+Nothing so far.
+
+
+\end{titlepage}
+
+
+% Start regular page numbering
 \pagenumbering{arabic}
+
+
+%
+% Include chapters
+%
+
 \include{introduction/introduction}
 \include{background/background}
 \include{methodology/methodology}

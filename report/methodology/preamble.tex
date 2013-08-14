@@ -2,7 +2,7 @@ We will outline our initial implementations of
 the \replicateddata{} and \systolicloop{} MD codes
 along with our methods for extracting performance data from our codes.
 
-\subsection{Implementation}
+\section{Implementation}
 \label{sec:methodology:subsec:implementation}
 
 The code is implemented in Fortran.
@@ -38,7 +38,7 @@ namely individual particle operations and particle list comparison
 operations.
 
 
-\subsubsection{The \individualoperation{} Method}
+\subsection{The \individualoperation{} Method}
 \label{sec:the_individual_operation_method}
 
 This method will accept a function defining a mapping from
@@ -66,7 +66,7 @@ This will be useful for initialising particle distributions
 and performing integration steps.
 
 
-\subsubsection{The \pairoperation{} Method}
+\subsection{The \pairoperation{} Method}
 \label{sec:the_pair_operation_method}
 
 This method will accept a function defining a mapping from two
@@ -117,7 +117,7 @@ However, as we are focusing primarily on implementing
 the \velocityverlet{} algorithm, this is not a major concern for us.
 
 
-\subsubsection{Errata and an Example}
+\subsection{Errata and an Example}
 
 We further provide an interface for printing information on the particles
 out to disk.
@@ -201,7 +201,7 @@ end program MD
 
 
 
-\subsection{Performance Measurement}
+\section{Performance Measurement}
 
 %
 %Q: What should we be measuring?
