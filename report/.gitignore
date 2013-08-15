@@ -4,6 +4,7 @@
 *.log
 *.toc
 *.lof
+*.lot
 
 # Image stuff
 *.plt.eps
