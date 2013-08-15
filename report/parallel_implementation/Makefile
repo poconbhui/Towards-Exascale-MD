@@ -23,5 +23,5 @@ parallel_implementation.tex: $(parallel_implementation.tex)
 
 .PHONY: clean
 clean:
-	@echo rm v0/*.plt.{tex,pdf}
-	@rm v0/*.plt.{tex,pdf} 2>/dev/null; true
+	@echo rm v0/*.plt.{tex,pdf,eps,gnu}
+	@rm v0/*.plt.{tex,pdf,eps,gnu} 2>/dev/null; true
