@@ -1,0 +1,73 @@
+\section{Shared and Replicated Data}
+
+\subsection{\individualoperation{}}
+
+%
+% Overall speedup plot
+%
+\begin{figure}[!h]
+    \input{parallel_implementation/v1/shared_and_replicated.individual_operation.logspeedup.plt}
+    \caption{
+        Speedup plots for the \individualoperation{} implemented with the \sharedandreplicateddata{} scheme for systems of particles of size 512, 4096 and 32768.
+    }
+    \label{fig:v1_shared_and_replicated_data_individual_operation_speedups}
+\end{figure}
+
+
+%
+% Individual breakdowns
+%
+\begin{figure}[!h]
+    \input{parallel_implementation/v1/shared_and_replicated.individual_operation.512.time.plt}
+    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\individualoperation{}}{512}}
+    \label{fig:v1_shared_and_replicated_individual_operation_512_time}
+\end  {figure}
+
+\begin{figure}[!h]
+    \input{parallel_implementation/v1/shared_and_replicated.individual_operation.4096.time.plt}
+    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\individualoperation{}}{4096}}
+    \label{fig:v1_shared_and_replicated_individual_operation_4096_time}
+\end  {figure}
+
+\begin{figure}[!h]
+    \input{parallel_implementation/v1/shared_and_replicated.individual_operation.32768.time.plt}
+    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\individualoperation{}}{32768}}
+    \label{fig:v1_shared_and_replicated_individual_operation_32768_time}
+\end  {figure}
+
+
+
+\subsection{\pairoperation{}}
+
+%
+% Overall speedup plot
+%
+\begin{figure}[!h]
+    \input{parallel_implementation/v1/shared_and_replicated.pair_operation.logspeedup.plt}
+    \caption{
+        Speedup plots for the \pairoperation{} implemented with the \sharedandreplicateddata{} scheme for systems of particles of size 512, 4096 and 32768.
+    }
+    \label{fig:v1_shared_and_replicated_data_pair_operation_speedups}
+\end{figure}
+
+
+%
+% Individual breakdowns
+%
+\begin{figure}[!h]
+    \input{parallel_implementation/v1/shared_and_replicated.pair_operation.512.logtime.plt}
+    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\pairoperation{}}{512}}
+    \label{fig:v1_shared_and_replicated_pair_operation_512_logtime}
+\end  {figure}
+
+\begin{figure}[!h]
+    \input{parallel_implementation/v1/shared_and_replicated.pair_operation.4096.logtime.plt}
+    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\pairoperation{}}{4096}}
+    \label{fig:v1_shared_and_replicated_pair_operation_4096_logtime}
+\end  {figure}
+
+\begin{figure}[!h]
+    \input{parallel_implementation/v1/shared_and_replicated.pair_operation.32768.logtime.plt}
+    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\pairoperation{}}{32768}}
+    \label{fig:v1_shared_and_replicated_pair_operation_32768_logtime}
+\end  {figure}
