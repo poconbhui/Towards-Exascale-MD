@@ -363,44 +363,16 @@ contains
 
 
         !
-        ! Try timing num_reps
+        ! Loop over timings, increasing num_reps
+        ! Until measured time is comparable to 1s
         !
-        call MPI_Barrier(MPI_COMM_WORLD, ierror)
-
-        start_time = get_time()
-        do rep=1, num_reps
-            call bench_ptr(dist)
-        end do
-        end_time = get_time()
-
-        call MPI_Barrier(MPI_COMM_WORLD, ierror)
-
-
-        !
-        ! If our measured time is too low, try more reps
-        !
-        if(end_time - start_time .LT. 1E-3) then
-            do_more_reps = .TRUE.
-        end if
-
-        ! Make sure everyone is doing the same thing
-        call MPI_Bcast( &
-            do_more_reps, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierror &
-        )
-
-        ! Do the repeat, if necessary
-        if(do_more_reps) then
-            ! Get suggested rep size
-            num_reps = int(1.0/(end_time - start_time))
-
-            ! Use num_reps from process 0
-            call MPI_Bcast(num_reps, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, ierror)
+        do_more_reps = .TRUE.
+        do while(do_more_reps)
 
 
             !
-            ! Do longer timing
+            ! Try timing num_reps
             !
-
             call MPI_Barrier(MPI_COMM_WORLD, ierror)
 
             start_time = get_time()
@@ -411,7 +383,25 @@ contains
 
             call MPI_Barrier(MPI_COMM_WORLD, ierror)
 
-        end if
+
+            !
+            ! If our measured time is too low, try more reps
+            !
+            if(end_time - start_time .LT. 0.1) then
+                do_more_reps = .TRUE.
+            else
+                do_more_reps = .FALSE.
+            end if
+
+            ! Make sure everyone is doing the same thing
+            call MPI_Bcast( &
+                do_more_reps, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, ierror &
+            )
+
+            ! If doing more reps, multiply by 10
+            if(do_more_reps) num_reps = 10*num_reps
+        end do
+
 
 
         !
