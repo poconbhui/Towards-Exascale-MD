@@ -33,6 +33,21 @@ this should take a time
     \frac{N}{P}\bigO{1} = \bigO{\frac{N}{P}}
 \end  {equation}
 
+%
+% Overall speedup plot
+%
+\begin{figure}[!h]
+    \input{parallel_implementation/v0/systolic.individual_operation.logspeedup.plt}
+    \caption{
+        Speedup plots for the \individualoperation{} implemented with the \systolicloop{} scheme for systems of particles of size 512, 4096 and 32768.
+    }
+    \label{fig:v0_systolic_individual_operation_speedups}
+\end{figure}
+
+
+%
+% Individual breakdowns
+%
 \begin{figure}[!h]
     \input{parallel_implementation/v0/systolic.individual_operation.512.logtime.plt}
     \caption{\vZeroTimeCaption{\systolicloop{}}{\individualoperation{}}{512}}
@@ -171,6 +186,21 @@ should run in a time
 \end  {align}
 assuming $P \ll{} N^2$, which for this implementation will hold true.
 
+%
+% Overall speedup plot
+%
+\begin{figure}[!h]
+    \input{parallel_implementation/v0/systolic.pair_operation.logspeedup.plt}
+    \caption{
+        Speedup plots for the \pairoperation{} implemented with the \systolicloop{} scheme for systems of particles of size 512, 4096 and 32768.
+    }
+    \label{fig:v0_systolic_pair_operation_speedups}
+\end{figure}
+
+
+%
+% Individual breakdowns
+%
 \begin{figure}[!h]
     \input{parallel_implementation/v0/systolic.pair_operation.512.logtime.plt}
     \caption{\vZeroTimeCaption{\systolicloop{}}{\pairoperation{}}{512}}
