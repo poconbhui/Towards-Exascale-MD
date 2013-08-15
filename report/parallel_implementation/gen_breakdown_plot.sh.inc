@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 
-basedir=$(readlink -f $(dirname $0))
+
+base_dir=$(dirname $(readlink -f $0))
+script_name=$(basename $0)
+
+info=( $(echo $script_name | sed 's/\./ /g') )
+
+distribution_name=${info[0]}
+bench_name=${info[1]}
+num_particles=${info[2]}
+graph_type=${info[3]}
+
+
+data_prefix=$distribution_name.$bench_name.$num_particles
 
 
 
@@ -14,9 +26,9 @@ function gen_plotfile() {
     local output_tex=$output_base.$graph_type.plt.tex
     local output_gnu=$output_base.$graph_type.plt.gnu
 
-    compile_normal=$(echo $basedir/compile_data.sh $data_base.*.false.false.bench.dat)
-    compile_calc_only=$(echo $basedir/compile_data.sh $data_base.*.true.false.bench.dat)
-    compile_mpi_only=$(echo $basedir/compile_data.sh $data_base.*.false.true.bench.dat)
+    local compile_normal=$(echo $base_dir/../compile_data.sh $data_base.\*.false.false.bench.dat)
+    local compile_calc_only=$(echo $base_dir/../compile_data.sh $data_base.\*.true.false.bench.dat)
+    local compile_mpi_only=$(echo $base_dir/../compile_data.sh $data_base.\*.false.true.bench.dat)
 
 
     # Print stuff common to all plots
@@ -141,4 +153,7 @@ function gen_plotfile() {
 }
 
 
-gen_plotfile "$1" "$2" "$3"
+gen_plotfile \
+    $base_dir/data/$data_prefix \
+    $base_dir/$data_prefix \
+    ${info[3]}
