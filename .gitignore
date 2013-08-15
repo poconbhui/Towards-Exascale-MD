@@ -7,3 +7,6 @@
 *.dat
 
 *.swp
+
+# Ignore the configure.rb config file
+config

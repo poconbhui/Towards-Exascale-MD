@@ -1,0 +1,5 @@
+--FC=crayftn
+--MPIFC=ftn
+--MPIEXEC=aprun
+
+--ACCOUNT=d45
