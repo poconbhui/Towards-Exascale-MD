@@ -1,0 +1,2 @@
+ # distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled total_cores num_reps time
+ replicated_systolic full_calculation  32768,  16,  F,  T,  5,  6.13284111022949219E-3

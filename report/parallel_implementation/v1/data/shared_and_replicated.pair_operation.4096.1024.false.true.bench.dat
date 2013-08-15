@@ -1,0 +1,2 @@
+ # distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled total_cores num_reps time
+ shared_and_replicated pair_operation  4096,  1024,  F,  T,  5,  7.62701034545898437E-3
