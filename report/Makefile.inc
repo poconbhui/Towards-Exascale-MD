@@ -37,4 +37,4 @@ pdflatex=./latexmk.pl -pdf -g \
 
 # Clean up
 .PHONY: clean
-clean_exts = .aux .log .toc .fdb_latexmk .fls .pdf .plt.eps .plt.tex .plt.pdf
+clean_exts = .aux .log .toc .lof .lot .fdb_latexmk .fls .pdf .plt.eps .plt.tex .plt.pdf
