@@ -89,8 +89,8 @@ def bench_list_for(num_particles)
         # 128-1024 in powers of 2
         "128-1024" => bench_for(num_particles, (7..10).map{|i| 2**i}),
 
-        # 2048-16384 in powers of 2
-        "2048-16384" => bench_for(num_particles, (11..14).map{|i| 2**i})
+        # 2048-32768 in powers of 2
+        "2048-32768" => bench_for(num_particles, (11..15).map{|i| 2**i})
     }
 end
 
