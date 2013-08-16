@@ -1,2 +1,2 @@
- # distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled num_procs num_reps time
- systolic individual_operation  4096,  1,  F,  T,  1048576,  1.77628993988037109E-2
+ # distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled total_cores num_reps time
+ systolic individual_operation  4096,  1,  F,  T,  50000000,  0.84676003456115723

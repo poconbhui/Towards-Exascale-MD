@@ -1,2 +1,2 @@
  # distrubution_name benchmark_name num_particles mpi_disabled calculation_disabled total_cores num_reps time
- replicated_systolic individual_operation  32768,  16,  F,  T,  0,  9.5367431640625E-7
+ replicated_systolic individual_operation  32768,  16,  F,  T,  5000000,  0.14084792137145996
