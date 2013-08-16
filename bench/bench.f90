@@ -127,14 +127,26 @@ program bench
     total_cores = total_cores*num_procs
 
 
+    !
+    ! Parse command line arguments
+    !
+
     call parse_arguments( &
       argc, argv, &
       distribution_name, num_particles, num_reps &
     )
 
 
+    !
+    ! Initialise benchmark suite
+    !
+
     call bench_suite_init(num_particles, (/ 1.0_p, 1.0_p, 1.0_p /), dt)
 
+
+    !
+    ! Initialise distribution
+    !
 
     select case(distribution_name)
         case ("serial")
@@ -171,6 +183,12 @@ program bench
             stop 1
 
     end select
+
+
+
+    !
+    ! Run benchmarks
+    !
 
 
 
