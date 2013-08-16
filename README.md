@@ -18,20 +18,23 @@ The test suite runs on 32 cores.
 
 On Hector:
 
-    ./configure.rb --FC=crayftn --MPIFC=ftn --MPIEXEC=aprun
+    cp examples/config.hector config
+    ./configure.rb
     make all
-    qsub ./scripts/run_tests.qsub.sh
+    qsub ./examples/run_tests.qsub.sh
 
 On Morar
 
     module load mpich2-pgi
-    ./configure.rb --FC=pgf90 --MPIFC=mpif90 --MPIEXEC=mpiexec
+    cp examples/config.morar
+    ./configure.rb
     make all
-    qsub ./scripts/run_tests.qsub.sh
+    qsub ./examples/run_tests.qsub.sh
 
 On a standard machine:
 
-    ./configure.rb --FC=gfortran --MPIFC=mpif90 --MPIEXEC=mpiexec
+    cp examples/config.standard
+    ./configure.rb
     make all
     ./scripts/run_tests.rb
 
@@ -42,9 +45,18 @@ a reasonable set of the Fortran 2003 standard.
 
 ### configure.rb ###
 
-To configure the package, run
+To configure the package to compile using `gfortran` as the compiler,
+`mpif90` as the MPI compiler and `mpiexec` as the MPI execution
+program, run
 
     ./configure.rb --FC=gfortran --MPIFC=mpif90 --MPIEXEC=mpiexec
+
+To save configurations, place them in a `config` file in the
+project root. For some example `config` files, see the `examples/`
+directory. With a `config` file set up, the project can be reconfigured
+by running
+
+    ./configure.rb
 
 For help with configuration options, run
 

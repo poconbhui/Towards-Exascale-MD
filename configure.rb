@@ -18,6 +18,9 @@
 # including mpiexec.rb and Makefile.inc that are used for building,
 # testing and benchmarking the project.
 #
+# This script also configures some other scripts. See which files
+# compile_in is called for at the bottom of this script for more info.
+#
 
 
 # Include OptionParser
@@ -161,4 +164,4 @@ puts "Using:
 #
 compile_in("scripts/Makefile.inc")
 compile_in("scripts/mpiexec.rb")
-compile_in("scripts/run_tests.qsub.sh")
+compile_in("examples/run_tests.qsub.sh", true)

@@ -21,6 +21,25 @@
 #PBS -l walltime=0:5:0
 #
 
+
+#
+# Set PBS_O_WORKDIR variable if not set and cd to it.
+#
+
+# If PBS_O_WORKDIR not set, set it to $PWD
+if [[ -z "$PBS_O_WORKDIR" ]]; then
+    export PBS_O_WORKDIR=$PWD
+fi
+
+# Fix PBS_O_WORKDIR path to absolute path and cd to it
+export PBS_O_WORKDIR=$(readlink -f $PBS_O_WORKDIR)
+cd $PBS_O_WORKDIR
+
+
+#
+# Run the tests
+#
+
 project_root=@PROJECT_ROOT@
 
 $project_root/scripts/run_tests.rb
