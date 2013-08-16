@@ -1,3 +1,2 @@
 Makefile.inc
 mpiexec.rb
-run_tests.qsub.sh
