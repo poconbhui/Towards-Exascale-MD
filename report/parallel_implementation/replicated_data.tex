@@ -1,4 +1,5 @@
 \section{Replicated Data}
+\label{sec:replicated_data_implementation}
 
 The \replicateddata{} scheme, as described in
 \SEC{sec:background:subsec:replicated_data},
@@ -19,6 +20,7 @@ for the \replicateddata{} scheme using MPI will be analysed and discussed.
 %
 
 \subsection{Implementation of the \individualoperation{} Method}
+\label{sec:replicated_data_individual_operation_implementation}
 
 The \individualoperation{} method as outlined in
 \SEC{sec:the_individual_operation_method}
@@ -89,8 +91,8 @@ of cores and that MPI takes up no time as this method uses no MPI calls.
 There is an interesting increase of time that occurs at 2 cores and again
 at 8 cores.
 %
-Given that \hector{} has 4 NUMA regions of 8 cores and each of those
-regions is further subdivided into 4 NUMA regions of 2 cores,
+Given that \hector{} has 4 \numa{} regions of 8 cores and each of those
+regions is further subdivided into 4 \numa{} regions of 2 cores,
 it is likely this is a cause for the jumps at 2 and 8 cores.
 %
 This is particularly noticeable in
@@ -104,7 +106,7 @@ The jumps occur at the same numbers of processes in
 and after 8 processes, the time remains roughly constant.
 %
 This suggests either a latency effect with processes accessing memory
-in other NUMA regions or a memory bandwith effect.
+in other \numa{} regions or a memory bandwith effect.
 %
 Given that the effect scales roughly with the number of particles
 in the system, at fixed core counts, it is most likely due to
@@ -114,9 +116,11 @@ If bandwidth saturated, it is expected that the time taken for
 data transfer would
 scale linearly with the size of the data per core being transferred.
 %
-Therefore, it is likely that the bandwidth is not saturated in the 2 core NUMA
-region when only 1 core is in use, and
-similarly that the bandwidth for the 8 core NUMA region is not saturated
+Therefore, it is likely that the bandwidth is not saturated in
+the 2 core \numa{} region
+when only 1 core is in use, and
+similarly that the bandwidth for
+the 8 core \numa{} region is not saturated
 when only 7 cores are in use.
 
 Above 8 cores, the overall execution time for

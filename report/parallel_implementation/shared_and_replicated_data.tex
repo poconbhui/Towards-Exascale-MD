@@ -1,6 +1,55 @@
 \section{Shared and Replicated Data}
 
+The \sharedandreplicateddata{} scheme is implemented in exactly the same
+way as the \replicateddata{} scheme outlined in 
+\SEC{sec:replicated_data_implementation},
+except the update loop in the \pairoperation{} method is further
+parallelised using \openmp{} directives, taking advantage of shared
+memory between cores.
+%
+In fact, this distribution class inherits directly from the
+\replicateddata{} distribution class, and overloads only the
+\pairoperation{} method.
+
+
+The primary motivation for this is to show that mixed mode MPI and \openmp{}
+paralellism is just as viable as MPI only parallelism for a \replicateddata{}
+scheme along with how easily the mixed mode parallelism may be implemented
+on top of an MPI implementation.
+%
+The importance of this is that the maximum system size per core per node
+can be increased in proportion to the number of \openmp{} threads
+created per MPI process, which is of particular importance for nodes with
+particularly high core counts.
+
+The \sharedandreplicateddata{} distribution is initialised by
+allocating a list of particles the size of the system of particles
+on every MPI process.
+%
+The number of \openmp{} threads used per MPI processes is fixed at 8,
+as this is the suggested number for \hector{} due to the arrangement
+of the \numa{} regions into groups of 8.
+%
+As this is a rather low number compared to the overall number of MPI
+processes, the emphasis here isn't to gain any perticular performance
+improvement using \openmp{}, only to show that it is viable.
+%
+Indeed, the mere introduction of 8 threads per MPI process should increase
+the maximum system size that can be run 8 fold.
+
+In this section,
+the implementation details and performance of
+the \individualoperation{} and \pairoperation{} methods
+will be presented and analysed.
+
+
 \subsection{\individualoperation{}}
+
+The \individualoperation{} method is inherited directly from
+the implementation outlined in
+\SEC{sec:replicated_data_individual_operation_implementation}.
+%
+As a result, the time to completion is also expected to scale as $\bigO{N}$.
 
 %
 % Overall speedup plot
@@ -35,9 +84,64 @@
     \label{fig:v1_shared_and_replicated_individual_operation_32768_time}
 \end  {figure}
 
+\vZeroTimeExplanation
+    {\FIG{fig:v0_replicated_individual_operation_512_time}}
+    {\FIG{fig:v0_replicated_individual_operation_4096_time}}
+    {\FIG{fig:v0_replicated_individual_operation_32768_time}}
+    {\individualoperation{}}
+    {\replicateddata{}}
+
+As can be seen from 
+\FIG{fig:v0_replicated_individual_operation_512_time},
+\FIG{fig:v0_replicated_individual_operation_4096_time} and
+\FIG{fig:v0_replicated_individual_operation_32768_time}
+the performace scaling does indeed scale as $\bigO{N}$, as expected
+and exactly in line with the performance scaling results of the
+\individualoperation{} method in the \replicateddata{} scheme.
+
 
 
 \subsection{\pairoperation{}}
+
+The \pairoperation{} method is implemented in a similar manner to the
+\pairoperation{} method from the \replicateddata{} scheme with the
+addition of \openmp{} directives to further parallelise the
+force update loop.
+
+A copy of the system is held on each MPI process, meaning there
+are $P_{MPI}$ replicas of the system created.
+%
+Each MPI process is then assigned $N/P_{MPI}$ particles in that system
+to determine forces for.
+%
+Given that list of $N/P_{MPI}$ particles,
+an MPI process spawns $P_{OMP}$ threads
+and assigns $1/(P_{MPI} P_{OMP})$ particles to each thread.
+
+Writing $P = P_{MPI} \times{} P_{OMP}$,
+each core therefore has $N/P$ particles
+for which it must determine the forces.
+%
+As before, if each particles must be compared to $N$ other particles
+using an $\bigO{1}$ update operation, the time to find the force for
+a single particles is
+\begin{equation}
+    N\bigO{1} = \bigO{N}
+\end{equation}
+And so, the time to find the forces for $N/P$ particles is
+\begin{equation}
+    \frac{N}{P}\bigO{N} = \bigO{\frac{N^2}{P}}
+\end{equation}
+
+After the forces have been determined by each thread, the team of threads
+shuts down.
+%
+This represents a synchronisation point for the threads within the
+MPI process.
+%
+After this, an MPI\_Allgatherv is used over the $P_{MPI}$ processes
+to synchronise the updated lists of particles, representing a
+$\bigO{N\log{P_{OMP}}}$ operation.
 
 %
 % Overall speedup plot
