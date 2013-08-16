@@ -107,8 +107,8 @@ To see available benchmarks, run
 
 The program `bench/bench` outlines a set of tests for a given distribution,
 timing a full calculation time step,
-a single `individual_operation` and
-a single `pair_operation`.
+several repetitions of the `individual_operation` method and
+several repetitions of the `pair_operation` method.
 
 These are done in several regimes. In one, both MPI communications and
 calculations are enabled. In another, MPI communications are disabled
