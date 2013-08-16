@@ -74,7 +74,7 @@ assuming it passes arguments directly to the underlying compiler.
 
 Use `MPIEXEC` to specify the MPI execution program to be used.
 Currently, only `mpiexec` and `aprun` are supported.
-This may be expanded by editing `scripts/mpiexec.rb`.
+This may be expanded by editing `scripts/mpiexec.rb.in`.
 
 
 ### Running scripts ###
