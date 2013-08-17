@@ -241,11 +241,13 @@ an MPI\_Allgatherv.
 Assuming this uses a tree-like algorithm, this should perform
 $\log{P}$ communications of $N$ particles with a constant latancy $l$
 resulting in a communication time of
-\begin{align}
-    \log{(P)}\,\bigO{N + l}
-        &= \bigO{(N+l)\log{P}} \\
-        &\approx{} \bigO{N\log{P}}
-\end{align}
+\begin{equation}
+    \begin{split}
+        \log{(P)}\,\bigO{N + l}
+            &= \bigO{(N+l)\log{P}} \\
+            &\approx{} \bigO{N\log{P}}
+    \end{split}
+\end{equation}
 
 %
 %Q:What is the expected overall time of the Replicated Data pair_operation method?
@@ -301,11 +303,13 @@ suggesting good scaling in this regime.
 %
 Similarly when $P \sim{} N$
 or $P > N$
-\begin{align}
-    \bigO{\frac{N^2}{P} + N\log{P}}
-        &\sim{} \bigO{N + N\log{P}} \\
-        &\sim{} \bigO{N\log{P}}
-\end  {align}
+\begin{equation}
+    \begin{split}
+        \bigO{\frac{N^2}{P} + N\log{P}}
+            &\sim{} \bigO{N + N\log{P}} \\
+            &\sim{} \bigO{N\log{P}}
+    \end{split}
+\end{equation}
 %
 suggesting the communication term eventually dominating and
 the overall time increasing as $N\log{P}$.

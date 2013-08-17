@@ -251,23 +251,27 @@ with a fixed latency $l$, each pulse is expected to take a time
 $\bigO{N/P + l}$.
 %
 With $P-1$ pulses on each time step, the communication per timestep should be
-\begin{align}
-    (P-1)\bigO{N/P + l}
-        &= \bigO{(N/P + l)(P-1)} \\
-        &= \bigO{(N + lP - N/P - l} \\
-        &\approx{} \bigO{N + lP} \\
-        &\approx{} \bigO{N + P}
-\end  {align}
+\begin{equation}
+    \begin{split}
+        (P-1)\bigO{N/P + l}
+            &= \bigO{(N/P + l)(P-1)} \\
+            &= \bigO{(N + lP - N/P - l} \\
+            &\approx{} \bigO{N + lP} \\
+            &\approx{} \bigO{N + P}
+    \end{split}
+\end{equation}
 
 %
 %Q: What is the expected overall time of the Systolic Loop pair_operation method?
 Combining the calculation and communication terms, the \systolicloop{} approach
 should run in a time
-\begin{align}
-    \bigO{\frac{N^2}{P}} + \bigO{N + P - N/P}
-        &\approx{} \bigO{\frac{N^2}{P} + N + P - N/P} \\
-        &= \bigO{\frac{N^2}{P} + P}
-\end  {align}
+\begin{equation}
+    \begin{split}
+        \bigO{\frac{N^2}{P}} + \bigO{N + P - N/P}
+            &\approx{} \bigO{\frac{N^2}{P} + N + P - N/P} \\
+            &= \bigO{\frac{N^2}{P} + P}
+    \end{split}
+\end{equation}
 assuming $P \ll{} N^2$, which for this implementation will hold true.
 
 

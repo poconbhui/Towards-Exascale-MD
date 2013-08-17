@@ -242,12 +242,14 @@ Assuming the MPI\_Allgatherv uses a tree-like algorithm for
 gathering and distributing the data, this should perform
 $\log{P_{MPI}}$ communications of approximately $N$ particles
 with a constant latency $l$, resulting in a communication time
-\begin{align}
-    \log{(P_{MPI})}\,\bigO{N + l} 
-        &= \bigO{\log{(P_{MPI})}\,(N+l)} \\
-        &\approx{} \bigO{N\log{P_{MPI}}}
-        \label{eqn:shared_andreplicated_communication_time}
-\end{align}
+\begin{equation}
+    \label{eqn:shared_andreplicated_communication_time}
+    \begin{split}
+        \log{(P_{MPI})}\,\bigO{N + l} 
+            &= \bigO{\log{(P_{MPI})}\,(N+l)} \\
+            &\approx{} \bigO{N\log{P_{MPI}}}
+    \end{split}
+\end{equation}
 
 Where communications in the \replicateddata{} scheme grew as $\log{P}$,
 here they grow as $\log{P_{MPI}}$.
