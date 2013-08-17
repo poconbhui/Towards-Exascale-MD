@@ -427,8 +427,45 @@ simplifies to
         } \\
         = \bigO{
             \frac{N^2}{P}
-            + \frac{N}{\sqrt{P}}\log{\sqrt{P}}
+            + \frac{N}{\sqrt{P}}(\log{\sqrt{P}}+1)
             + \log{\sqrt{P}}
         }
     \end{split}
 \end{equation}
+
+\begin{figure}
+    \input{parallel_implementation/log_vs_log_sqrt_p.plt}
+    \caption{
+        The relative scaling of
+        $1/\sqrt{P}\log{\sqrt{P}}$ (red) and
+        $\log{\sqrt{P}}$ (green)
+        compared over the interval $[1,32768]$.
+    }
+    \label{fig:log_vs_log_sqrt_p}
+\end{figure}
+
+The $N/\sqrt{P}(\log{\sqrt{P}}+1)$ term suggests the initial communication
+time ($P = 1$) is proportional to $N$.
+%
+\FIG{fig:v1_replicated_systolic_pair_operation_512_logtime},
+\FIG{fig:v1_replicated_systolic_pair_operation_4096_logtime} and
+\FIG{fig:v1_replicated_systolic_pair_operation_32768_logtime}
+appear to support this.
+%
+\FIG{fig:log_vs_log_sqrt_p} presents how the scaling of this term compares
+to the $\log{\sqrt{P}}$ term.
+%
+This suggests that the eventual increase in communication time is
+due to the $\log{\sqrt{P}}$ term, which originates from the latency
+of the communications.
+
+An interesting note is that this initial communication term scales as $N$,
+where the initial calculation term scales as $N^2$.
+%
+This tends to place the two trends farther away from each other for
+larger system sizes
+%
+This suggests an explanation for why the $N = 512$
+case becomes dominated by communications rather quickly compared to the
+$N = 32768$ case, where communications remain almost an order of
+magnitude smaller than the calculations up until $P = N$.
