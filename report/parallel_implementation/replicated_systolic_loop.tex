@@ -1,6 +1,103 @@
 \subsection{Replicated Systolic Loop}
 
+The \replicatedsystolicloop{} scheme is intended to directly improve directly
+upon the \systolicloop{} scheme.
+%
+It takes some inspiration from the \replicateddata{} scheme's approach
+to partitioning workloads.
+%
+However, instead of assigning subsets of the particle list to replicas
+to update, subsets of systolic pulses are assigned.
+
+Given $P$ processes, they are arranged in a cartesian topology of
+approximate size $\sqrt{P} \times{} \sqrt{P}$.
+%
+A systolic loop is then created with the processes
+$(0,0) \rightarrow{} (\sqrt{P}, 0)$
+resulting in a systolic loop with $\sqrt{P}$ systolic elements.
+%
+The system of particles is partitioned across these systolic elements.
+%
+This systolic loop is then replicated on processes
+$(0,1) \rightarrow{} (\sqrt{P}, 1)$.
+%
+It is similarly replicated on processes $(0,y) \rightarrow{} (\sqrt{P},y)$.
+
+The topology may not necessarily be split perfectly into a
+$\sqrt{P} \times{} \sqrt{P}$ grid, and as using $\sqrt{P}$ for both
+dimensions may become confusing in the following text.
+%
+As such, it will instead be said that the processes are split into a
+$S \times{} R$ grid.
+%
+Each replica systolic loop will have $S$ systolic elements,
+and there will be $R$ replica loops.
+
+There now exists $R$ replica systolic loops, each with $S$
+systolic elements.
+%
+Each replica is now assigned $S/R$ of the $S$ systolic pulses to
+perform.
+%
+Replica $x$, for example, will be assigned the pulses
+$xS/R \rightarrow{} (x+1)S/R$.
+%
+This is performed by having each element of loop $x$ perform an initial
+swap, sending its local list of particles to
+the element $xS/R$ to the ``right'',
+and receiving a list from the element $xS/R$ to the ``left'',
+and then performing $S/R$ pulses.
+
+When each replica performs its $S/R$ pulses, each element
+should have only a partial result, having performed only a subset
+of the pulses.
+%
+Equivalent systolic elements are defined as elements whose
+processor coordinates have the same $x$ value but different $y$ values
+%
+Equivalent systolic elements communicate to
+reduce their partial results together.
+%
+The resulting reduction should be the result of a full set of systolic pulses
+for that systolic element.
+
+%
+%Q: What data does the Replicated Systolic Loop implementation use?
+In this manner, by using $P$ processes, each process should be holdind
+$N/S$ particles.
+%
+This means that, unlike the \replicateddata{} and \sharedandreplicateddata{}
+cases, the only limit to the number of particles that can be simulated
+is how many cores the machine being used has.
+%
+However, unlike the \systolicloop{} case, particles per core grows as
+$N/S$ rather than $N/P$, which means a greater number of processes
+may be needed to partition a large system enough that it fits in memory.
+%
+As $S \times{} R = P$,
+if the system of particles must be partitioned into
+smaller chunks per core,
+it is simply a matter of
+increasing the number of systolic elements per loop and
+reducing the number of replicas.
+
+It can be seen that this scheme requires $S \ge{} R$.
+%
+Similar to the \systolicloop{} scheme, it also requires $N \ge{} S$.
+%
+As a result, assuming $S = R = \sqrt{P}$, this scheme can be run
+with $P = N^2$, which is a large improvement over the \systolicloop{}
+maximum of $P = N$.
+
+In this section, implementation details and performance results
+for the \individualoperation{} and \pairoperation{} methods will
+be presented.
+
+
 \subsubsection{\individualoperation{}}
+
+The \individualoperation{} method is impleemnted by having each process
+update its local list of particles.
 
 %
 % Overall speedup plot
@@ -21,6 +118,39 @@
     {\replicatedsystolicloop{}}
     {\individualoperation{}}
 
+%
+%Q: What is the speedup of the Replicated Systolic Loop individual_operation method?
+
+The speedup in
+\FIG{fig:v1_replicated_systolic_loop_individual_operation_speedups}
+is sublinear by a constant factor.
+%
+The graph suggests the method scales as $\sqrt{P}$.
+
+%
+%Q: What is the expected calculation time of the Replicated Systolic Loop individual_operation method?
+
+Given $S$ systolic elements per loop, each element is expected to
+hold $N/S$ particles.
+%
+Performing an $\bigO{1}$ operation on each particle should take a time
+\begin{equation}
+    \frac{N}{S}\bigO{1} = \bigO{\frac{N}{S}}
+\end{equation}
+%
+%Q: What is the expected communication time of the Replicated Systolic Loop individual_operation method?
+As there are no MPI communications performed, the communications are expected
+to take $\bigO{1}$ time.
+%
+As previously stated, this nonzero time is to allow for function
+and branch evaluations as a result of benchmarking flags in the method.
+%
+%Q: What is the expected overall time of the Replicated Systolic Loop individual_operation method?
+Combining the calculation and communication terms, this method
+is expected to take a time
+\begin{equation}
+    \bigO{\frac{N}{S}} + \bigO{1} \approx{} \bigO{\frac{N}{S}}
+\end{equation}
 
 %
 % Individual breakdowns
@@ -44,9 +174,54 @@
 \end  {figure}
 
 
+\vZeroTimeExplanation
+    {\FIG{fig:v1_replicated_systolic_individual_operation_512_time}}
+    {\FIG{fig:v1_replicated_systolic_individual_operation_4096_time}}
+    {\FIG{fig:v1_replicated_systolic_individual_operation_32768_time}}
+    {\individualoperation{}}
+    {\replicatedsystolicloop{}}
+
+%
+%Q: Where and why does scaling stop for the Replicated Systolic Loop individual_operation method?
+It can be seen from
+\FIG{fig:v1_replicated_systolic_individual_operation_512_time},
+\FIG{fig:v1_replicated_systolic_individual_operation_4096_time} and
+\FIG{fig:v1_replicated_systolic_individual_operation_32768_time}
+that the time taken for this routine does indeed scale as $N$.
+%
+Along with 
+\FIG{fig:v1_replicated_systolic_loop_individual_operation_speedups},
+they also show polynomial scaling, consistent with a $\sqrt{P}$ scaling.
+
+The implementation uses the MPI\_Create\_dims function to generate a
+cartesian topology.
+%
+This function attempts to create a 2d decomposition to $S \times{} R$
+processes from the supplied $P$ processes where $S$ and $R$ are roughly
+equal in size.
+%
+For $S$ and $R$ to be roughly equal, they should both be around $\sqrt{P}$.
+%
+That they can't always be decomposed into equal terms of $\sqrt{P}$
+explains why the timings look stepped.
+%
+That the function constantly strives for equal terms of $\sqrt{P}$
+explains why the general scaling trend follows $\sqrt{P}$.
+
+As in the \systolicloop{} case, the MPI scaling terms are nonzero.
+%
+This is could, again, becaused by function call overhead and
+branch evaluations caused by how benchmarking flags have been implemented.
+%
+However, the MPI scaling terms here are approximately constant and negligible.
 
 
 \subsubsection{\pairoperation{}}
+
+The \pairoperation{} partitions systolic pulses to be performed among
+the replica systolic loops, and has equivalent elements across loops
+reduce their partial answers to generate an overall result for that
+systolic element for that time step.
 
 %
 % Overall speedup plot
@@ -69,6 +244,125 @@
 
 
 %
+%Q: What is the speedup of the Replicated Systolic Loop pair_operation method?
+With the exception of the system size $N = 512$ particles,
+\FIG{fig:v1_replicated_systolic_pair_operation_speedups}
+displays near perfect speedup up to $P = N$.
+%
+The case of $N = 512$ displays rather good, if noisier speedup up
+until $P = N$.
+%
+The most remarkable aspect of this data is that the $N = 512$ system can
+be run up to $4096$ cores while still producing some
+improvement in performance,
+and actually run on $32768$ cores, albeit with a drop
+in performance.
+%
+It appears that the speedup is improved for each system size over all of
+the other parallelisation schemes presented in this dissertation
+and can be run well on an order of magnitude more cores.
+
+%
+%Q: What is the expected calculation time of the Replicated Systolic Loop pair_operation method?
+As each replica systolic loop has $S$ systolic elements, each element
+should have $N/S$ particles in its local array.
+%
+There should be similarly be $N/S$ particles in the receive array when
+a partial reduction is being performed.
+%
+As with the systolic case, during one pulse, a partial reduction for one
+particle using an $\bigO{1}$ comparison operation to compare it to the
+$N/S$ particles in the receive array should take a time
+\begin{equation}
+    \frac{N}{S}\,\bigO{1} = \bigO{\frac{N}{S}}
+\end{equation}
+%
+Performing this for the $N/S$ particles in the local list should take a time
+\begin{equation}
+    \frac{N}{S}\,\bigO{\frac{N}{S}} = \bigO{\left( \frac{N}{S} \right)^2}
+\end{equation}
+%
+As each ring performs $S/R$ pulses per time step, the time for calculations
+per time step should be
+\begin{equation}
+    \label{eqn:replicated_systolic_pair_operation_calculation_time}
+    \begin{split}
+        \frac{S}{R}\,\bigO{\left( \frac{N}{S} \right)^2}
+            &= \bigO{\frac{S}{R} \frac{N^2}{S^2}} \\
+            &= \bigO{\frac{N^2}{SR}} \\
+            &= \bigO{\frac{N^2}{P}}
+    \end{split}
+\end{equation}
+which is the same result as the \systolicloop{} case.
+
+
+%
+%Q: What is the expected communication time of the Replicated Systolic Loop pair_operation method?
+As each process should perform $S/R$ pulses per time step, it performs
+$S/R$ communications of $N/S$ particles with a constant latency $l$
+introducing a time
+\begin{equation}
+    \label{eqn:replicated_systolic_pair_operation_pulse_time}
+    \begin{split}
+        \frac{S}{R}\,\bigO{\frac{N}{S} + l}
+            &= \bigO{\left(\frac{N}{S} + l\right)\frac{S}{R}} \\
+            &= \bigO{\frac{N}{R} + \frac{S}{R}}
+    \end{split}
+\end{equation}
+%
+After the pulses have been performed, each set of equivalent systolic
+elements reduces their partial results using an MPI\_Allreduce.
+%
+Assuming a tree-like algorithm, this should perform $\log{R}$ communications
+of $N/S$ particles with a constant latency $l$ introducint a time
+\begin{equation}
+    \label{eqn:replicated_systolic_pair_operation_reduce_time}
+    \begin{split}
+        \log{(R)}\,\bigO{\frac{N}{S} + l}
+            &= \bigO{\log{(R)}\, \left(\frac{N}{S} + l\right)} \\
+            &\approx{} \bigO{\frac{N}{S}\log{R} + \log{R}}
+    \end{split}
+\end{equation}
+%
+Combining
+\EQN{eqn:replicated_systolic_pair_operation_pulse_time} and
+\EQN{eqn:replicated_systolic_pair_operation_reduce_time},
+the overall communication time is
+\begin{equation}
+    \label{eqn:replicated_systolic_pair_operation_communication_time}
+    \bigO{\frac{N}{R} + \frac{S}{R}} + \bigO{\frac{N}{S}\log{R}}
+        \approx{}
+        \bigO{\frac{N}{R} + \frac{S}{R} + \frac{N}{S}\log{R} + \log{R}}
+\end{equation}
+
+%
+%Q: What is the expected overall time of the Replicated Systolic Loop pair_operation method?
+Combing the results of 
+\EQN{eqn:replicated_systolic_pair_operation_calculation_time} and
+\EQN{eqn:replicated_systolic_pair_operation_communication_time},
+the overall time for this method to complete a time step should be
+\begin{equation}
+    \label{eqn:replicated_systolic_pair_operation_overall_time}
+    \begin{split}
+    \bigO{\frac{N^2}{SR}}
+        + \bigO{\frac{N}{R} + \frac{S}{R} + \frac{N}{S}\log{R} + \log{R}} \\
+        \approx{} \bigO{\frac{N^2}{SR}
+        + \frac{N}{R} + \frac{S}{R} + \frac{N}{S}\log{R} + \log{R}}
+    \end{split}
+\end{equation}
+%
+As an aside, when $S = P$ and $R = 1$, this overall time reverts
+to the overall time predicted by the \systolicloop{} implementation.
+%
+It can be seen that the $S/R$ term is equivalent to the communication
+term proportional to $P$ in the \systolicloop{} case.
+%
+Replication here tackles this communication term, replacing a term
+proportional to $P$ with one proportional to $S/R$ and another
+proportional to $N/S\log{R}$.
+
+
+%
 % Individual breakdowns
 %
 \begin{figure}[!h]
@@ -88,3 +382,53 @@
     \caption{\vZeroTimeCaption{\replicatedsystolicloop{}}{\pairoperation{}}{32768}}
     \label{fig:v1_replicated_systolic_pair_operation_32768_logtime}
 \end  {figure}
+
+\vZeroTimeExplanation
+    {\FIG{fig:v1_replicated_systolic_pair_operation_512_logtime}}
+    {\FIG{fig:v1_replicated_systolic_pair_operation_4096_logtime}}
+    {\FIG{fig:v1_replicated_systolic_pair_operation_32768_logtime}}
+    {\individualoperation{}}
+    {\replicatedsystolicloop{}}
+
+
+\FIG{fig:v1_replicated_systolic_pair_operation_512_logtime} shows that
+communications begin to dominate fhr the system size $N = 512$ around
+$N/P = 2$,
+\FIG{fig:v1_replicated_systolic_pair_operation_4096_logtime} shows
+communications dominating around $N/P = 0.5$ and
+\FIG{fig:v1_replicated_systolic_pair_operation_32768_logtime} shows
+communications don't appear to intersect with calculations at all,
+although some small deviation of the total run time from the calculation
+time can be seen starting around $N/P = 2$.
+
+The implementation uses the MPI\_Dims\_create function to generate
+the $S\times{}R$ decomposition of $P$.
+%
+As this function strives to
+produce an $S$ and $R$ of roughly equal size, and each tick on
+\FIG{fig:v1_replicated_systolic_pair_operation_512_logtime},
+\FIG{fig:v1_replicated_systolic_pair_operation_4096_logtime} and
+\FIG{fig:v1_replicated_systolic_pair_operation_32768_logtime}
+is a perfect square, the simplifying assumption $S = R = \sqrt{P}$
+can be made to describe the general trend of the graphs.
+%
+Making this assumption,
+\EQN{eqn:replicated_systolic_pair_operation_overall_time}
+simplifies to
+\begin{equation}
+    \label{eqn:replicated_systolic_pair_operation_simplified_time}
+    \begin{split}
+        \bigO{
+            \frac{N^2}{P}
+            + \frac{N}{\sqrt{P}}
+            + \frac{\sqrt{P}}{\sqrt{P}}
+            + \frac{N}{\sqrt{P}}\log{\sqrt{P}}
+            + \log{\sqrt{P}}
+        } \\
+        = \bigO{
+            \frac{N^2}{P}
+            + \frac{N}{\sqrt{P}}\log{\sqrt{P}}
+            + \log{\sqrt{P}}
+        }
+    \end{split}
+\end{equation}
