@@ -71,9 +71,67 @@ How will we measure these?
 Will we measure IO?
 How accurate will the benchmarked simulations be?
 
+
 ### Implementation ###
 
-What does an implementation look like?
+#### Replicated Data ####
+What data does the Replicated Data implementation use?
+##### individual_operation #####
+What is the speedup of the Replicated Data individual_operation method?
+What is the expected calculation time of the Replicated Data individual_operation method?
+What is the expected communication time of the Replicated Data individual_operation method?
+What is the expected overall time of the Replicated Data individual_operation method?
+Where and why does scaling stop for the Replicated Data individual_operation method?
+##### pair_operation #####
+What is the speedup of the Replicated Data pair_operation method?
+What is the expected calculation time of the Replicated Data pair_operation method?
+What is the expected communication time of the Replicated Data pair_operation method?
+What is the expected overall time of the Replicated Data pair_operation method?
+Where and why does scaling stop for the Replicated Data pair_operation method?
+
+#### Systolic Loop ####
+What data does the Systolic Loop implementation use?
+##### individual_operation #####
+What is the speedup of the Systolic Loop individual_operation method?
+What is the expected calculation time of the Systolic Loop individual_operation method?
+What is the expected communication time of the Systolic Loop individual_operation method?
+What is the expected overall time of the Systolic Loop individual_operation method?
+Where and why does scaling stop for the Systolic Loop individual_operation method?
+##### pair_operation #####
+What is the speedup of the Systolic Loop pair_operation method?
+What is the expected calculation time of the Systolic Loop pair_operation method?
+What is the expected communication time of the Systolic Loop pair_operation method?
+What is the expected overall time of the Systolic Loop pair_operation method?
+Where and why does scaling stop for the Systolic Loop pair_operation method?
+
+#### Shared And Replicated Data ####
+What data does the Shared And Replicated Data implementation use?
+##### individual_operation #####
+What is the speedup of the Shared And Replicated Data individual_operation method?
+What is the expected calculation time of the Shared And Replicated Data individual_operation method?
+What is the expected communication time of the Shared And Replicated Data individual_operation method?
+What is the expected overall time of the Shared And Replicated Data individual_operation method?
+Where and why does scaling stop for the Shared And Replicated Data individual_operation method?
+##### pair_operation #####
+What is the speedup of the Shared And Replicated Data pair_operation method?
+What is the expected calculation time of the Shared And Replicated Data pair_operation method?
+What is the expected communication time of the Shared And Replicated Data pair_operation method?
+What is the expected overall time of the Shared And Replicated Data pair_operation method?
+Where and why does scaling stop for the Shared And Replicated Data pair_operation method?
+
+#### Replicated Systolic Loop ####
+What data does the Replicated Systolic Loop implementation use?
+##### individual_operation #####
+What is the speedup of the Replicated Systolic Loop individual_operation method?
+What is the expected calculation time of the Replicated Systolic Loop individual_operation method?
+What is the expected communication time of the Replicated Systolic Loop individual_operation method?
+What is the expected overall time of the Replicated Systolic Loop individual_operation method?
+Where and why does scaling stop for the Replicated Systolic Loop individual_operation method?
+##### pair_operation #####
+What is the speedup of the Replicated Systolic Loop pair_operation method?
+What is the expected calculation time of the Replicated Systolic Loop pair_operation method?
+What is the expected communication time of the Replicated Systolic Loop pair_operation method?
+What is the expected overall time of the Replicated Systolic Loop pair_operation method?
+Where and why does scaling stop for the Replicated Systolic Loop pair_operation method?
 
 
-How do the initial implementations perform?

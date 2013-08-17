@@ -38,12 +38,38 @@
 \newcommand{\SEC}[1]{Section~\ref{#1}}
 
 
+\newcommand{\vZeroSpeedupCaption}[2]{
+    {\bf Speedup vs. Cores} for the {\bf #1} implementation of the
+    {\bf #2} method for systems of particles of size
+    $N=512$ (red), $N=4096$ (green) and $N=32768$ (blue) and the
+    function $f(x) = x$ (light red).
+}
+
+\newcommand{\vZeroSpeedupExplanation}[3]{
+    #1 shows how the speedup of the #2 implementation of the
+    #3 method scales with the number of cores available to the
+    implementation.
+    %
+    This is presented for systems of particles of size
+    $N=512$ shown in red, $N=4096$ shown in green
+    and $N=32769$ shown in blue along with the function
+    $f(x) = x$ shown in light red.
+}
+
 \newcommand{\vZeroTimeCaption}[3]{
     {\bf Time vs. Cores} for the {\bf #1} implementation of the
     {\bf #2} method for the total execution time (red),
     calculation execution time without MPI (green) and
     MPI execution time without calculations (blue)
     for an MD system of particles of size ${\bf N = {#3}}$.
+}
+
+\newcommand{\vOneSRTimeCaption}[3]{
+    \vZeroTimeCaption{#1}{#2}{#3}
+    %
+    %The number cores presented is the number of MPI
+    %processes used multiplied by the number of \openmp{} threads
+    %available per MPI process.
 }
 
 \newcommand{\vZeroTimeExplanation}[5]{
@@ -61,6 +87,13 @@
         without communication effects; and
     MPI is performed without calculations (blue)
         representing the time taken up solely by the communications.
+}
+
+\newcommand{\vOneSRTimeExplanation}[5]{
+    \vZeroTimeExplanation{#1}{#2}{#3}{#4}{#5}
+    %
+    In this graph, the cores listed represent the total possible cores
+    $P = P_{MPI} \times{} P_{OMP}$ available to the implementation.
 }
 
 

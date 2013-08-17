@@ -46,10 +46,16 @@ function compile_N() {
     echo set logscale y
     echo set mytics 10
 
-    echo 'set format y "$10^{%L}$"'
+    echo 'set format y "$10^{%T}$"'
+
+    echo 'set key left top'
 
     # Import common gnuplot styles
     echo 'load "'$base_dir'/../../gnuplot_styles.plt"'
+
+
+    echo 'set ylabel "Speedup ($t(1)/t(P)$)"'
+    echo 'set xlabel "Cores"'
 
 
     # Find lowest core time N

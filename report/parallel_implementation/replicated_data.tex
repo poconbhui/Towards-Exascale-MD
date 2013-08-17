@@ -1,6 +1,8 @@
-\section{Replicated Data}
+\subsection{Replicated Data}
 \label{sec:replicated_data_implementation}
 
+%
+%Q: What data does the Replicated Data implementation use?
 The \replicateddata{} scheme, as described in
 \SEC{sec:background:subsec:replicated_data},
 allocates a list of particles the size of
@@ -19,7 +21,7 @@ for the \replicateddata{} scheme using MPI will be analysed and discussed.
 % Replicated individual_operation v0
 %
 
-\subsection{Implementation of the \individualoperation{} Method}
+\subsubsection{Implementation of the \individualoperation{} Method}
 \label{sec:replicated_data_individual_operation_implementation}
 
 The \individualoperation{} method as outlined in
@@ -29,18 +31,14 @@ its entire local list of particles.
 %
 As such, it closely resembles the example serial implementation.
 %
-This approach involves more computation than having each process
-evaluate a subsection of the list and share the result with the
-other processes, but it avoids a global synchronization.
-%
-As each process performs an $\bigO{1}$ operation on $N$ particles with
-no communications,
-this implementation is expected to take a time
-\begin{equation}
-\label{eqn:v0_replicated_individual_operation_overall_time}
-    N\bigO{1} = \bigO{N}
-\end  {equation}
+This unparallelised approach involves more computation than
+having each process evaluate a subsection of the list and
+share the result with the other processes,
+but it avoids a global synchronization.
 
+
+%
+%Q:What is the speedup of the Replicated Data individual_operation method?
 
 %
 % Overall speedup plot
@@ -48,10 +46,48 @@ this implementation is expected to take a time
 \begin{figure}[!h]
     \input{parallel_implementation/v0/replicated.individual_operation.logspeedup.plt}
     \caption{
-        Speedup plots for the \individualoperation{} implemented with the \replicateddata{} scheme for systems of particles of size 512, 4096 and 32768.
+        \vZeroSpeedupCaption
+            {\replicateddata{}}
+            {\individualoperation{}}
     }
     \label{fig:v0_replicated_data_individual_operation_speedups}
 \end{figure}
+
+
+\vZeroSpeedupExplanation
+    {\FIG{fig:v0_replicated_data_individual_operation_speedups}}
+    {\replicateddata{}}
+    {\individualoperation{}}
+
+As can be seen from 
+\FIG{fig:v0_replicated_data_individual_operation_speedups},
+this method gains no speedup when extra cores are used.
+%
+It does, however, have an interesting jump in time around 8 cores.
+
+
+%
+%Q:What is the expected calculation time of the Replicated Data individual_operation method?
+As each process performs an $\bigO{1}$ operation on $N$ particles with
+the calculations are expected to take a time
+\begin{equation}
+\label{eqn:v0_replicated_individual_operation_overall_time}
+    N\bigO{1} = \bigO{N}
+\end  {equation}
+%
+%Q:What is the expected communication time of the Replicated Data individual_operation method?
+As there are no MPI operations performed, the communications are
+expected to take $\bigO{1}$ time.
+%
+The nonzero value is to allow for function call overheads and
+branch evaluations as a result of evaluating benchmarking flags
+within the code.
+%
+%Q:What is the expected overall time of the Replicated Data individual_operation method?
+As a result, the overall time is ecpexted to take a time
+\begin{equation}
+    \bigO{N} + \bigO{1} = \bigO{N}
+\end{equation}
 
 
 %
@@ -84,6 +120,8 @@ this implementation is expected to take a time
     {\replicateddata{}}
 
 
+%
+%Q: Where and why does scaling stop for the Replicated Data individual_operation method?
 From these, it is clear that
 the time for the \individualoperation{} doesn't scale with the number
 of cores and that MPI takes up no time as this method uses no MPI calls.
@@ -133,7 +171,7 @@ as predicted in \EQN{eqn:v0_replicated_individual_operation_overall_time}.
 % Replicated pair_operation v0
 %
 
-\subsection{Implementation of the \pairoperation{} Method}
+\subsubsection{Implementation of the \pairoperation{} Method}
 
 The \pairoperation{} method as outlined in
 \SEC{sec:the_pair_operation_method}
@@ -141,6 +179,39 @@ is implemented by having each process evaluating the pair
 comparisons for a subset of the particles and sharing the
 results with the other processes.
 
+%
+%Q: What is the speedup of the Replicated Data pair_operation method?
+
+%
+% Overall speedup plot
+%
+\begin{figure}[!h]
+    \input{parallel_implementation/v0/replicated.pair_operation.logspeedup.plt}
+    \caption{
+        \vZeroSpeedupCaption
+            {\replicateddata{}}
+            {\pairoperation{}}
+    }
+    \label{fig:v0_replicated_data_pair_operation_speedups}
+\end{figure}
+
+
+\vZeroSpeedupExplanation
+    {\FIG{fig:v0_replicated_data_pair_operation_speedups}}
+    {\replicateddata{}}
+    {\pairoperation{}}
+
+The speedup shown in 
+\FIG{fig:v0_replicated_data_pair_operation_speedups}
+appears to continue up until around $P = N/2$ where it levels
+off.
+%
+It is interesting to note that the number of cores that can be
+used effectively appears to grow in proportion to the number of particles
+in the system.
+
+%
+%Q:What is the expected calculation time of the Replicated Data pair_operation method?
 Each process is designated a subset of the list of particles for which
 it will evaluate the results of the comparison and reduction.
 %
@@ -162,32 +233,28 @@ and so, the time for all $N/P$ particles to be updated is
 \end  {equation}
 As such, a calculation term of $\bigO{N^2/P}$ is expected.
 
+%
+%Q:What is the expected communication time of the Replicated Data pair_operation method?
 After the each process finishes updating it's section of the list,
 the updated sections of lists are shared across processes using
 an MPI\_Allgatherv.
-This introduces a communication term of $\bigO{(N + l)\log{P}}$
-where $l$ represents a constant latency.
-
-The overall execution time of this method should therefore be
+Assuming this uses a tree-like algorithm, this should perform
+$\log{P}$ communications of $N$ particles with a constant latancy $l$
+resulting in a communication time of
 \begin{align}
-    \bigO{\frac{N^2}{P}} + \bigO{(N+l)\log{P}}
-        &\approx{} \bigO{\frac{N^2}{P} + (N+l)\log{P}} \\
-        &\approx{} \bigO{\frac{N^2}{P} + (N+l)\log{P}} \\
-        &\approx{} \bigO{\frac{N^2}{P} + N\log{P} + \log{P}} \\
-        \label{eqn:v0_replicated_pair_operation_overall_time}
-        &\approx{} \bigO{\frac{N^2}{P} + N\log{P}}
-\end  {align}
+    \log{(P)}\,\bigO{N + l}
+        &= \bigO{(N+l)\log{P}} \\
+        &\approx{} \bigO{N\log{P}}
+\end{align}
 
 %
-% Overall speedup plot
-%
-\begin{figure}[!h]
-    \input{parallel_implementation/v0/replicated.pair_operation.logspeedup.plt}
-    \caption{
-        Speedup plots for the \pairoperation{} implemented with the \replicateddata{} scheme for systems of particles of size 512, 4096 and 32768.
-    }
-    \label{fig:v0_replicated_data_pair_operation_speedups}
-\end{figure}
+%Q:What is the expected overall time of the Replicated Data pair_operation method?
+The overall execution time of this method should therefore be
+\begin{equation}
+    \bigO{\frac{N^2}{P}} + \bigO{N\log{P}}
+        \approx{} \bigO{\frac{N^2}{P} + N\log{P}}
+        \label{eqn:v0_replicated_pair_operation_overall_time}
+\end{equation}
 
 
 %
@@ -218,6 +285,8 @@ The overall execution time of this method should therefore be
     {\pairoperation{}}
     {\replicateddata{}}
 
+%
+%Q:Where and why does scaling stop for the Replicated Data pair_operation method?
 In \FIG{fig:v0_replicated_pair_operation_512_logtime},
 \FIG{fig:v0_replicated_pair_operation_4096_logtime} and
 \FIG{fig:v0_replicated_pair_operation_32768_logtime},
@@ -239,7 +308,7 @@ or $P > N$
 \end  {align}
 %
 suggesting the communication term eventually dominating and
-the overall time increasing as a function of $P$.
+the overall time increasing as $N\log{P}$.
 
 Indeed, examining where
 \FIG{fig:v0_replicated_pair_operation_512_logtime},
@@ -251,9 +320,7 @@ of 512 particles is approximately $10^{-4}$ seconds,
 of 4096 particles is approximately $10^{-3}$ seconds and
 of 32768 particles is approximately $10^{-2}$ seconds.
 %
-Thus as scaling begins dropping off at $P = N$ for the system syzes tested,
-the minimum execution time for this distribution appears to scale as $N$,
-although this could also be $N\log{N}$ which would be expected from
-a dominating communication term.
+This suggests that a minimum time solution may well scale as
+$N\log{N}$ for the system sizes tested in the regime where $P \sim{} N$.
 %
-However, there is not enough data presented here to make the distinction.
+However, more data would need to be gathered to verify this claim.

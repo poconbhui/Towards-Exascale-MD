@@ -1,4 +1,4 @@
-\section{Shared and Replicated Data}
+\subsection{Shared and Replicated Data}
 
 The \sharedandreplicateddata{} scheme is implemented in exactly the same
 way as the \replicateddata{} scheme outlined in 
@@ -22,6 +22,8 @@ can be increased in proportion to the number of \openmp{} threads
 created per MPI process, which is of particular importance for nodes with
 particularly high core counts.
 
+%
+%Q: What data does the Shared And Replicated Data implementation use?
 The \sharedandreplicateddata{} distribution is initialised by
 allocating a list of particles the size of the system of particles
 on every MPI process.
@@ -32,7 +34,9 @@ of the \numa{} regions into groups of 8.
 %
 As this is a rather low number compared to the overall number of MPI
 processes, the emphasis here isn't to gain any perticular performance
-improvement using \openmp{}, only to show that it is viable.
+improvement using \openmp{} (although some is expected due to reduced
+MPI communications),
+only to show that it is viable.
 %
 Indeed, the mere introduction of 8 threads per MPI process should increase
 the maximum system size that can be run 8 fold.
@@ -43,13 +47,15 @@ the \individualoperation{} and \pairoperation{} methods
 will be presented and analysed.
 
 
-\subsection{\individualoperation{}}
+\subsubsection{\individualoperation{}}
 
 The \individualoperation{} method is inherited directly from
 the implementation outlined in
 \SEC{sec:replicated_data_individual_operation_implementation}.
+
+
 %
-As a result, the time to completion is also expected to scale as $\bigO{N}$.
+%Q: What is the speedup of the Shared And Replicated Data individual_operation method?
 
 %
 % Overall speedup plot
@@ -57,40 +63,71 @@ As a result, the time to completion is also expected to scale as $\bigO{N}$.
 \begin{figure}[!h]
     \input{parallel_implementation/v1/shared_and_replicated.individual_operation.logspeedup.plt}
     \caption{
-        Speedup plots for the \individualoperation{} implemented with the \sharedandreplicateddata{} scheme for systems of particles of size 512, 4096 and 32768.
+        \vZeroSpeedupCaption
+            {\sharedandreplicateddata{}}
+            {\individualoperation{}}
     }
     \label{fig:v1_shared_and_replicated_data_individual_operation_speedups}
 \end{figure}
 
+
+\vZeroSpeedupExplanation
+    {\FIG{fig:v1_shared_and_replicated_data_individual_operation_speedups}}
+    {\sharedandreplicateddata{}}
+    {\individualoperation{}}
+
+Similar to the speedup graph in
+\FIG{fig:v0_replicated_data_individual_operation_speedups}
+for the \individualoperation{} method of the \replicateddata{}
+implementation, there is no speedup to be seen here.
+%
+The primary point of interest is that this graph begins at 8 cores
+which is a result of having the number of \openmp{} cores per
+MPI process fixed at 8.
+
+%
+%Q: What is the expected calculation time of the Shared And Replicated Data individual_operation method?
+The time to complete the calculations is expected to scale as $\bigO{N}$,
+similarly to the \replicateddata{} implementation.
+%
+%Q: What is the expected communication time of the Shared And Replicated Data individual_operation method?
+This implementation likewise performs no MPI communications, implying a
+$\bigO{1}$ time.
+%
+%Q: What is the expected overall time of the Shared And Replicated Data individual_operation method?
+As before, the overall time to completion is expected to be $\bigO{N}$.
 
 %
 % Individual breakdowns
 %
 \begin{figure}[!h]
     \input{parallel_implementation/v1/shared_and_replicated.individual_operation.512.time.plt}
-    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\individualoperation{}}{512}}
+    \caption{\vOneSRTimeCaption{\sharedandreplicateddata{}}{\individualoperation{}}{512}}
     \label{fig:v1_shared_and_replicated_individual_operation_512_time}
 \end  {figure}
 
 \begin{figure}[!h]
     \input{parallel_implementation/v1/shared_and_replicated.individual_operation.4096.time.plt}
-    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\individualoperation{}}{4096}}
+    \caption{\vOneSRTimeCaption{\sharedandreplicateddata{}}{\individualoperation{}}{4096}}
     \label{fig:v1_shared_and_replicated_individual_operation_4096_time}
 \end  {figure}
 
 \begin{figure}[!h]
     \input{parallel_implementation/v1/shared_and_replicated.individual_operation.32768.time.plt}
-    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\individualoperation{}}{32768}}
+    \caption{\vOneSRTimeCaption{\sharedandreplicateddata{}}{\individualoperation{}}{32768}}
     \label{fig:v1_shared_and_replicated_individual_operation_32768_time}
 \end  {figure}
 
-\vZeroTimeExplanation
+\vOneSRTimeExplanation
     {\FIG{fig:v0_replicated_individual_operation_512_time}}
     {\FIG{fig:v0_replicated_individual_operation_4096_time}}
     {\FIG{fig:v0_replicated_individual_operation_32768_time}}
     {\individualoperation{}}
     {\replicateddata{}}
 
+
+%
+%Q: Where and why does scaling stop for the Shared And Replicated Data individual_operation method?
 As can be seen from 
 \FIG{fig:v0_replicated_individual_operation_512_time},
 \FIG{fig:v0_replicated_individual_operation_4096_time} and
@@ -99,17 +136,67 @@ the performace scaling does indeed scale as $\bigO{N}$, as expected
 and exactly in line with the performance scaling results of the
 \individualoperation{} method in the \replicateddata{} scheme.
 
+An opportunity exists to use the \openmp{} threads available to
+parallelise this particular method with little synchronisation
+and communications overhead as would be present with MPI
+parallelisation of this method.
+%
+However, this particular optimisation was left unimplemented as
+the run time of this method tends to be an order of magnitude
+lower than the \pairoperation{} method regardless of the
+number of cores used, so any optimisation
+would be insignificant to the overall run time.
+%
+The extra development overhead and complexity would not be justified by the
+overall performance improvement to an MD loop.
 
 
-\subsection{\pairoperation{}}
+
+\subsubsection{\pairoperation{}}
 
 The \pairoperation{} method is implemented in a similar manner to the
 \pairoperation{} method from the \replicateddata{} scheme with the
 addition of \openmp{} directives to further parallelise the
 force update loop.
 
-A copy of the system is held on each MPI process, meaning there
-are $P_{MPI}$ replicas of the system created.
+%
+%Q: What is the speedup of the Shared And Replicated Data pair_operation method?
+
+%
+% Overall speedup plot
+%
+\begin{figure}[!h]
+    \input{parallel_implementation/v1/shared_and_replicated.pair_operation.logspeedup.plt}
+    \caption{
+        \vZeroSpeedupCaption
+            {\sharedandreplicateddata{}}
+            {\pairoperation{}}
+    }
+    \label{fig:v1_shared_and_replicated_data_pair_operation_speedups}
+\end{figure}
+
+
+\vZeroSpeedupExplanation
+    {\FIG{fig:v1_shared_and_replicated_data_pair_operation_speedups}}
+    {\sharedandreplicateddata{}}
+    {\pairoperation{}}
+
+The speedup displayed by 
+\FIG{fig:v1_shared_and_replicated_data_pair_operation_speedups}
+is very similar to the speedup shown for the \pairoperation{}
+method of the \replicateddata{} scheme in
+\FIG{fig:v0_replicated_data_pair_operation_speedups}.
+%
+The speedup is marginally better for higher core counts, and in
+particular on larger systems of particles.
+%
+There is some unexpected instability in the speedup for $N=512$ particles.
+
+
+%
+%Q: What is the expected calculation time of the Shared And Replicated Data pair_operation method?
+A copy of the full system of particles is held on each MPI process,
+resulting in $P_{MPI}$ replicas of the system being created.
 %
 Each MPI process is then assigned $N/P_{MPI}$ particles in that system
 to determine forces for.
@@ -118,7 +205,11 @@ Given that list of $N/P_{MPI}$ particles,
 an MPI process spawns $P_{OMP}$ threads
 and assigns $1/(P_{MPI} P_{OMP})$ particles to each thread.
 
-Writing $P = P_{MPI} \times{} P_{OMP}$,
+Writing
+\begin{equation}
+    \label{eqn:p_eq_pmpi_pomp}
+    P = P_{MPI} \times{} P_{OMP}
+\end{equation}
 each core therefore has $N/P$ particles
 for which it must determine the forces.
 %
@@ -130,29 +221,64 @@ a single particles is
 \end{equation}
 And so, the time to find the forces for $N/P$ particles is
 \begin{equation}
+    \label{eqn:shared_and_replicated_calculation_time}
     \frac{N}{P}\bigO{N} = \bigO{\frac{N^2}{P}}
 \end{equation}
 
+%
+%Q: What is the expected communication time of the Shared And Replicated Data pair_operation method?
 After the forces have been determined by each thread, the team of threads
 shuts down.
 %
 This represents a synchronisation point for the threads within the
 MPI process.
 %
-After this, an MPI\_Allgatherv is used over the $P_{MPI}$ processes
-to synchronise the updated lists of particles, representing a
-$\bigO{N\log{P_{OMP}}}$ operation.
+After this \openmp{} synchronisation point,
+an MPI synchronisation point is introduced in the form of
+an MPI\_Allgatherv over the $P_{MPI}$ processes
+to synchronise the updated lists of particles.
+%
+Assuming the MPI\_Allgatherv uses a tree-like algorithm for
+gathering and distributing the data, this should perform
+$\log{P_{MPI}}$ communications of approximately $N$ particles
+with a constant latency $l$, resulting in a communication time
+\begin{align}
+    \log{(P_{MPI})}\,\bigO{N + l} 
+        &= \bigO{\log{(P_{MPI})}\,(N+l)} \\
+        &\approx{} \bigO{N\log{P_{MPI}}}
+        \label{eqn:shared_andreplicated_communication_time}
+\end{align}
+
+Where communications in the \replicateddata{} scheme grew as $\log{P}$,
+here they grow as $\log{P_{MPI}}$.
+%
+Using the definition of $P$ in \EQN{eqn:p_eq_pmpi_pomp} for the
+\sharedandreplicateddata{} scheme, it can be seen that
+\begin{equation}
+    \log{P} = \log{P_{MPI}P_{OMP}} = \log{P_{MPI}} + \log{P_{OMP}}
+\end{equation}
+%
+As a result, using $P_{OMP}$ threads per MPI process should provide
+a drop in communication time of a constant $\log{P_{OMP}}$ compared
+to the \replicateddata{} time.
+%
+Given the largest number of MPI processes used here is $32768$,
+and $\log{32768} = 15$, the resulting drop in communication
+time of $\log{P_{OMP}} = \log{8} = 3$ should result in a small
+but noticeable improvement.
+
 
 %
-% Overall speedup plot
-%
-\begin{figure}[!h]
-    \input{parallel_implementation/v1/shared_and_replicated.pair_operation.logspeedup.plt}
-    \caption{
-        Speedup plots for the \pairoperation{} implemented with the \sharedandreplicateddata{} scheme for systems of particles of size 512, 4096 and 32768.
-    }
-    \label{fig:v1_shared_and_replicated_data_pair_operation_speedups}
-\end{figure}
+%Q: What is the expected overall time of the Shared And Replicated Data pair_operation method?
+Combining
+\EQN{eqn:shared_and_replicated_calculation_time} and
+\EQN{eqn:shared_andreplicated_communication_time},
+the overall execution time is expected to be
+\begin{equation}
+    \label{eqn:shared_and_replicated_data_overall_time}
+    \bigO{\frac{N^2}{P}} + \bigO{N\log{P_{MPI}}}
+        = \bigO{\frac{N^2}{P_{MPI} \times{} P_{OMP}} + N\log{P_{MPI}}}
+\end{equation}
 
 
 %
@@ -160,18 +286,56 @@ $\bigO{N\log{P_{OMP}}}$ operation.
 %
 \begin{figure}[!h]
     \input{parallel_implementation/v1/shared_and_replicated.pair_operation.512.logtime.plt}
-    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\pairoperation{}}{512}}
+    \caption{\vOneSRTimeCaption{\sharedandreplicateddata{}}{\pairoperation{}}{512}}
     \label{fig:v1_shared_and_replicated_pair_operation_512_logtime}
 \end  {figure}
 
 \begin{figure}[!h]
     \input{parallel_implementation/v1/shared_and_replicated.pair_operation.4096.logtime.plt}
-    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\pairoperation{}}{4096}}
+    \caption{\vOneSRTimeCaption{\sharedandreplicateddata{}}{\pairoperation{}}{4096}}
     \label{fig:v1_shared_and_replicated_pair_operation_4096_logtime}
 \end  {figure}
 
 \begin{figure}[!h]
     \input{parallel_implementation/v1/shared_and_replicated.pair_operation.32768.logtime.plt}
-    \caption{\vZeroTimeCaption{\sharedandreplicateddata{}}{\pairoperation{}}{32768}}
+    \caption{\vOneSRTimeCaption{\sharedandreplicateddata{}}{\pairoperation{}}{32768}}
     \label{fig:v1_shared_and_replicated_pair_operation_32768_logtime}
 \end  {figure}
+
+\vOneSRTimeExplanation
+    {\FIG{fig:v1_shared_and_replicated_pair_operation_512_logtime}}
+    {\FIG{fig:v1_shared_and_replicated_pair_operation_4096_logtime}}
+    {\FIG{fig:v1_shared_and_replicated_pair_operation_32768_logtime}}
+    {\pairoperation{}}
+    {\sharedandreplicateddata{}}
+
+
+%
+%Q: Where and why does scaling stop for the Shared And Replicated Data pair_operation method?
+From
+\FIG{fig:v1_shared_and_replicated_pair_operation_512_logtime},
+\FIG{fig:v1_shared_and_replicated_pair_operation_4096_logtime} and
+\FIG{fig:v1_shared_and_replicated_pair_operation_32768_logtime},
+it appears the communication times approach and pass the calculation
+times around $P = N/4$ or $P = N/2$.
+%
+This is in a similar place to
+\FIG{fig:v0_replicated_pair_operation_512_logtime},
+\FIG{fig:v0_replicated_pair_operation_4096_logtime} and
+\FIG{fig:v0_replicated_pair_operation_32768_logtime}
+representing this method for the \replicateddata{} implementaiton.
+%
+However, the communications tend to pass slightly later and at a shallower
+angle here than in the \replicateddata{} case.
+%
+This results in a very slightly improved speedup.
+
+What is worth noting, however, is that this implementation performs
+at least as well as the \replicateddata{} implementation, required
+the inclusion of just one default \openmp{} directive and
+is now capable of holding an order of magnitude more particles on
+a compute node.
+%
+The scaling results here suggest that with more cores available to the
+implementation, running system sizes at the limit of what can fit on
+a node may be feasible to run.

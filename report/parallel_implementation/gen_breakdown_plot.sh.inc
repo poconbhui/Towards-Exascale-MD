@@ -50,7 +50,7 @@ function gen_plotfile() {
         echo set logscale x 2
         echo set mxtics 2
 
-        echo 'set format y "$10^{%L}$"'
+        echo 'set format y "$10^{%T}$"'
 
         # Import common gnuplot styles
         cat ../gnuplot_styles.plt
@@ -74,6 +74,18 @@ function gen_plotfile() {
         # Print linear time
         #
         if [ "$graph_type" = "time" ] ; then
+
+            # Fix tick format
+            echo 'set format y "$%.1t\\times{}10^{%T}$"'
+
+            # Fix legend positioning
+            if [[ "$distribution_name" == "replicated" ]]; then
+                echo 'set key right center'
+            fi
+            if [[ "$distribution_name" == "shared_and_replicated" ]]; then
+                echo 'set key right center'
+            fi
+
             echo 'plot "<'$compile_normal'" using 1:($3/$2) title "total time" with lp ls 1, '\\
 
             echo '"<'$compile_calc_only'" using 1:($3/$2) title "calculation only" with lp ls 2, '\\
