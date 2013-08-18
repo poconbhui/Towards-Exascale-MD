@@ -43,6 +43,8 @@ report.tex = \
 	report.tex \
 	epcc.sty \
 	macros.tex \
+	packages.tex \
+	styles.tex \
 	$(introduction.tex) \
 	$(background.tex) \
 	$(methodology.tex) \
