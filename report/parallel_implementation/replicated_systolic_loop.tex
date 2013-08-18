@@ -103,7 +103,10 @@ update its local list of particles.
 % Overall speedup plot
 %
 \begin{figure}[!h]
-    \input{parallel_implementation/v1/replicated_systolic.individual_operation.logspeedup.plt}
+    \input{%
+        parallel_implementation/v1/%
+        replicated_systolic.individual_operation.logspeedup.plt%
+    }
     \caption{
         \vZeroSpeedupCaption
             {\replicatedsystolicloop{}}
@@ -156,20 +159,44 @@ is expected to take a time
 % Individual breakdowns
 %
 \begin{figure}[!h]
-    \input{parallel_implementation/v1/replicated_systolic.individual_operation.512.logtime.plt}
-    \caption{\vZeroTimeCaption{\replicatedsystolicloop{}}{\individualoperation{}}{512}}
+    \input{%
+        parallel_implementation/v1/%
+        replicated_systolic.individual_operation.512.logtime.plt%
+    }
+    \caption{
+        \vZeroTimeCaption
+            {\replicatedsystolicloop{}}
+            {\individualoperation{}}
+            {512}
+    }
     \label{fig:v1_replicated_systolic_individual_operation_512_time}
 \end  {figure}
 
 \begin{figure}[!h]
-    \input{parallel_implementation/v1/replicated_systolic.individual_operation.4096.logtime.plt}
-    \caption{\vZeroTimeCaption{\replicatedsystolicloop{}}{\individualoperation{}}{4096}}
+    \input{%
+        parallel_implementation/v1/%
+        replicated_systolic.individual_operation.4096.logtime.plt%
+    }
+    \caption{
+        \vZeroTimeCaption
+            {\replicatedsystolicloop{}}
+            {\individualoperation{}}
+            {4096}
+    }
     \label{fig:v1_replicated_systolic_individual_operation_4096_time}
 \end  {figure}
 
 \begin{figure}[!h]
-    \input{parallel_implementation/v1/replicated_systolic.individual_operation.32768.logtime.plt}
-    \caption{\vZeroTimeCaption{\replicatedsystolicloop{}}{\individualoperation{}}{32768}}
+    \input{%
+        parallel_implementation/v1/%
+        replicated_systolic.individual_operation.32768.logtime.plt%
+    }
+    \caption{
+        \vZeroTimeCaption
+            {\replicatedsystolicloop{}}
+            {\individualoperation{}}
+            {32768}
+    }
     \label{fig:v1_replicated_systolic_individual_operation_32768_time}
 \end  {figure}
 
@@ -227,7 +254,10 @@ systolic element for that time step.
 % Overall speedup plot
 %
 \begin{figure}[!h]
-    \input{parallel_implementation/v1/replicated_systolic.pair_operation.logspeedup.plt}
+    \input{%
+        parallel_implementation/v1/%
+        replicated_systolic.pair_operation.logspeedup.plt%
+    }
     \caption{
         \vZeroSpeedupCaption
             {\replicatedsystolicloop{}}
@@ -366,20 +396,35 @@ proportional to $N/S\log{R}$.
 % Individual breakdowns
 %
 \begin{figure}[!h]
-    \input{parallel_implementation/v1/replicated_systolic.pair_operation.512.logtime.plt}
-    \caption{\vZeroTimeCaption{\replicatedsystolicloop{}}{\pairoperation{}}{512}}
+    \input{%
+        parallel_implementation/v1/%
+        replicated_systolic.pair_operation.512.logtime.plt%
+    }
+    \caption{
+        \vZeroTimeCaption{\replicatedsystolicloop{}}{\pairoperation{}}{512}
+    }
     \label{fig:v1_replicated_systolic_pair_operation_512_logtime}
 \end  {figure}
 
 \begin{figure}[!h]
-    \input{parallel_implementation/v1/replicated_systolic.pair_operation.4096.logtime.plt}
-    \caption{\vZeroTimeCaption{\replicatedsystolicloop{}}{\pairoperation{}}{4096}}
+    \input{%
+        parallel_implementation/v1/%
+        replicated_systolic.pair_operation.4096.logtime.plt%
+    }
+    \caption{
+        \vZeroTimeCaption{\replicatedsystolicloop{}}{\pairoperation{}}{4096}
+    }
     \label{fig:v1_replicated_systolic_pair_operation_4096_logtime}
 \end  {figure}
 
 \begin{figure}[!h]
-    \input{parallel_implementation/v1/replicated_systolic.pair_operation.32768.logtime.plt}
-    \caption{\vZeroTimeCaption{\replicatedsystolicloop{}}{\pairoperation{}}{32768}}
+    \input{%
+        parallel_implementation/v1/%
+        replicated_systolic.pair_operation.32768.logtime.plt%
+    }
+    \caption{
+        \vZeroTimeCaption{\replicatedsystolicloop{}}{\pairoperation{}}{32768}
+    }
     \label{fig:v1_replicated_systolic_pair_operation_32768_logtime}
 \end  {figure}
 
@@ -391,6 +436,8 @@ proportional to $N/S\log{R}$.
     {\replicatedsystolicloop{}}
 
 
+%
+%Q: Where and why does scaling stop for the Replicated Systolic Loop pair_operation method?
 \FIG{fig:v1_replicated_systolic_pair_operation_512_logtime} shows that
 communications begin to dominate fhr the system size $N = 512$ around
 $N/P = 2$,

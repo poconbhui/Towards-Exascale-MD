@@ -44,7 +44,10 @@ but it avoids a global synchronization.
 % Overall speedup plot
 %
 \begin{figure}[!h]
-    \input{parallel_implementation/v0/replicated.individual_operation.logspeedup.plt}
+    \input{%
+        parallel_implementation/v0/%
+        replicated.individual_operation.logspeedup.plt%
+    }
     \caption{
         \vZeroSpeedupCaption
             {\replicateddata{}}
@@ -94,20 +97,44 @@ As a result, the overall time is ecpexted to take a time
 % Individual breakdowns
 %
 \begin{figure}[!h]
-    \input{parallel_implementation/v0/replicated.individual_operation.512.time.plt}
-    \caption{\vZeroTimeCaption{\replicateddata{}}{\individualoperation{}}{512}}
+    \input{%
+        parallel_implementation/v0/%
+        replicated.individual_operation.512.time.plt%
+    }
+    \caption{
+        \vZeroTimeCaption
+            {\replicateddata{}}
+            {\individualoperation{}}
+            {512}
+    }
     \label{fig:v0_replicated_individual_operation_512_time}
 \end  {figure}
 
 \begin{figure}[!h]
-    \input{parallel_implementation/v0/replicated.individual_operation.4096.time.plt}
-    \caption{\vZeroTimeCaption{\replicateddata{}}{\individualoperation{}}{4096}}
+    \input{%
+        parallel_implementation/v0/%
+        replicated.individual_operation.4096.time.plt%
+    }
+    \caption{
+        \vZeroTimeCaption
+            {\replicateddata{}}
+            {\individualoperation{}}
+            {4096}
+    }
     \label{fig:v0_replicated_individual_operation_4096_time}
 \end  {figure}
 
 \begin{figure}[!h]
-    \input{parallel_implementation/v0/replicated.individual_operation.32768.time.plt}
-    \caption{\vZeroTimeCaption{\replicateddata{}}{\individualoperation{}}{32768}}
+    \input{%
+        parallel_implementation/v0/%
+        replicated.individual_operation.32768.time.plt%
+    }
+    \caption{
+        \vZeroTimeCaption
+            {\replicateddata{}}
+            {\individualoperation{}}
+            {32768}
+    }
     \label{fig:v0_replicated_individual_operation_32768_time}
 \end  {figure}
 
@@ -263,20 +290,44 @@ The overall execution time of this method should therefore be
 % Individual breakdowns
 %
 \begin{figure}[!h]
-    \input{parallel_implementation/v0/replicated.pair_operation.512.logtime.plt}
-    \caption{\vZeroTimeCaption{\replicateddata{}}{\pairoperation{}}{512}}
+    \input{%
+        parallel_implementation/v0/%
+        replicated.pair_operation.512.logtime.plt%
+    }
+    \caption{
+        \vZeroTimeCaption
+            {\replicateddata{}}
+            {\pairoperation{}}
+            {512}
+    }
     \label{fig:v0_replicated_pair_operation_512_logtime}
 \end  {figure}
 
 \begin{figure}[!h]
-    \input{parallel_implementation/v0/replicated.pair_operation.4096.logtime.plt}
-    \caption{\vZeroTimeCaption{\replicateddata{}}{\pairoperation{}}{4096}}
+    \input{%
+        parallel_implementation/v0/%
+        replicated.pair_operation.4096.logtime.plt%
+    }
+    \caption{
+        \vZeroTimeCaption
+            {\replicateddata{}}
+            {\pairoperation{}}
+            {4096}
+    }
     \label{fig:v0_replicated_pair_operation_4096_logtime}
 \end  {figure}
 
 \begin{figure}[!h]
-    \input{parallel_implementation/v0/replicated.pair_operation.32768.logtime.plt}
-    \caption{\vZeroTimeCaption{\replicateddata{}}{\pairoperation{}}{32768}}
+    \input{%
+        parallel_implementation/v0/%
+        replicated.pair_operation.32768.logtime.plt%
+    }
+    \caption{
+        \vZeroTimeCaption
+            {\replicateddata{}}
+            {\pairoperation{}}
+            {32768}
+    }
     \label{fig:v0_replicated_pair_operation_32768_logtime}
 \end  {figure}
 
