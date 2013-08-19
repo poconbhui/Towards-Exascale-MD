@@ -439,10 +439,11 @@ proportional to $N/S\log{R}$.
 %
 %Q: Where and why does scaling stop for the Replicated Systolic Loop pair_operation method?
 \FIG{fig:v1_replicated_systolic_pair_operation_512_logtime} shows that
-communications begin to dominate fhr the system size $N = 512$ around
-$N/P = 2$,
+communications begin to approach calculation times around $N/P = 2$
+and dominate around $N/P = 0.5$,
 \FIG{fig:v1_replicated_systolic_pair_operation_4096_logtime} shows
-communications dominating around $N/P = 0.5$ and
+communications approaching calculation times around $N/P = 1$ and
+dominating around $N/P = 0.25$ and
 \FIG{fig:v1_replicated_systolic_pair_operation_32768_logtime} shows
 communications don't appear to intersect with calculations at all,
 although some small deviation of the total run time from the calculation
@@ -456,12 +457,11 @@ produce an $S$ and $R$ of roughly equal size, and each tick on
 \FIG{fig:v1_replicated_systolic_pair_operation_512_logtime},
 \FIG{fig:v1_replicated_systolic_pair_operation_4096_logtime} and
 \FIG{fig:v1_replicated_systolic_pair_operation_32768_logtime}
-is a perfect square, the simplifying assumption $S = R = \sqrt{P}$
+is a perfect square, the simplification $S = R = \sqrt{P}$
 can be made to describe the general trend of the graphs.
 %
-Making this assumption,
 \EQN{eqn:replicated_systolic_pair_operation_overall_time}
-simplifies to
+becomes
 \begin{equation}
     \label{eqn:replicated_systolic_pair_operation_simplified_time}
     \begin{split}
@@ -480,39 +480,72 @@ simplifies to
     \end{split}
 \end{equation}
 
-\begin{figure}
-    \input{parallel_implementation/log_vs_log_sqrt_p.plt}
-    \caption{
-        The relative scaling of
-        $1/\sqrt{P}\log{\sqrt{P}}$ (red) and
-        $\log{\sqrt{P}}$ (green)
-        compared over the interval $[1,32768]$.
-    }
-    \label{fig:log_vs_log_sqrt_p}
-\end{figure}
-
+The $N^2/P$ term suggests the initial calculation term scales as $N^2$.
+%
 The $N/\sqrt{P}(\log{\sqrt{P}}+1)$ term suggests the initial communication
-time ($P = 1$) is proportional to $N$.
+time is proportional to $N$.
 %
 \FIG{fig:v1_replicated_systolic_pair_operation_512_logtime},
 \FIG{fig:v1_replicated_systolic_pair_operation_4096_logtime} and
 \FIG{fig:v1_replicated_systolic_pair_operation_32768_logtime}
 appear to support this.
-%
+
+
+\begin{figure}
+    \input{parallel_implementation/log_vs_log_sqrt_p.plt}
+    \caption{
+        Upper plot: The relative scaling of
+        $1/\sqrt{P}\log{\sqrt{P}}$ (red) and
+        $\log{\sqrt{P}}$ (green)
+        over the interval $[1,32768]$.
+        %
+        Lower plot: The relative scaling of
+        $0.1/\sqrt{P}\log{\sqrt{P}} + \log{P}$ (red),
+        $1/\sqrt{P}\log{\sqrt{P}} + \log{P}$ (green) and
+        $10/\sqrt{P}\log{\sqrt{P}} + \log{P}$ (blue)
+        over the interval $[1,32768]$.
+    }
+    \label{fig:log_vs_log_sqrt_p}
+\end{figure}
+
 \FIG{fig:log_vs_log_sqrt_p} presents how the scaling of this term compares
-to the $\log{\sqrt{P}}$ term.
+to the $\log{\sqrt{P}}$ term, and how different sums of the two scale.
 %
-This suggests that the eventual increase in communication time is
+The upper graph suggests that the eventual increase in communication time is
 due to the $\log{\sqrt{P}}$ term, which originates from the latency
 of the communications.
+%
+The lower graph suggests
+how the communication terms for $N = 512$ and $N = 4096$ can
+increase while $N = 32768$ appears to remain remarkably flat.
 
-An interesting note is that this initial communication term scales as $N$,
-where the initial calculation term scales as $N^2$.
+\begin{figure}
+    \input{parallel_implementation/replicated_systolic_comm_fits.plt}
+    \caption{
+        Communication times for systems of particles of size
+        $N=512$, $N=4096$ and $N=32768$ fitted to the function
+        $a\times{}N(\log{\sqrt{P}} + 1)/\sqrt{P} + b\times{}\log{\sqrt{P}}$
+        corresponding to the predicted communication time.
+    }
+    \label{fig:replicated_systolic_communication_fits}
+\end{figure}
+
+The communication times for the three system sizes are plotted in
+\FIG{fig:replicated_systolic_communication_fits}
+along with fittings to the suggested trends.
 %
-This tends to place the two trends farther away from each other for
-larger system sizes
+An interesting note is that the communication time at $P = 32768$ cores
+appears to increase by only one order of magnitude over two orders
+of magnitude in the number of particles in the system.
 %
-This suggests an explanation for why the $N = 512$
-case becomes dominated by communications rather quickly compared to the
-$N = 32768$ case, where communications remain almost an order of
-magnitude smaller than the calculations up until $P = N$.
+The cofactor for the $N/P\log{\sqrt{P}}$ for
+$N = 512$ and $N = 4096$ remain within error of each other, although
+there is a jump in the cofactor for $N = 32768$.
+%
+All cofactors, however, are within the same order of magnitude.
+%
+The latency over the three cases appears to be slowly increasing.
+%
+This could signify the use of different communication protocols
+over different message sizes, or extra communication terms that
+have been left out here.
