@@ -10,13 +10,13 @@ a rich assortment of molecular systems in
 highly complex arrangements.
 %
 The way molecules in these systems interact determine various properties
-of the system such as heat capacity, structure, rigidity, reactivity.
+of the system such as heat capacity, structure, rigidity and reactivity.
 %
 %Q: Why is modelling molecular systems useful?
-With a deeper understanding of these molecular systems,
+With the ability to study complex molecular systems,
 researchers are able to develop novel drugs,
-develop a better understanding of protein folding and
-do ever more exciting things in genetic engineering.
+create interesting new materials and
+learn ever more about our complex biology.
 
 %
 %Q: What modelling methods are there?
@@ -31,8 +31,6 @@ using density functional theory.
 Each of these tools is useful for
 deriving some information on the system being modelled and
 each has their difficulties and limitations.
-%
-Here, we are interested primarily in molecular dynamics.
 
 
 %
@@ -44,32 +42,23 @@ simulating the time evolution of that system.
 %Q: Why is MD useful?
 By doing this, it is possible to
 gather spatial and temporal information on the system.
-
-
 %
 %Q: What is the basic MD problem?
-A classical MD simulation determines
-the force on each particle as a result of
-every other particle in the system.
+A classical MD simulation is performed by integrating
+the classical equations of motion.
 %
-It will then step the system forward in time by a small amount.
-%
-The force calculation may involve $\bigO{N^2}$ terms or higher.
-%
-The time the system may be stepped forward is
-quite small compared to the length of time it must be run for.
-%
-Both the force calculation and the time step represent a unique difficulty.
-%
-This dissertation focuses on the force calculation.
+For the equations of motion of a \twobody{} potential,
+this may require $\bigO{N^2}$ operations per time step
+where $N$ is the number of particles in the MD system.
 
 
 Many approaches exist to reduce the time complexity of
-the force term.
+the simulation by altering the potential used.
 %
 One such approach is to truncate the effective length of inter-molecular
-forces and to avoid computing interactions between particles outside of a
-force-dependant cutoff distance.
+potential and to avoid computing interactions between particles outside of a
+potential-dependant cutoff distance.
+%
 This can be used to produce $\bigO{N}$ algorithms.
 %
 %Q: Why is truncation bad?
@@ -82,15 +71,22 @@ too short to accurately model the physics involved.
 
 %
 %Q: Why so we want to look at direct solutions?
-One popular approach which uses force truncation is the
-domain distribution scheme.
-It will be shown how one such implementation can be cast as
-a series of isolated systems
-directly solving the equations of motion without truncations.
+This dissertation seeks to implement and benchmark two parallel schemes
+that can be used to integrate the equations of motion without
+approximations.
 %
-By finding good direct solutions, it may be possible to use reduce the
-time taken for these isolated systems to run, and so longer
-force truncations may become feasible to use.
+These are the \replicateddata{} and \systolicloop{} schemes.
+%
+These schemes present algorithms that would ideally scale as $\bigO{N^2/P}$
+where $P$ is the number of cores used to solve the problem.
+%
+At first glance, it appears that when $P = N$, the algorithm should
+scale as $\bigO{N}$.
+%
+However, this $\bigO{N^2/P}$ scaling tends to fall short at large $P$.
+%
+This dissertation seeks to identify the strengths and weaknesses of
+these schemes, and suggest some potential workarounds.
 
 
 %

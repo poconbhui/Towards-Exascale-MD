@@ -24,8 +24,8 @@ the entire system of particles is replicated across all processors.
 This is useful for the force update, as each particle must have a view of
 every other particle to determine its instantaneous force.
 %
-Given $P$ replicated processes, for each process
-determines the force for $1/P$ of the particles.
+Given $P$ replicated processes,
+each process determines the force for $1/P$ of the particles.
 %
 The processes then share these newly determined forces with each other
 such that each processor will have a copy of the system where every
@@ -116,7 +116,8 @@ yielding a communication time of $\bigO{N \log{P}}$.
 
 As every process has an individual copy of the system of particles,
 when large systems are simulated using a large number of cores,
-the memory of the machine it is running on can be stretched rather thin.
+the memory per node of the machine running the simulation
+can become a limiting factor to the maximum system size.
 %
 For a system of particles where each particle uses double
 precision floating point (8~B) data to store
@@ -124,20 +125,20 @@ a position vector,
 a velocity vector,
 a force vector and
 a scalar mass,
-amounting to 80~B per particle, a 32~GB system could hold around $10^8$
+amounting to 80~B per particle, a 32~GB node could hold around $10^8$
 particles.
 %
-However, if the system has around 10 cores per 32~GB of memory,
-with the replicated scheme,
-it can now hold a maximum of around $10^7$ particles
-as each core will be holding a full system.
+However, if the simulation is performed on 10 cores per node,
+the machine can now hold a maximum of around $10^7$ particles
+as there will be 10 copies of the system on each node.
 %
 As a result, the maximum possible size of the system is
 inversely proportional to
 the number of cores used per GB of memory per node.
 
-We further encounter the problem that all processes must communicate
-with every other process at every time step.
+Another issue arising from this scheme is
+that every process must communicate with
+every other process at every time step.
 %
 This puts global synchronisation points into the simulation.
 %
@@ -150,11 +151,11 @@ These drawbacks are particularly important when considering exascale systems
 where systems are expected to have large numbers of cores per node.
 %
 As memory per node is expected to grow at a much lower rate than
-the number of cores per node,,
+the number of cores per node,
 a \replicateddata{} scheme may have difficulties
 utilising every core on a node.
 %
-Indeed, even in current systems, nodes are often requested and only a
+Indeed, even with current machines, nodes are often requested and only a
 subset of cores used due to memory per core considerations in applications.
 %
 Even if all the cores in the node are utilised, frequent global synchronisation
@@ -167,10 +168,11 @@ points may not scale well to large numbers of processes.
 
 %
 %Q: What is the systolic loop scheme?
-In the \systolicloop{} scheme, the system is split up and distributed among
-all the processes.
+In the \systolicloop{} scheme, the system of particles is
+split up and distributed among all the processes.
 %
-Force updates are performed by passing list data around a ring in pulses.
+Force updates are performed by
+passing packets of particles around a ring in pulses.
 %
 This is illustrated in \FIG{fig:systolic_loop_illustration}.
 
@@ -263,8 +265,8 @@ It will then pass the copied list to the ``right'' process and
 receive a new list from the ``left'' process and use that to perform
 another partial force update on its local list.
 %
-These ``pulses'' continue until a process receives its own system again from
-the ``left'' process, signifying that it has at some stage received
+These pulses continue until a process receives its own system again from
+the left process, signifying that it has at some stage received
 a copy of every list on every process.
 %
 At this point, it should have added the force contributions from
@@ -281,14 +283,15 @@ $\bigO{N^2/P}$ time.
 %
 %Q: What are the scaling challenges of systolic loop?
 As the system is distributed over a number of processes, this allows
-us to work on very large systems.
+the scheme to work with very large systems.
 %
 Taking the systems and figures from the previous section,
 rather than the simulation being limited to $10^7$ particles for the system,
 it is instead limited to $10^7$ particles per core per 32~GB node.
 %
-As a result, there is an upper limit on particles per core, but no
-upper limit on the actual system being studied.
+There is an upper limit on particles per core, but no
+upper limit on the size system being studied as more cores can be introduced
+to reduce the number of particles per core used by the simulation.
 
 Another benefit is that
 communications between processes are more limited than
@@ -299,10 +302,7 @@ and sends and receives only $N/P$ particles.
 %
 By this mechanism, volume of data
 being communicated across the machine is limited
-and and there are no hard global synchronisation points.
-%
-However, the number of communications performed per time step
-scales linearly with the number of processes.
+and and there are no strict global synchronisation points.
 
 When factoring in the number of systolic pulses per time step,
 it becomes clear that the $\bigO{N^2/P}$ scaling will not last indefinitely.
@@ -312,11 +312,11 @@ $\bigO{P}$ exists.
 %
 As the calculation scales inversely with the number of processes
 and the communication linearly, it is clear that communication time will
-eventually dominate over calculation.
-%
-Even for very large $N$, a modest $P$ can incur large latency overheads.
+dominate over calculation much sooner here than
+in the \replicateddata{} scheme.
+
 %
 %Q: Why are the scaling challenges of systolic loop concerning for exascale?
 As increasing the number of processes to a large value
 can quickly result in calculations having significant communication overhead,
-this raises an immediate concern for exascale system.
+this raises an immediate concern for exascale systems.

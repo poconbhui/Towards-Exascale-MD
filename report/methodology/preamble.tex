@@ -17,7 +17,7 @@ should be separated.
 %
 Similarly, the logic for finding the force between two particles
 should be separated from the logic for combining all of these
-inter-particle forces to find the entire force on a particle.
+\twobody{} forces to find the total instantaneous force on a particle.
 
 To address this, a ``distribution class'' is implemented,
 representing a distributed list of particles
@@ -225,7 +225,8 @@ In a parallel MD simulation, the time for a single step is strongly dependent
 on both the number of particles present and
 the number of parallel processes the simulation is running on.
 %
-This suggests a 2D space over which we might evaluate performance.
+This suggests a 2D space over which the performance of the implementation
+might be evaluated.
 
 %
 %Q: What will we measure?
@@ -233,12 +234,19 @@ As successful MD simulations can be carried out on well defined
 systems sizes, evaluating just how large a simulation can be run
 is not particularly interesting.
 %
-As such, we choose several fixed system sizes to test, namely
-$2^{9} = 512$, $2^{12} = 4096$, $2^{15} = 32768$ particles.
+As such, several fixed system sizes will be tested, namely
+$N = 2^{9} = 512$,
+$N = 2^{12} = 4096$ and
+$N = 2^{15} = 32768$
+particles.
 %
-These are chosen mainly so we can study effects when the number of cores
-used are small compared to the system, large compared to the system
+These are chosen mainly so effects can be studied where the number of cores
+used is small compared to the system, large compared to the system
 and comparable to the system.
+%
+In particular, system sizes were chosen where communication times
+tended to surpass calculation times within $P = 32768$ cores
+being used.
 %
 The minimum system size was chosen to reflect a number of cores
 exceeding the number of cores on a single \hector{} node and yet well
@@ -250,16 +258,16 @@ cores on a \hector{} node.
 
 %
 %Q: How will we measure these?
-We use a very simple model of MD to distil the fundamental calculation
-with our implementation.
+A very simple model of MD is used to distil the fundamental calculation
+from the implementation.
 %
-Specifically, our simulation will perform a loop consisting of two
-individual operations over our particles representing the first
+Specifically, the simulation will perform a loop consisting of two
+individual operations over the particles representing the first
 and second halves of the \velocityverlet{} integration scheme and one
 pair operation representing the force evaluation section of the scheme.
 %
 The loop will be run several times to extract some statistical significance
-from our timings.
+from the timings.
 %
 In particular, loops will be repeated until at least 5 iterations
 have been performed and the overall time is comparable to 1 second.
@@ -270,24 +278,24 @@ We will perform no I/O within the simulation.
 %
 While this is not representative of a real MD code, and indeed I/O
 is itself an important factor in the performance of an MD simulation,
-we leave it outside the scope of this discussion.
+it is left outside the scope of this discussion.
 %
-We implement I/O primarily for testing purposes.
+I/O is implemented primarily for testing and debugging purposes.
 
 %
 %Q: How accurate will the benchmarked simulations be?
-We make no pretence of performing accurate simulations in our benchmarks,
-so the entire step of allowing the system to come to
-thermal equilibrium will be ignored.
+There is no pretence made of performing accurate simulations in
+the benchmarks performed,
+only that the operation performs the same calculations and
+communications as an MD simulation.
+%
+The entire step of allowing the system to come to
+thermal equilibrium will therefore be ignored.
 %
 This is primarily to reduce the time required to perform a benchmark.
 %
 This is not expected to have a significant impact on performance metrics
-as we are not dealing with any particle domain specific distributions,
+as no particle domain specific distributions are dealt with here,
 so the particles having improper positions or velocities is of
 little consequence to the number of operations and communications
-performed.
-%
-It will, however, be considered when testing our software so we are
-certain our code is at least doing the work of a realistic simulation.
-
+performed on each process.

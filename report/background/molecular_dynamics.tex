@@ -123,7 +123,8 @@ the simulation is producing a correct result.
 %
 Indeed, a simulation may proceed perfectly, but not accurately reflect
 the system it supposes to model due to
-inappropriate approximations and truncations of potentials.
+inappropriate approximations and truncations of
+the potentials and the physics involved.
 
 
 
@@ -160,7 +161,7 @@ in a simulation to more accurately model certain underlying behaviours.
 %
 %Q: What are the equations of motion for a 2-body potential?
 The Hamiltonian for a system of $N$ bodies
-interacting under a 2-body potential can be written
+interacting under a \twobody{} potential can be written
 \begin{equation}
     H = \sum_{i=1}^N \frac{\vec{p}_i^{,2}}{2 m}
         + \sum_{i=1}^N \sum_{j<i}^N V(\vec{x}_i, \vec{x}_j)
@@ -170,7 +171,7 @@ $N$ is the number of bodies,
 $m_i$ is the mass of body $i$,
 $p_i$ is the momentum of body $i$,
 $x_i$ is the position of body $i$ and
-$V(\vec{x}_i, \vec{x}_j)$ is the 2-body interaction potential
+$V(\vec{x}_i, \vec{x}_j)$ is the \twobody{} interaction potential
 between two bodies.
 %
 This equation assumes a scalar potential which is
@@ -193,7 +194,7 @@ by using an appropriate integration scheme.
 The integration scheme used in this dissertation is
 the \velocityverlet{} scheme.
 %
-Using this scheme, a system of classical particles using a 2-body potential
+Using this scheme, a system of classical particles using a \twobody{} potential
 may be stepped forward a time step $h$ using the equations
 %
 \begin{subequations}
@@ -223,7 +224,7 @@ $\vec{x}_i(t)$ is the position of body $i$ at time $t$ and
 $V$ and $N$ are as described above.
 %
 %Q:What is the error in the VV scheme?
-The local error for this scheme is $\bigO{h^4}$ while the local error
+The local error for this scheme is $\bigO{h^4}$ while the global error
 is $\bigO{h^3}$.
 %
 %Q: What is the time to solution for the VV scheme?
@@ -243,17 +244,13 @@ As a result, the numerical integrator must use very short steps to
 pick up atomic level effects, but must run for a long
 time to pick up system level effects.
 %
-This results in very many time steps to calculate, which
-in itself introduces a significant challenge to performing simulations.
-
-Some schemes attempt to address this issue by
-using different time steps for phenomenon that occur on
-different time scales within the same simulation.
+This results in very many time steps to calculate in order
+to observe interesting phenomenon in a system, which
+in itself introduces a significant time complexity
+when performing a simulation.
 %
-However, beyond ensuring our numerical integrator and time steps provide
-reasonable results for our simulation,
-the accuracy of numerical integrators will be
-outside the scope of this discussion.
+However, the performance of numerical integration schemes is outside
+the scope of this paper.
 
 
 \subsection{The \LennardJones{} potential}
@@ -306,8 +303,12 @@ becomes
 \begin{equation}
     V(\vec{x}_i(t), \vec{x}_j(t)) = V_{LJ}(|\vec{x}_i(t) - \vec{x}_j(t)|)
 \end  {equation}
-and writing $\vec{r}_{ij} = \vec{x}_j - \vec{x}_i$, the gradient of this is
-$r_{ij} = |\vec{r}_{ij}|$, $\hat{r}_{ij} = \frac{\vec{r}_{ij}}{r_{ij}}$
+%
+Writing
+$\vec{r}_{ij} = \vec{x}_j - \vec{x}_i$,
+$r_{ij} = |\vec{r}_{ij}|$ and
+$\hat{r}_{ij} = \frac{\vec{r}_{ij}}{r_{ij}}$
+the gradient of this is
 \begin{equation}
     \vec{\nabla}_i V_{LJ}(r_{ij}) = 4\epsilon \left[
         - \frac{12}{r_{ij}} \left( \frac{\delta}{r_{ij}} \right)^{12}
@@ -348,24 +349,14 @@ Truncation is often implemented by
 setting a cutoff distance and only evaluating potentials
 between particles within this distance from each other.
 %
-Several schemes such as the \verletlist{} and domain distribution
-schemes exist for limiting calculations performed to
-particles within the cutoff distance of each other.
-%
 In this manner, each particle can be described as generating its own
 isolated system of particles within its cutoff distance
 at each time step
 to be solved, without truncations, to step that particle forward in time.
-
-The \verletlist{} scheme, as an example, involves using some bookkeeping to
-maintain lists of particles that are within the cutoff distance of each other.
 %
-Typically, the time complexity of \verletlist{} implementations scale
-near $\bigO{N}$ with
-the number of particles in the simulation,
-but use $\bigO{N^2}$ memory.
-%
-The domain distributed scheme will be outlined later.
+In this case, it may be interesting to combine a truncation oriented
+scheme such as domain distribution with a scheme designed to integrate
+the equations of motion without truncations.
 
 %
 %Q: What happens if we have periodic systems?
@@ -380,16 +371,16 @@ of the system.
 With this approach, one hopes to simulate what looks like an infinite system
 without introducing periodic effects.
 %
-Of course, as this is implemented by using periodic boundary conditions,
+As this is implemented by using a periodic system, however,
 periodic effects cannot be completely removed or ruled out.
 %
 %Q: When we shrink our system sizes, what are the effects?
-These periodic systems must be of a minimum size to avoid introducing
-significant finite size effects.
+Steps can be taken to minimise them, such as ensuring the boundaries
+of the simulation are large enough to avoid finite size effects.
 %
-A system will often, however, experience some finite size effects
-regardless of the system size simply because the system is not actually
-infinite.
+However, a detailed discussion about effects introduced by
+truncation and boundary conditions are outide the scope of
+this dissertation.
 
 %
 %Q: What happens if we have long range potentials?
@@ -397,14 +388,16 @@ Potentials can't be reasonably truncated if they are long ranged.
 %
 For non-periodic systems, the equations of motion must be solved directly.
 %
-For periodic systems, a very different approach must be used, as each particle
-will interact with an infinite number of copies of every particle in the
-system in every direction.
+For periodic systems with long ranged potentials,
+a very different approach must be used,
+as each particle will interact with
+an infinite number of copies of
+every particle in the system in every possible direction.
 %
 The problem of computing these infinite sums can be addressed using
 schemes such as Ewald summation.
 %
-However,the discussion of evaluating long ranged potentials in periodic systems
+However, the discussion of evaluating long ranged potentials in periodic systems
 is out of the scope of this dissertation.
 
 
@@ -431,8 +424,9 @@ largely different results.
 %
 Errors may be introduced by
 the numerical integration scheme used,
-the time step used and
-approximations of the forces used.
+the time step used,
+approximations of potentials
+and truncations.
 %
 While a final answer may not be accurate,
 the simulation may still be useful.
@@ -444,14 +438,11 @@ Overzealous truncation may lead to a simulation that supposes to
 model a particular system of particles, but instead overapproximates
 the physics involved and produces incorrect results.
 %
-Indeed, here, we seek to evaluate the time to solution for direct solutions
-to allow us to increase the cutoff distance of two-body potentials
-and maintain an acceptable run time for a simulation.
+However, overzealous truncation may be necessary to run a simulation
+within a reasonable timeframe.
 %
-By increasing this cutoff distance, we may slightly improve the accuracy
-of our simulation.
+By increasing this cutoff distance, the accuracy of a simulation may
+by slightly improved.
 %
-However, given the system is chaotic, we will
-still get an ``incorrect'' answer.
-%
-We hope only to reduce this particular source of error.
+However, given the system is chaotic, it will
+still produce an ``incorrect'' answer.
