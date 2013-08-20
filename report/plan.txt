@@ -53,14 +53,20 @@ What happens if we have periodic systems?
 ### Force Parallelization ###
 
 Can we parallelize the force calculation?
+What force parallelization schemes exist?
+What force parallelization schemes will we be looking at and why?
 
 What is the replicated data scheme?
+Who uses the replicated data scheme?
 What are the scaling challenges of replicated data?
 Why are the scaling challenges of replicated data concerning for exascale?
 
 What is the systolic loop scheme?
+Who uses the systolic loop scheme?
 What are the scaling challenges of systolic loop?
 Why are the scaling challenges of systolic loop concerning for exascale?
+
+
 
 
 ### Benchmarks ###

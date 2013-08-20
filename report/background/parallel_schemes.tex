@@ -7,8 +7,66 @@ immediately provides an algorithm for
 performing MD simulations of long ranged forces in isolated systems.
 %
 This dissertation will explore parallel implementations of this algorithm.
+
 %
-Here, the \replicateddata{} and \systolicloop{} schemes will be outlined.
+%Q: What force parallelization schemes exist?
+Parallelisation schemes can be broadly placed into the two categories
+of particle domain sensitive and particle domain insensitive.
+
+The domain decomposed approach is a domain sensitive scheme
+that places particles that are
+close in space onto processors that are close on the machine running
+the simulation.
+%
+In this manner, a process may be considered to represent a region of space.
+%
+Truncations may be implemented by having a process communicate
+only with processes representing regions of space within the required
+cutoff distance.
+%
+As a result, the cutoff distance not only reduces the time complexity
+of finding the force term for each particle on each time step,
+but it also reduces the time complexity of communications.
+%
+This, however, introduces some difficulty to increasing the number
+of processors beyond the point where the space allocated to
+each process is smaller than the cutoff distance.
+
+Another suggestion is to have each process approximate, for example,
+the charges of all the particles local to it as a single point charge
+at the center of its region of space.
+%
+Processes then gather the positions and charges of these point charges
+created by every other process and incorporate them into the equations
+of motion for their local list of particles.
+%
+This is exemplified by the fast multipole method, which may be used
+to produce $\bigO{N}$ calculation times.
+
+
+Particle domain insensitive approaches tend to ignore the spatial positions
+of the particles.
+%
+The list of particles is distributed to or across  the processes in some manner,
+which then cooperate to update a section of the list and update
+the entire list as a result.
+%
+It is therefore not necessary to use any approximations to
+implement these schemes.
+%
+They may, however, be combined with approximation schemes to reduce
+time complexity.
+
+%
+%Q: What force parallelization schemes will we be looking at and why?
+Two domain insensitive schemes will be discussed in detail here and
+later implemented and their performance analysed.
+%
+They are the \replicateddata{} and \systolicloop{} schemes.
+%
+These have been chosen for the relative simplicity of implementation
+and to avoid the need to consider the correctness of any
+approxmations that might be implemented as part of a parallel scheme.
 
 
 
@@ -40,47 +98,21 @@ an $\bigO{N^2/P}$ algorithm.
 \begin{figure}[!ht]
     \begin{center}
     \begin{tikzpicture}[scale=.5]
-        \newcommand{\drawRect}[1]{
-            \draw [block] (6*#1,0) rectangle (6*#1+4,4);
-            \draw [block, redfill] (6*#1,#1) rectangle (6*#1+4,#1+1);
-        }
         % Draw replicated blocks and force areas
-        \drawRect{0}
-        %
-        \drawRect{1}
-        %
-        \drawRect{2}
-        %
-        \drawRect{3}
+        \foreach \n in {0,...,3} {
+            \draw [block] (6*\n,0) rectangle (6*\n+4,4);
+            \draw [block, redfill] (6*\n,\n) rectangle (6*\n+4,\n+1);
+        }
         %
         % Draw arrows
-        \newcommand{\drawArr}[1]{
-            \draw [latex'-latex', thick] (4 + 6*#1+0.2,2) -- (4 + 6*#1+1.8,2);
+        \foreach \n in {0,...,2} {
+            \draw [latex'-latex', thick] (6*\n+4.2,2) -- (6*\n+5.8,2);
         }
-        \drawArr{0}
-        \drawArr{1}
-        \drawArr{2}
-        %
-        % Draw home block
-%        \draw [block] (9,8) rectangle (13,12);
-%        \newcommand{\drawFromHome}[1]{
-%            \draw [->, thick] (9.5+#1,8-0.2) -- (2 + 6*#1,4+0.2);
-%        }
-%        \drawFromHome{0}
-%        \drawFromHome{1}
-%        \drawFromHome{2}
-%        \drawFromHome{3}
         %
         % Draw text
-%        \node at (11,13) {Initial system};
-        %\node at (11, -2) {Replicas};
-        \newcommand{\drawReplicaNum}[1]{
-            \node at (2 + 6*#1, -1) {#1};
+        \foreach \n in {0,...,3} {
+            \node at (2 + 6*\n, -1) {\n};
         }
-        \drawReplicaNum{0}
-        \drawReplicaNum{1}
-        \drawReplicaNum{2}
-        \drawReplicaNum{3}
     \end{tikzpicture}
     \end{center}
     %
@@ -113,6 +145,9 @@ This results in a number of system-wide of communications occurring
 at every time step,
 with $\log{P}$ communications of $N$ particles
 yielding a communication time of $\bigO{N \log{P}}$.
+%
+For large $P$, the $\bigO{N^2/P}$ term will be small compared to the
+$\bigO{N\log{P}}$ term, and communications will dominate run time.
 
 As every process has an individual copy of the system of particles,
 when large systems are simulated using a large number of cores,
@@ -179,71 +214,62 @@ This is illustrated in \FIG{fig:systolic_loop_illustration}.
 \begin{figure}[!ht]
     \begin{center}
     \begin{tikzpicture}
-        \newcommand{\smallRectangle}[3]{
-            \draw [block, #3] (#1+0.1,#2+0.1) rectangle (#1+1-0.1,#2+1-0.1);
-        }
         %
         % Draw bounding boxes
-        \draw [draw, rounded corners] (-0.5,0) rectangle (1.5, 1);
+        \draw [draw, rounded corners] (-0.5,0) rectangle +(2, 1);
         %
-        \draw [draw, rounded corners] (2,1.5) rectangle (3, 3.5);
-        \draw [draw, rounded corners] (4,1.5) rectangle (5, 3.5);
+        \draw [draw, rounded corners] (2,1.5) rectangle +(1, 2);
+        \draw [draw, rounded corners] (4,1.5) rectangle +(1, 2);
         %
-        \draw [draw, rounded corners] (5.5,0) rectangle (7.5, 1);
+        \draw [draw, rounded corners] (5.5,0) rectangle +(2, 1);
         %
-        \draw [draw, rounded corners] (4,-0.5) rectangle (5, -2.5);
-        \draw [draw, rounded corners] (2,-0.5) rectangle (3, -2.5);
-        %HEREHEREHEREHERE
+        \draw [draw, rounded corners] (4,-0.5) rectangle +(1, -2);
+        \draw [draw, rounded corners] (2,-0.5) rectangle +(1, -2);
         %
         % Draw outer ring
-        \smallRectangle{-0.5}{0}{bluefill}
-        %
-        \smallRectangle{2}{2.5}{bluefill}
-        \smallRectangle{4}{2.5}{bluefill}
-        %
-        \smallRectangle{6.5}{0}{bluefill}
-        %
-        \smallRectangle{4}{-2.5}{bluefill}
-        \smallRectangle{2}{-2.5}{bluefill}
+        \foreach \xy in {
+            {(-0.5,0)},
+            {(2,2.5)}, {(4,2.5)},
+            {(6.5,0)},
+            {(4,-2.5)}, {(2,-2.5)}
+        } {
+            \draw [block, bluefill] {\xy+(0.1,0.1)} rectangle +(0.9, 0.9);
+        }
         %
         % Draw inner ring
-        \smallRectangle{0.5}{0}{redfill}
-        %
-        \smallRectangle{2}{1.5}{redfill}
-        \smallRectangle{4}{1.5}{redfill}
-        %
-        \smallRectangle{5.5}{0}{redfill}
-        %
-        \smallRectangle{4}{-1.5}{redfill}
-        \smallRectangle{2}{-1.5}{redfill}
+        \foreach \xy in {
+            {(0.5,0)},
+            {(2,1.5)}, {(4,1.5)},
+            {(5.5,0)},
+            {(4,-1.5)}, {(2,-1.5)}
+        } {
+            \draw [block, redfill] {\xy+(0.1,0.1)} rectangle +(0.9, 0.9);
+        }
         %
         % Draw circle
         \newcommand{\off}{0.1}
-        \path [line] (1, 0.5+\off) |- (2.5, 2);
+        \path [line] (1, 0.5+\off) |- +(1.5, 1.5-\off);
         %
-        \path [line] (2.5+\off, 2) -- (4.5, 2);
-        \path [line] (4.5+\off, 2) -| (6, 0.5);
+        \path [line] (2.5+\off, 2) -- +(2-\off, 0);
+        \path [line] (4.5+\off, 2) -| +(1.5-\off, -1.5);
         %
-        \path [line] (6, 0.5-\off) |- (4.5, -1);
+        \path [line] (6, 0.5-\off) |- +(-1.5, -1.5+\off);
         %
-        \path [line] (4.5-\off, -1) -- (2.5, -1);
-        \path [line] (2.5-\off, -1) -| (1, 0.5);
+        \path [line] (4.5-\off, -1) -- +(-2+\off, 0);
+        \path [line] (2.5-\off, -1) -| +(-1.5+\off, +1.5);
         %
         % Draw labels
-        \newcommand{\drawNode}[3]{
-            \node at (#1, #2) {#3};
+        \foreach \xy/\n in {
+            {(-1,0.5)}/0,
+            {(2.5,4)}/1, {(4.5,4)}/2,
+            {(8,0.5)}/3,
+            {(4.5,-3)}/4, {(2.5,-3)}/5
+        } {
+            \node at \xy {\n};
         }
-        \drawNode{-1}{0.5}{0}
-        %
-        \drawNode{2.5}{4}{1}
-        \drawNode{4.5}{4}{2}
-        %
-        \drawNode{8}{0.5}{3}
-        %
-        \drawNode{4.5}{-3}{4}
-        \drawNode{2.5}{-3}{5}
     \end{tikzpicture}
     \end{center}
+    %
     \caption{
         A representation of the systolic loop model.
         Each process, numbered 0-5, holds a subset of the entire
