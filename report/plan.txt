@@ -66,19 +66,41 @@ Who uses the systolic loop scheme?
 What are the scaling challenges of systolic loop?
 Why are the scaling challenges of systolic loop concerning for exascale?
 
+What is the shared and replicated data scheme?
+Who uses the shared and replicated data scheme?
+What are the scaling challenges of shared and replicated data?
+Why are the scaling challenges of shared and replicated data concerning for exascale?
+
+What is the replicated systolic loop scheme?
+Who uses the replicated systolic loop scheme?
+What are the scaling challenges of replicated systolic loop?
+Why are the scaling challenges of replicated systolic loop concerning for exascale?
 
 
 
-### Benchmarks ###
+### Methodology ###
+
+How will the code be implemented?
+How will we handle changing the underlying parallel pattern?
+What interfaces will out implementations provide?
+
+What operation will the individual_operation perform?
+What operation will the pair_operation perform?
+What other interfaces will be provided?
+
+How is the replicated data scheme implemented?
+How is the systolic loop scheme implemented?
+How is the shared and replicated data scheme implemented?
+How is the replicated systolic loop implemented?
 
 What should we be measuring?
 What will we measure?
 How will we measure these?
 Will we measure IO?
-How accurate will the benchmarked simulations be?
+How will the benchmarks compare to a real MD code?
 
 
-### Implementation ###
+### Analysis ###
 
 #### Replicated Data ####
 What data does the Replicated Data implementation use?
