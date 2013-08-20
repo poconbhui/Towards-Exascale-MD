@@ -31,7 +31,9 @@ background.tex = \
 
 methodology.tex = \
 	methodology/methodology.tex \
-	methodology/preamble.tex
+	methodology/preamble.tex \
+	methodology/implementation.tex \
+	methodology/performance_measurement.tex
 
 
 parallel_implementation.tex = \
