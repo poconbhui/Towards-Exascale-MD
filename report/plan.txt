@@ -82,7 +82,7 @@ Why are the scaling challenges of replicated systolic loop concerning for exasca
 
 How will the code be implemented?
 How will we handle changing the underlying parallel pattern?
-What interfaces will out implementations provide?
+What interfaces will our implementations provide?
 
 What operation will the individual_operation perform?
 What operation will the pair_operation perform?

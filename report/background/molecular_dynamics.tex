@@ -202,9 +202,11 @@ may be stepped forward a time step $h$ using the equations
 \begin{align}
     \vec{v}_i(t + \tfrac{1}{2} h) &=
         \vec{v}_i(t) + \tfrac{1}{2}\vec{a}_i h
+    \label{eqn:velocity_verlet_v1_update}
     \\
     \vec{x}_i(t + h) &=
         \vec{x}_i(t) + \vec{v}_i(t + \tfrac{1}{2} h) h
+    \label{eqn:velocity_verlet_position_update}
     \\
     m_i \vec{a}_i(t + h) &=
         - \sum_{\substack{j=1\\j\ne{}i}}^N
@@ -213,6 +215,7 @@ may be stepped forward a time step $h$ using the equations
     \\
     \vec{v}_i(t+h) &=
         \vec{v}_i(t + \tfrac{1}{2} h) + \tfrac{1}{2} \vec{a}_i(t + h) h
+    \label{eqn:velocity_verlet_v2_update}
 \end{align}
 \end{subequations}
 where $t$ is the time,
