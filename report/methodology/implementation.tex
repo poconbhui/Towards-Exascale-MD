@@ -1,0 +1,806 @@
+\section{The Abstract Distribution}
+\label{sec:methodology:subsec:implementation}
+
+%
+%Q: How will the code be implemented?
+The code for this dissertation is implemented in
+object-oriented Fortran 2003.
+%
+%Q: How will we handle changing the underlying parallel pattern?
+To allow for arbitrary \twobody{} potentials and integration schemes
+to be used with arbitrary parallel schemes,
+the routines calculating how an individual particle is stepped forward
+in time and the routine determining when and where that stepping is applied
+are separated.
+%
+Similarly, the routines calculating the force between two particles
+are separated from the routine for combining all of these
+\twobody{} forces to find the total instantaneous force on a particle.
+
+\begin{figure}
+    \begin{center}
+    \begin{tikzpicture}[node distance=3.5cm]
+        \umlclass{particle}
+            {
+                double precision :: pos(Ndim) \\
+                double precision :: vel(Ndim) \\
+                double precision :: force(Ndim) \\
+                double precision :: mass
+            }{}
+        \umlclass[y=-5, type=abstract]{abstract\_distribution}
+            {
+                type(particle), allocatable :: particles(:)
+            }{
+                individual\_operation \\
+                pair\_operation
+            }
+        \umlaggreg[mult2=1..N, mult1=1]
+            {abstract\_distribution}{particle}
+        \umlemptyclass[y=-10, x=-6]{replicated\_distribution}
+        \umlemptyclass[y=-10, x=-1]{systolic\_distribution}
+        \umlemptyclass[y=-12, x=2]{shared\_and\_replicated\_distribution}
+        \umlemptyclass[y=-10, x=6]{replicated\_systolic\_distribution}
+        \umlreal[geometry=|-|]{replicated\_distribution}{abstract\_distribution}
+        \umlreal[geometry=|-|]{systolic\_distribution}{abstract\_distribution}
+        \umlreal[geometry=|-|]
+            {shared\_and\_replicated\_distribution}{abstract\_distribution}
+        \umlreal[geometry=|-|]
+            {replicated\_systolic\_distribution}{abstract\_distribution}
+    \end{tikzpicture}
+    \end{center}
+    \caption{
+        Overview of the \abstractdistribution{} class and inheritence tree.
+    }
+\end{figure}
+
+To address this, an \abstractdistribution{} class is implemented
+which holds a list of particles and
+provides a set of methods for
+applying transformations over the particles.
+%
+The user can define functions to be passed into these methods
+as parameters, and the method should perform a predefined operation
+over the list of particles using these user defined functions.
+%
+%Q: What does an implementation look like?
+An implementation of a parallel scheme inherits from the
+\abstractdistribution{} class and is free to distribute
+the list of particles it holds across processes as it wishes,
+and should implement the required interfaces as appropriate for that scheme.
+%
+This allows the handling of arbitrary user defined operations while
+allowing the underlying parallel scheme to be changed as necessary.
+
+%
+%Q: What interfaces will our implementations provide?
+The MD loop illustration in
+\FIG{fig:md_loop_flow_chart}
+suggests a set of interfaces to be implemented.
+%
+Namely, one for capable of performing force updates and another
+capable of performing an integration step.
+%
+Integration step can be implemented with a method that can update particles
+in place.
+%
+The force update can be implemented with a method that can
+update each particle based on some
+comparison with every other particle in the system.
+%
+These two methods will be outlined here with an example serial
+implementation provided for clarity.
+%
+They will be referred to as the \individualoperation{} method and
+the \pairoperation{} method.
+
+
+\subsection{The \individualoperation{} Method}
+\label{sec:the_individual_operation_method}
+
+This method will accept a function defining a mapping from
+particles and integers to particles.
+\begin{equation}
+    f: p\times{}i \rightarrow{} p
+\end{equation}
+%
+The intention is that a particle and the number of that particle in
+the particle list is passed to the function, and the function
+returns an updated particle based on the particle's current parameters
+and its position in the list.
+%
+This replaces each particle in the list of particles with
+a newly updated particle.
+
+An example serial implementation is in
+\LST{lst:serial_individual_operation_implementation}.
+An example of using this method to initialise the list of
+particles is given in
+\LST{lst:individual_operation_example_usage}.
+
+\begin{lstlisting}[
+    caption=Serial \individualoperation{} implementation.,
+    label=lst:serial_individual_operation_implementation,
+    gobble=3
+]
+    subroutine individual_operation(this, f)
+        class(serial_distribution), intent(inout) :: this
+        procedure(one_particle_function), intent(in) :: f
+
+        integer :: i
+
+
+        do i=1, this%num_particles
+            this%particles(i) = f(this%particles(i), i)
+        end do
+    end subroutine individual_operation
+\end{lstlisting}
+
+\begin{lstlisting}[
+    caption=Example usage of the \individualoperation{} to initialise
+        a list of particles.,
+    label=lst:individual_operation_example_usage,
+    gobble=3
+]
+    program ExampleIndividualOperation
+        use serial_distribution_type
+        use particle_type
+        implicit none
+
+
+        type(serial_distribution) :: dist
+
+    
+        ! Initialise a serial_distribution
+        dist = new_serial_distribution(...)
+
+        ! Apply init_particles to the list using
+        ! the individual_operation.
+        call dist%individual_operation(init_particles)
+
+        ! Particle i of the particle list should now have
+        ! a position (i, i, i), velocity (0, 0, 0),
+        ! force (0, 0, 0) and mass 1.
+
+    contains
+        ! Initialise particle i to have position (i, i, i)
+        PURE function init_particles(p_i, i)
+            type(particle) :: init_particles
+
+            type(particle), intent(in) :: p_i
+            integer, intent(in) :: i
+
+            return particle(pos=i, vel=0, force=0, mass=1)
+        end function init_particles
+    end program ExampleIndividualOperation
+\end{lstlisting}
+
+
+\subsection{The \pairoperation{} Method}
+\label{sec:the_pair_operation_method}
+
+This method accepts
+a function defining a mapping from two particles to a value;
+a reduction operation provided by the implementation;
+a mapping from a particle and a value a new particle;
+and an initial value to use for reductions.
+
+\begin{equation}
+    \begin{split}
+        f &: p\times{}p \rightarrow{} v^n \\
+        r &: v^n\times{}v^n \rightarrow{} v^n \\
+        s &: p\times{}v^n \rightarrow{} p \\
+        iv &: v^n
+    \end{split}
+\end{equation}
+
+This can be considered a map/reduce operation where $f$ is the map operation
+and $r$ is the reduce operation.
+%
+The value $iv$ is used as the initial value used in the reduce operation.
+%
+The function $s$ can then be used to set some value of a particle with
+the results of this map/reduce operation.
+
+The intention is that the implementation use $s$ to set the value
+of particle $i$ to the value given by $iv$.
+%
+It will then use $f$ to compare particle
+$i$ with a particle $j$, where $i \ne{} j$, and use $r$ to
+reduce this new value with the current result being held for
+particle $i$.
+%
+Performing this for every particle $j$ and reducing the results together,
+the implementation should detmine the correct result for the operation.
+
+An example serial implementation is in
+\LST{lst:serial_pair_operation_implementation}.
+
+\begin{lstlisting}[
+    caption=Serial \pairoperation{} implementation.,
+    label=lst:serial_pair_operation_implementation,
+    gobble=3
+]
+    subroutine pair_operation(                     &
+        this                                       &
+        pair_to_value, particle_value_to_particle, &
+        reduction_type, reduction_init             &
+    )
+        class(serial_distribution), intent(inout) &
+            :: serial_distribution
+        procedure(pair_to_val_function), intent(in) &
+            :: pair_to_value
+        procedure(set_particle_function), intent(in) &
+            :: particle_value_to_particle
+        procedure(reduce_op_function), intent(in) &
+            :: reduction_type
+        double precision, intent(in) :: reduction_init(:)
+
+        double precision :: value(size(reduction_init))
+        double precision :: tmp_value(size(reduction_init))
+
+
+        do i=1, this%num_particles
+            value = reduction_init
+
+            do j=1, this%num_particles
+                call pair_to_value(                       &
+                    this%particles(i), this%particles(j), &
+                    tmp_value                             &
+                )
+
+                value = reduction_type( &
+                    value, tmp_value,   &
+                )
+            end do
+
+            this%particles(i) = particle_value_to_particle( &
+                this%particles(i), value                    &
+            )
+        end do
+    end subroutine pair_operation
+\end{lstlisting}
+
+As can be seen, some design choices have been taken which limit how
+general the user defined operations can be.
+%
+There are also some unfortunate inconsistencies in the signatures of
+user defined operations.
+%
+These are primarily due to language restrictions.
+%
+However, the minimum requirement is for the distribution to be able
+to implement the \velocityverlet{} algorithm,
+so these problems are not a major concern.
+
+
+\subsection{A Full Example}
+
+An example of an MD simulation using this model is provided in
+\LST{lst:distribution_operation}.
+%
+Presented is an example of creating a distribution,
+initialising the particles in the simulation,
+an MD update loop and
+printing the list of particles out to disk.
+
+
+\begin{lstlisting}[
+    caption=An example MD simulation,
+    label=lst:distribution_operation,
+]
+program MD
+    ...
+
+    dist = new_distribution(...)
+
+    call dist%individual_operation(init_particles)
+
+    do while(time < end_time)
+        ! Perform first half of velocity Verlet scheme
+        call dist%individual_operation(VV_scheme_part_1)
+
+        ! Find forces between particles due to
+        ! LJ potential
+        call dist%pair_operation(                      &
+            map_force, unmap_force, dist%sum, zero_arr &
+        )
+
+        ! Perform second half of velocity Verlet scheme
+        call dist%individual_operation(VV_scheme_part_2)
+
+        ! Step time forward
+        time = update_time(time)
+    end do
+
+
+contains
+    ! An overly simplistic initialisation scheme
+    PURE function init_particles(particle_i, i)
+        ...
+        init_particles = Particle(        &
+            pos=i, vel=0, mass=1, force=0 &
+        )
+    end function init_particles
+
+    ! Find the force on particle1 due to particle2
+    PURE subroutine map_force(        &
+        particle_i, particle_j, force &
+    )
+        ...
+        call find_LJ_force_between(        &
+            particle_i, particle_j, force  &
+        )
+    end subroutine map_force
+
+    ! Expect all the forces to have been summed together
+    ! in the "total_force" parameter.
+    ! Apply force to the particle and return it.
+    PURE function unmap_force(particle_i, total_force)
+        ...
+        unmap_force = particle_i
+        unmap_force%force = total_force
+    end function unmap_force
+
+    ! Accept a particle and return a string
+    ! that can be printed.
+    PURE subroutine particle_to_string( &
+        particle_i, i, output_string    &
+    )
+        ...
+        write(output_string, *) particle_i%pos
+    end subroutine particle_to_string
+end program MD
+\end{lstlisting}
+
+
+\subsection{Testing}
+
+Interfaces for printing information on the particles
+out to disk and for performing some map/reduce operations over
+the particles and returning a result are also provided.
+%
+These are used only for testing and debugging, as they are entirely
+unoptimised, and indeed, very slow.
+
+The \individualoperation{} is tested by having each particle set
+its position vector to $(i, i, i)$ where $i$ is its position in the
+particle list.
+%
+A map/reduce operation is then performed over the particles to
+sum all the positions.
+%
+The result is then compared to $\sum_n=1^N (n, n, n)$.
+%
+The test is then repeated where particles have their positions set to
+$(di, di, di)$ where $d$ is an arbitrary multiplier and $i$ is their
+position in the particle list, and the map/reduce result i
+compared to the result of $d\sum_n=1^N (n, n, n)$.
+%
+This is performed for several $d$.
+
+The \pairoperation{} is tested by having each particle's position set
+to $(i, i, i)$.
+%
+A \pairoperation{} is performed where $f$ performed for particles $i$ and
+$j$ returns the position of particle $j$.
+%
+The reduction operation is the element-wise summation of these results.
+%
+The setting operation is to set the result to the velocity parameter of
+the particle.
+%
+The initialisation value is 0.
+
+The result should be that the velocity parameter of each particle should
+be a sum of the positions of each particle it has been compared to.
+%
+As a result, the velocity of particle $i$ should be equal to
+$\sum_{\substack{n=1\\n\ne{}i}}^N (n, n, n)$.
+%
+A map/reduce operation summing all the velocities of all the particles
+in the system should therefore return a value
+$(N-1)\sum_{n=1}^N (n, n, n)$.
+
+
+\subsection{The Replicated Distribution}
+
+%
+%Q: How is the replicated data scheme implemented?
+The replicated distribution is an implementation of the \replicateddata{}
+scheme.
+%
+In this implementation, a list of $N$ particles is kept on each process.
+
+When the implementation is instantiated, an MPI communicator is passed to it.
+%
+This communicator is duplicated and several parameters, such as
+the processes rank and the number of processes are determined and
+set as instance variables.
+%
+At this point, if $P > N$, the implementation will output an error message
+and exit the simulation.
+%
+Each process will allocate a list of $N$ particles here.
+
+The \individualoperation{} method is implemented by having each process update
+its local list of particles wth the input function.
+%
+No communications are performed in this method.
+
+The \pairoperation{} method is implemented by having each process
+determine a chunk of $N/P$ it should update.
+%
+Each process then independently updates those $N/P$ particles.
+%
+All processes then perform an MPI\_Allgatherv to share these
+updates and ensure their list of particles is up to date.
+
+
+\subsection{The Systolic Distribution}
+
+%
+%Q: How is the systolic loop scheme implemented?
+The systolic distribution is an implementation of the \systolicloop{} scheme.
+%
+In this implementation, three lists of $N/P$ particles are allocated
+on each process.
+%
+These lists are referred to as the local list (which corresponds to
+the particles list from the abstract distribution), the send list and the
+receive list.
+
+Upon instantiation, an MPI communicator is passed to the class
+which is duplicated and stored as an instance variable.
+%
+Several parameters, such as the current rank and the number of
+processes are also set as instance variables.
+%
+If $P > N$, the implementation will output an error message
+here and exit the simulation.
+%
+At this stage, the implementation determines how large a chunk of
+memory it will need to store its local list, by rounding up
+the result of $N/P$.
+%
+The three lists of particles mentioned are allocated at this point.
+
+The \individualoperation{} method is implemented by having each process
+update its local list of particles.
+%
+The send and receive lists are ignored in this method.
+
+\begin{lstlisting}[
+    caption=The \pairoperation{} implementation for the Systolic Loop.,
+    label=lst:systolic_loop_pair_operation_implementation,
+    gobble=3
+]
+    this%receive_list = this%particles
+
+    do i=1, this%num_local_particles
+        partial_reductions(:,i) = reduction_init
+    end do
+
+    do pulse=1, this%nprocs
+        if(pulse .NE. 1) then
+            this%do_systolic_pulse
+        end if
+
+        do i=1, this%num_local_particles
+            do j=1, this%num_receive_particles
+                if(                               &
+                    this%receive_rank             &
+                        .EQ. this%local_ring_rank &
+                    .AND.                         &
+                    i .EQ. j                      &
+                ) cycle
+
+                call pair_to_value(                          &
+                    this%particles(i), this%receive_list(i), &
+                    tmp_value                                &
+                )
+
+                partial_reductions(:, i) = reduction_type( &
+                    partial_reductions(:, i), tmp_value    &
+                )
+            end do
+        end do
+    end do
+
+    do i=1, this%num_local_particles
+        this%particles(i) = particle_value_to_value(    &
+            this%particles(i), partial_reductions(:, i) &
+        )
+    end do
+\end{lstlisting}
+
+The \pairoperation{} method is outlined in
+\LST{lst:systolic_loop_pair_operation_implementation}.
+It is implemented by using the three
+particle lists to perform systolic pulses.
+%
+On first call, this method determines the dimensions of the
+reduction variable needed.
+%
+In the case of determining forces, this will be of size 3.
+%
+This is determined by finding the size of the ``reduction\_init''
+variable.
+%
+It then allocates an array of doubles of this size multiplied by the
+number of particles in its local list.
+%
+This list is then used to store partial reduction results across
+systolic pulses.
+
+Initially, a process will copy its local list to the receive list,
+skip performing a systolic pulse for that iteration, and perform
+a comparison loop over the local and receive lists, saving the
+reduction results into the partial reductions array.
+%
+A process will then perform a systolic pulse, in which it copies its
+current foreign list into its send list, and sends the send list to
+the next process in the ring while waiting for data to arrive 
+into the receive list from the previous process in the loop.
+%
+The communications are performed using an MPI\_Sendrecv.
+
+Each process will then perform a comparison loop using this new receive
+array, reducing the results with the values already in the partial
+reductions array.
+%
+After performing $P$ such comparisons and $P-1$ systolic pulses,
+the results in the partial reductions array will be the correct
+values to be set on the local particle list.
+%
+The implementation then uses the particle\_to\_val function
+passed to the method to update
+its list of local particles with these fully reduced values.
+
+
+\subsection{Shared And Replicated Distribution}
+
+%
+%Q: How is the shared and replicated data scheme implemented?
+The shared and replicated distribution is an implementation of the
+shared and replcated data scheme.
+%
+This implementation inherits directly from the replicated data
+implementation, and overloads the initialisation and pair operation
+methods.
+
+The initialisation routine is overloaded to ensure that
+$P_{MPI}*P_{OMP} \le{} N$, where $P_{MPI}$ is the number of MPI
+processes the simulation is running on and $P){OMP}$ is the
+number of requested \openmp{} threads per MPI process.
+%
+If $P_{MPI}*P_{OMP} > N$, the implementation will output an error message
+and exit the simulation.
+%
+The implementation then calls the initialisation method of the
+replicated data scheme.
+
+The \pairoperation{} method is implemented exactly the same
+as in the \replicateddata{} case, except a basic \openmp{}
+parallel do region is defined, as outlined in
+\LST{lst:shared_and_replicated_omp_region}.
+
+\begin{lstlisting}[
+    caption=\openmp{} directives in the shared and replicated distribution.,
+    label=lst:shared_and_replicated_omp_region,
+    gobble=3
+]
+    !$OMP PARALLEL DO                                  &
+    !$OMP&  DEFAULT(none)                              &
+    !$OMP&  PRIVATE(reduce_val, tmp_val, i, j)         &
+    !$OMP&  SHARED(                                    &
+    !$OMP&      reduction_identity, this, reduce_func, &
+    !$OMP&      i_start, i_end                         &
+    !$OMP&  )
+    !
+    do i=i_start, i_end
+        reduce_val = reduction_init
+
+        do j=1, this%num_particles
+            if(i .EQ. j) cycle
+
+            call pair_to_val(                         &
+                this%particles(i), this%particles(j), &
+                tmp_val                               &
+            )
+
+            reduce_val = reduce_func(reduce_val, tmp_val)
+
+        end do
+
+        this%particles(i) = val_to_particle( &
+            this%particles(i), reduce_val    &
+        )
+    end do
+    !
+    !$OMP END PARALLEL DO
+
+    call this%sync_particles
+\end{lstlisting}
+
+
+\subsection{Replicated Systolic Distribution}
+
+The replicated systolic distribution is an implementation of the
+replicated systolic loop.
+%
+In this implementation, much like the systolic distribution,
+three lists of particles of size $N/S$ are allocated on each process,
+referred to as the local list (corresponding to the particles list
+in the abstract distribution), the send list and the receive list.
+
+Upon instantiation, an MPI communicator is passed to the constructor.
+%
+The MPI\_Dims\_create function is used to create a 2d decomposition
+of the processes represented by the communicator passed to the
+constructor.
+%
+These dimensions are rearranged such that the $x$ dimension of the
+resulting distribution should be greater than or equal to the $y$
+dimension.
+%
+These dimensions will correspond to the sizes of $S$ and $R$ for
+the replicated systolic scheme.
+%
+This communicator is used to create a 2d cartesian communicator whose
+dimensions are derived from the 2d decomposition that has been generated.
+
+This cartesian communicator is then queried to find the coordinates of
+the process.
+%
+Processes will then use MPI\_Comm\_split on the cartesian communicator
+to create a new communicator using their $x$ coordinate as the color.
+%
+This new communicator should be of size $S$ and
+is stored in an instance variable as the local ring communicator.
+%
+Properties of the local ring communicator such as the processes rank
+and the number of processes are stored as instance variables.
+
+Processes will then use MPI\_Comm\_split on the cartesian communicator
+again, but this time use their rank in the local ring communicator as
+the color.
+%
+In this manner, each process representing systolic element $i$ should
+be represented by this communicator.
+%
+This new communicator should be of size $R$ and is stored in an instance
+variable as the equivalent element communicator.
+%
+Properties of the equivalent element communicator such as the process rank
+and the number of processes are stored as instance variables.
+
+After this communicator setup has taken place, the instance will determine
+the size of the $N/S$ local particle list, and allocate the local particle
+list, the send particle list and the receive particle list.
+
+The \individualoperation{} method is implemented by having each process update
+its local particle list using the update function passed to it.
+%
+No communications are performed in this method and the send and receive
+lists are ignored.
+
+\begin{lstlisting}[
+    caption=Replicated Systolic \pairoperation{} implementation.,
+    label=lst:replicated_systolic_pair_operation_implementation,
+    gobble=3
+]
+
+    ! Find pulse chunk sizes and boundaries
+    call this%get_pulse_bounds(            &
+        pulse_size, pulse_start, pulse_end &
+    )
+
+    ! Find initial swap ranks from pulse chunk boundaries
+    call this%get_pulse_offsets(                  &
+        pulse_start, pulse_end,                   &
+        initial_send, initial_receive             &
+    )
+
+    ! Do the initial swap
+    call MPI_Sendrecv(                                    &
+        this%particles, chunk_size, this%MPI_particle,    &
+        initial_send, 0,                                  &
+        this%receive_list, chunk_size, this%MPI_particle, &
+        initial_receive, 0,                               &
+        this%local_ring_comm, MPI_STATUS_IGNORE, ierror   &
+    )
+
+    ! Initialise the partial reductions array
+    do i=1, this%num_local_particles
+        partial_reductions(:,i) = reduction_init
+    end do
+
+    ! Loop over systolic pulses
+    do pulse=pulse_start, pulse_end
+
+        ! Do the systolic pulse
+        if(pulse .NE. pulse_star) then
+            call this%do_systolic_pulse
+        end if
+
+        do i=1, this%num_local_particles
+            do j=1, this%num_receive_particles
+
+                ! Ensure a particle isn't compared
+                ! with itself
+                if(                               &
+                    this%receive_rank             &
+                        .EQ. this%local_ring_rank &
+                    .AND.                         &
+                    i .EQ. j                      &
+                ) cycle
+
+                ! Do comparison
+                call pair_to_value(       &
+                    this%particles(i),    &
+                    this%receive_list(i), &
+                    tmp_value             &
+                )
+
+                ! Reduce into the reductions array
+                partial_reductions(:, i) = reduction_type( &
+                    partial_reductions(:, i), tmp_value    &
+                )
+            end do
+        end do
+    end do
+
+
+    ! Reduce over all the partial systolic pulse results
+    call MPI_Allreduce(                                    &
+        partial_reductions, final_partial_reductions,      &
+        size(reduction_identity)*this%num_local_particles, &
+        MPI_REAL_P, MPI_reduction_type,                    &
+        this%equiv_elem_comm, ierror                       &
+    )
+
+
+    ! Set the local particles with the fully reduced results
+    do i=1, this%num_local_particles
+        this%particles(i) = particle_value_to_value(    &
+            this%particles(i), partial_reductions(:, i) &
+        )
+    end do
+\end{lstlisting}
+
+The \pairoperation{} method, outlined in
+\LST{lst:replicated_systolic_pair_operation_implementation},
+is implemented by having each ring
+determine the chunk of $S/R$ pulses it should be performing.
+%
+For replica $i$, for example, it should be performing pulses
+$iS/R$ to $(i+1)S/R$.
+%
+This is realised by having each element in the ring copy its local
+particles to its send list.
+%
+It then performs an MPI\_Sendrecv, sending its send list to
+the process $iS/R$ ahead and receiving to its receive list from
+the process $iS/R$ behind.
+%
+This step looks as though $iS/R$ systolic pulses have been performed,
+when this is actually performed with one communication.
+%
+Each process in ring $i$ will then perform $S/R$ comparison loops
+with $S/R-1$ systolic pulses.
+
+When the method is first called, an array of partial reduction
+values is allocated to store the partial results across pulses.
+%
+This is implemented exactly as in the systolic distribution,
+except instead of being of length $N/P$, it is of length $N/S$.
+
+After performing the required pulses, each process will then perform
+an MPI\_Allreduce across the equivalent element communicator.
+%
+This should result in a reduction over all the partial reduction
+results for all of the systolic pulses performed.
+%
+The resulting array should be the final values to be set on each particle.
+%
+This array is then used to set the final values on the particles.

@@ -1,0 +1,152 @@
+\section{Performance Measurement}
+
+%
+%Q: What should we be measuring?
+In a parallel MD simulation, the time for a single step is strongly dependent
+on both the number of particles present and
+the number of parallel processes the simulation is running on.
+%
+This suggests a 2D space over which the performance of the implementation
+might be evaluated.
+
+%
+%Q: What will we measure?
+As successful MD simulations can be carried out on well defined
+systems sizes, evaluating just how large a simulation can be run
+is not particularly interesting.
+%
+As such, several fixed system sizes will be tested, namely
+$N = 2^{9} = 512$,
+$N = 2^{12} = 4096$ and
+$N = 2^{15} = 32768$
+particles.
+%
+These are chosen mainly so effects can be studied where the number of cores
+used is small compared to the system, large compared to the system
+and comparable to the system.
+%
+In particular, system sizes were chosen where communication times
+tended to surpass calculation times within $P = 32768$ cores
+being used.
+%
+The minimum system size was chosen to reflect a number of cores
+exceeding the number of cores on a single \hector{} node and yet well
+below the total number of cores on the machine.
+%
+The maximum system size was chosen both for time to completion for
+a single repetition, and for it's large size compared to the number of
+cores on a \hector{} node.
+
+%
+%Q: How will we measure these?
+A very simple model of MD is used to distil the fundamental calculation
+from the implementation.
+%
+Specifically, the simulation will perform a loop consisting of two
+individual operations over the particles representing the first
+and second halves of the \velocityverlet{} integration scheme and one
+pair operation representing the force evaluation section of the scheme.
+%
+The loop will be run several times to extract some statistical significance
+from the timings.
+%
+In particular, loops will be repeated until at least 5 iterations
+have been performed and the overall time is comparable to 1 second.
+
+%
+%Q: Will we measure IO?
+No I/O will be performed during a benchmark.
+%
+While this is not representative of a real MD code, and indeed I/O
+is itself an important factor in the performance of an MD simulation,
+it is left outside the scope of this discussion.
+%
+I/O is implemented primarily for testing and debugging purposes.
+
+%
+%Q: How accurate will the benchmarked simulations be?
+There is no pretence made of performing accurate simulations in
+the benchmarks performed,
+only that the scheme benchmarked performs calculations and
+communications that may be used to perform an accurate MD simulation.
+%
+The entire step of allowing the system to come to
+thermal equilibrium will therefore be ignored.
+%
+This is primarily to reduce the time required to perform a benchmark.
+%
+This is not expected to have a significant impact on performance metrics
+as no particle domain specific distributions are dealt with here,
+so the particles having improper positions or velocities is of
+little consequence to the number of operations and communications
+performed on each process.
+
+
+\subsection{Benchmarking Plan}
+
+Benchmarks will be performed on \hector{} Phase 3 using
+32 cores per node with 32~GB of memory available to each node.
+%
+Each benchmark will be performed on the range of $[1,32768]$ cores
+in powers of 2.
+%
+That is, benchmarks will be performed on
+$1$, $2$, $4$, $8$, $\dots{}$, $32768$ cores.
+%
+Measurements will be made of the time taken for $n$ repetitions of a given
+method where $n \ge{} 5$ and the time $t \sim{} 1$~second.
+%
+These measurements will be taken several times, at different times of
+day and the lowest recorded time used here.
+
+Measurements for the \individualoperation{} and \pairoperation{} method
+for a particular parallelisation scheme will be made.
+%
+These will be measured in the cases where both MPI and calculations
+are performed, measuring the total execution time of the method;
+the case where MPI communications are skipped and calculations are
+performed, measuring the calculation time of the method; and
+the case where calculations are skipped and MPI communications are
+performed, measuring the communication time of the method.
+
+Four schemes will be tested.
+%
+The \replicateddata{} and \systolicloop{} schemes as outlined above
+will be implemented and tested.
+%
+Two methods that build upon these referred to here as
+the \sharedandreplicateddata{} scheme and the \replicatedsystolicloop{} scheme
+will also be implemented and tested.
+
+Each implementation is left relatively unoptimised to ensure
+the clarity of the implementation although
+some thought has been put into the code to avoid inappropriately slow code.
+%
+These are compiled using crayftn and mpich2, using the ftn compiler with
+no flags specified on the command line, beyond that needed to compile
+the code.
+%
+MPI routines are implemented using blocking calls to produce the worst
+case communication time.
+
+\begin{table}
+    \begin{tabular}{|l|l|}
+        \hline
+        Machine & \hector{} Phase 3 \\
+        Cores Per Node & 32 \\
+        Memory Per Node & 32~GB \\
+        \hline
+        Schemes Tested & \replicateddata{}, \systolicloop{}, \\
+                       & \sharedandreplicateddata{},
+                         \replicatedsystolicloop{} \\
+        Methods Tested & \individualoperation{}, \pairoperation{} \\
+        Regimes Tested & Total Time, MPI Only, Calculation Only \\
+        Core Range Tested & 1-32768 \\
+        \hline
+    \end{tabular}
+    \caption{
+        Summary of benchmarks to be performed and the hardware and
+        configuration they will be performed on.
+    }
+    \label{table:benchmark_configuration}
+\end{table}
