@@ -30,14 +30,22 @@
 \newcommand{\sharedandreplicateddata}{shared and replicated data}
 \newcommand{\replicatedsystolicloop}{replicated systolic loop}
 
-\newcommand{\individualoperation}{
+\newcommand{\mpidimscreate}{%
+    MPI\_\discretionary{-}{}{}%
+    Dims\_\discretionary{-}{}{}%
+    create%
+}
+
+\newcommand{\individualoperation}{%
     \texttt{indi}\discretionary{-}{}{}%
     \texttt{vidual\_}\discretionary{-}{}{}%
-    \texttt{operation}
+    \texttt{oper}\discretionary{-}{}{}%
+    \texttt{ation}%
 }
-\newcommand{\pairoperation}{
+\newcommand{\pairoperation}{%
     \texttt{pair\_}\discretionary{-}{}{}%
-    \texttt{operation}
+    \texttt{oper}\discretionary{-}{}{}%
+    \texttt{ation}%
 }
 
 \newcommand{\EQN}[1]{Eqn.~(\ref{#1})}
@@ -69,7 +77,7 @@
     {\bf #2} method for the total execution time (red),
     calculation execution time without MPI (green) and
     MPI execution time without calculations (blue)
-    for an MD system of particles of size ${\bf N = {#3}}$.
+    for an MD system of particles of size $\bf N = {#3}$.
 }
 
 \newcommand{\vOneSRTimeCaption}[3]{

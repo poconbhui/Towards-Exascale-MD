@@ -389,7 +389,7 @@ term proportional to $P$ in the \systolicloop{} case.
 %
 Replication here tackles this communication term, replacing a term
 proportional to $P$ with one proportional to $S/R$ and another
-proportional to $N/S\log{R}$.
+proportional to $(N/S)\log{R}$.
 
 
 %
@@ -480,10 +480,10 @@ becomes
     \end{split}
 \end{equation}
 
-The $N^2/P$ term suggests the initial calculation term scales as $N^2$.
-%
-The $N/\sqrt{P}(\log{\sqrt{P}}+1)$ term suggests the initial communication
-time is proportional to $N$.
+The calculation term of $N^2/P$ term suggests
+the initial calculation time scales as $N^2$
+and the communication term $(N/\sqrt{P}) (\log{\sqrt{P}}+1)$ suggests
+the initial communication time scales as $N$.
 %
 \FIG{fig:v1_replicated_systolic_pair_operation_512_logtime},
 \FIG{fig:v1_replicated_systolic_pair_operation_4096_logtime} and
@@ -538,7 +538,7 @@ An interesting note is that the communication time at $P = 32768$ cores
 appears to increase by only one order of magnitude over two orders
 of magnitude in the number of particles in the system.
 %
-The cofactor for the $N/P\log{\sqrt{P}}$ for
+The cofactor for the $(N/P) (\log{\sqrt{P}}+1)$ for
 $N = 512$ and $N = 4096$ remain within error of each other, although
 there is a jump in the cofactor for $N = 32768$.
 %

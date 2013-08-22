@@ -36,15 +36,15 @@ are separated from the routine for combining all of these
             }
         \umlaggreg[mult2=1..N, mult1=1]
             {abstract\_distribution}{particle}
-        \umlemptyclass[y=-10, x=-6]{replicated\_distribution}
-        \umlemptyclass[y=-10, x=-1]{systolic\_distribution}
-        \umlemptyclass[y=-12, x=2]{shared\_and\_replicated\_distribution}
-        \umlemptyclass[y=-10, x=6]{replicated\_systolic\_distribution}
-        \umlreal[geometry=|-|]{replicated\_distribution}{abstract\_distribution}
-        \umlreal[geometry=|-|]{systolic\_distribution}{abstract\_distribution}
-        \umlreal[geometry=|-|]
-            {shared\_and\_replicated\_distribution}{abstract\_distribution}
-        \umlreal[geometry=|-|]
+        \umlemptyclass[y=-8.9, x=-3]{replicated\_distribution}
+        \umlemptyclass[y=-12.5, x=-3]{shared\_and\_replicated\_distribution}
+        \umlemptyclass[y=-8.9, x=4.05]{systolic\_distribution}
+        \umlemptyclass[y=-11, x=4.1]{replicated\_systolic\_distribution}
+        \umlreal[geometry=-|]{replicated\_distribution}{abstract\_distribution}
+        \umlreal[geometry=-|]{systolic\_distribution}{abstract\_distribution}
+        \umlinherit[geometry=-|]
+            {shared\_and\_replicated\_distribution}{replicated\_distribution}
+        \umlreal[geometry=-|]
             {replicated\_systolic\_distribution}{abstract\_distribution}
     \end{tikzpicture}
     \end{center}
@@ -253,8 +253,8 @@ An example serial implementation is in
                 )
             end do
 
-            this%particles(i) = particle_value_to_particle( &
-                this%particles(i), value                    &
+            this%particles(i) = particle_value_to_particle(&
+                this%particles(i), value                   &
             )
         end do
     end subroutine pair_operation
@@ -494,9 +494,10 @@ The send and receive lists are ignored in this method.
                     i .EQ. j                      &
                 ) cycle
 
-                call pair_to_value(                          &
-                    this%particles(i), this%receive_list(i), &
-                    tmp_value                                &
+                call pair_to_value(       &
+                    this%particles(i),    &
+                    this%receive_list(i), &
+                    tmp_value             &
                 )
 
                 partial_reductions(:, i) = reduction_type( &
@@ -635,7 +636,7 @@ in the abstract distribution), the send list and the receive list.
 
 Upon instantiation, an MPI communicator is passed to the constructor.
 %
-The MPI\_Dims\_create function is used to create a 2d decomposition
+The \mpidimscreate{} function is used to create a 2d decomposition
 of the processes represented by the communicator passed to the
 constructor.
 %
