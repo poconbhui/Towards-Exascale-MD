@@ -265,7 +265,7 @@ As such, a calculation term of $\bigO{N^2/P}$ is expected.
 %Q:What is the expected communication time of the Replicated Data pair_operation method?
 After the each process finishes updating it's section of the list,
 the updated sections of lists are shared across processes using
-an MPI\_Allgatherv.
+an \mpiallgatherv{}.
 Assuming this uses a tree-like algorithm, this should perform
 $\log{P}$ communications of $N$ particles with a constant latancy $l$
 resulting in a communication time of

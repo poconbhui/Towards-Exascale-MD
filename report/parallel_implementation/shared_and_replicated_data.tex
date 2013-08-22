@@ -265,10 +265,10 @@ MPI process.
 %
 After this \openmp{} synchronisation point,
 an MPI synchronisation point is introduced in the form of
-an MPI\_Allgatherv over the $P_{MPI}$ processes
+an \mpiallgatherv{} over the $P_{MPI}$ processes
 to synchronise the updated lists of particles.
 %
-Assuming the MPI\_Allgatherv uses a tree-like algorithm for
+Assuming the \mpiallgatherv{} uses a tree-like algorithm for
 gathering and distributing the data, this should perform
 $\log{P_{MPI}}$ communications of approximately $N$ particles
 with a constant latency $l$, resulting in a communication time

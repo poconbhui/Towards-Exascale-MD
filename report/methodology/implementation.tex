@@ -432,7 +432,7 @@ determine a chunk of $N/P$ it should update.
 %
 Each process then independently updates those $N/P$ particles.
 %
-All processes then perform an MPI\_Allgatherv to share these
+All processes then perform an \mpiallgatherv{} to share these
 updates and ensure their list of particles is up to date.
 
 
@@ -543,7 +543,7 @@ current foreign list into its send list, and sends the send list to
 the next process in the ring while waiting for data to arrive 
 into the receive list from the previous process in the loop.
 %
-The communications are performed using an MPI\_Sendrecv.
+The communications are performed using an \mpisendrecv{}.
 
 Each process will then perform a comparison loop using this new receive
 array, reducing the results with the values already in the partial
@@ -653,7 +653,7 @@ dimensions are derived from the 2d decomposition that has been generated.
 This cartesian communicator is then queried to find the coordinates of
 the process.
 %
-Processes will then use MPI\_Comm\_split on the cartesian communicator
+Processes will then use \mpicommsplit{} on the cartesian communicator
 to create a new communicator using their $x$ coordinate as the color.
 %
 This new communicator should be of size $S$ and
@@ -662,7 +662,7 @@ is stored in an instance variable as the local ring communicator.
 Properties of the local ring communicator such as the processes rank
 and the number of processes are stored as instance variables.
 
-Processes will then use MPI\_Comm\_split on the cartesian communicator
+Processes will then use \mpicommsplit{} on the cartesian communicator
 again, but this time use their rank in the local ring communicator as
 the color.
 %
@@ -779,7 +779,7 @@ $iS/R$ to $(i+1)S/R$.
 This is realised by having each element in the ring copy its local
 particles to its send list.
 %
-It then performs an MPI\_Sendrecv, sending its send list to
+It then performs an \mpisendrecv{}, sending its send list to
 the process $iS/R$ ahead and receiving to its receive list from
 the process $iS/R$ behind.
 %
@@ -796,7 +796,7 @@ This is implemented exactly as in the systolic distribution,
 except instead of being of length $N/P$, it is of length $N/S$.
 
 After performing the required pulses, each process will then perform
-an MPI\_Allreduce across the equivalent element communicator.
+an \mpiallreduce{} across the equivalent element communicator.
 %
 This should result in a reduction over all the partial reduction
 results for all of the systolic pulses performed.

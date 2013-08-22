@@ -220,7 +220,7 @@ Along with
 \FIG{fig:v1_replicated_systolic_loop_individual_operation_speedups},
 they also show polynomial scaling, consistent with a $\sqrt{P}$ scaling.
 
-The implementation uses the MPI\_Create\_dims function to generate a
+The implementation uses the \mpidimscreate{} function to generate a
 cartesian topology.
 %
 This function attempts to create a 2d decomposition to $S \times{} R$
@@ -341,7 +341,7 @@ introducing a time
 \end{equation}
 %
 After the pulses have been performed, each set of equivalent systolic
-elements reduces their partial results using an MPI\_Allreduce.
+elements reduces their partial results using an \mpiallreduce{}.
 %
 Assuming a tree-like algorithm, this should perform $\log{R}$ communications
 of $N/S$ particles with a constant latency $l$ introducint a time
@@ -449,7 +449,7 @@ communications don't appear to intersect with calculations at all,
 although some small deviation of the total run time from the calculation
 time can be seen starting around $N/P = 2$.
 
-The implementation uses the MPI\_Dims\_create function to generate
+The implementation uses the \mpidimscreate{} function to generate
 the $S\times{}R$ decomposition of $P$.
 %
 As this function strives to

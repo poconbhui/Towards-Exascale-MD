@@ -226,7 +226,7 @@ The third list is used to send a list of particles to another process.
 
 When a systolic pulse is performed,
 each process will copy its current ``receive''
-list into its ``send'' list and then perform an MPI\_Sendrecv, receiving
+list into its ``send'' list and then perform an \mpisendrecv{}, receiving
 into the receive list from the ``left'' process and sending the send list
 to the ``right'' process.
 %
@@ -381,7 +381,7 @@ of systolic pulses per time step.
 When going to much larger numbers of processes
 this implementation may suffer from extra slow down due to
 global synchronisation, as it was implemented using a blocking
-MPI\_Sendrecv.
+\mpisendrecv{}.
 %
 A simple remedy may be to use nonblocking communications to allow
 processes to receive particles and perform partial updates while
