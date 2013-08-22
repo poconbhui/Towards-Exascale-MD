@@ -1,0 +1,54 @@
+%
+%Q: What were the objectives and findings of the dissertation?
+This dissertation aimed to evaluate the scaling bottlenecks of
+some parallel schemes used to perform \twobody{} MD simulations.
+%
+Two base schemes were chosen:
+the \replicateddata{} and \systolicloop{} schemes.
+Two improvements upon these schemes were also proposed:
+the \sharedandreplicateddata{} and \replicatedsystolicloop{} schemes.
+
+The steps taken to determine the bottlenecks were:
+\begin{itemize}
+\item
+    Proposing an implementation pattern capable of representing
+    all four of the parallel schemes to ensure all implementations
+    were comparable.
+
+\item
+    Implementing the four parallel schemes using the prescribed
+    implementation pattern.
+
+\item
+    Determining the expected time complexity of the
+    \individualoperation{} and \pairoperation{} proposed by
+    the pattern, taking
+    account of expected calculation and communication patterns.
+
+\item
+    Writing a benchmark for the
+    \individualoperation{} and \pairoperation{} methods
+    to run each for a minimum of 5 iterations and minimum of 1 second
+    in 3 regimes:
+    \begin{itemize}
+        \item Normal operation
+        \item MD calculations only
+        \item MPI calls only
+    \end{itemize}
+
+\item
+    Running this benchmark on \hector{} Phase 3, using 32 cores per node
+    where possible, on a range from 1 to 32768 cores.
+
+\item
+    Matching the graphs found to the expected time complexities.
+    Determining where communications become a significant overhead
+    to the calculation.
+
+\end{itemize}
+
+It was found for the \replicateddata{} based implementations that
+data transfer between MPI processes was the greatest bottleneck.
+%
+It was found for the \systolicloop{} based implementations that
+communication latency between MPI processes was the greatest bottleneck.

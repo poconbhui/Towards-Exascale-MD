@@ -39,6 +39,10 @@ methodology.tex = \
 parallel_implementation.tex = \
 	parallel_implementation/parallel_implementation.tex
 
+conclusion.tex = \
+	conclusion/conclusion.tex \
+	conclusion/preamble.tex
+
 
 
 report.tex = \
@@ -50,7 +54,8 @@ report.tex = \
 	$(introduction.tex) \
 	$(background.tex) \
 	$(methodology.tex) \
-        $(parallel_implementation.tex)
+        $(parallel_implementation.tex) \
+	$(conclusion.tex)
 
 
 
