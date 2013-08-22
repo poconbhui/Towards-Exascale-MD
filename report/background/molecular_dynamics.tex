@@ -10,7 +10,8 @@ solving the Newtonian equations of motion for
 an atomic system.
 %
 As there are typically more than 3 bodies interacting in the simulation,
-it is not possible to solve these equations analytically.
+it is not possible to solve the general form of these equations analytically
+\cite{vsuvakov2013three}.
 %
 The system must be solved numerically.
 
@@ -19,7 +20,8 @@ The system must be solved numerically.
 An example classical MD loop is outlined in \FIG{fig:md_loop_flow_chart}.
 %
 A simulation typically requires a force evaluation scheme
-and a numerical integration scheme.
+and a numerical integration scheme
+\cite[p.~64]{frenkel2001understanding}.
 %
 This study will evaluate several parallel force evaluation schemes.
 %
@@ -62,7 +64,8 @@ An MD simulation typically consists of three phases as outlined in
 \FIG{fig:phases_of_md_simulation}:
 Initialise the system of particles;
 simulate the system until it comes to thermodynamic equilibrium; and
-simulate and measure the system.
+simulate and measure the system
+\cite[p.~394]{schlick2010molecular}.
 %
 %Q: Why do we need the system to reach thermodynamic equilibrium?
 The system must be allowed to reach thermodynamic equilibrium because
@@ -106,11 +109,13 @@ An MD system,
 assuming homogeneity of time,
 homogeneity of space and
 isotropy of space
-should conserve energy, linear momentum and angular momentum.
+should conserve energy, linear momentum and angular momentum
+\cite{landau1976mechanics}.
 %
 %Q: Can we use these to tell anything about our simulation?
 Measurements of these values can be used to
-determine the ``health'' of a simulation.
+determine the ``health'' of a simulation
+\cite[p.~72]{frenkel2001understanding}.
 %
 %Q: What does the conformance to these tell us about our simulation?
 If any of these values change over the course of a simulation,
@@ -124,7 +129,8 @@ the simulation is producing a correct result.
 Indeed, a simulation may proceed perfectly, but not accurately reflect
 the system it supposes to model due to
 inappropriate approximations and truncations of
-the potentials and the physics involved.
+the potentials and the physics involved
+\cite{patra2003molecular}.
 
 
 
@@ -147,7 +153,7 @@ the force felt by that particle.
 The exact form of the potential depends on the system being studied.
 %
 Systems studied using Coulomb interactions, for example,
-will have potentials that reach a constant value at relatively long distances
+will have potentials that reach a constant value at relatively large distances
 from a particle.
 %
 Systems studied using Van der Waals interactions will have
@@ -155,7 +161,8 @@ potentials that reach a constant value at relatively short distances from
 a particle.
 %
 Several different inter-molecular and intra-molecular potentials may be used
-in a simulation to more accurately model certain underlying behaviours.
+in a simulation to more accurately model certain underlying behaviours
+\cite{smith1996dl_poly_2}.
 
 
 %
@@ -191,10 +198,8 @@ The equations of motion may then be written
 The equations of motion may be discretise and solved numerically
 by using an appropriate integration scheme.
 %
-The integration scheme used in this dissertation is
-the \velocityverlet{} scheme.
-%
-Using this scheme, a system of classical particles using a \twobody{} potential
+Using the \velocityverlet{} integration scheme,
+a system of classical particles using a \twobody{} potential
 may be stepped forward a time step $h$ using the equations
 %
 \begin{subequations}
@@ -227,8 +232,9 @@ $\vec{x}_i(t)$ is the position of body $i$ at time $t$ and
 $V$ and $N$ are as described above.
 %
 %Q:What is the error in the VV scheme?
-The local error for this scheme is $\bigO{h^4}$ while the global error
-is $\bigO{h^3}$.
+The error for this scheme is $\bigO{h^4}$ in position and
+$\bigO{h^2}$ in velocity
+\cite[p.~70]{frenkel2001understanding}
 %
 %Q: What is the time to solution for the VV scheme?
 As can be seen from
@@ -241,7 +247,8 @@ perforing a summation over $N-1$ positions $\vec{x}_j$.
 %
 %Q: What time step do we need for the VV scheme?
 The timescale at which atomic forces manifest is very short compared to
-the timescale at which properties of a molecular system may emerge.
+the timescale at which properties of a molecular system may emerge
+\cite[p.~409]{frenkel2001understanding}.
 %
 As a result, the numerical integrator must use very short steps to
 pick up atomic level effects, but must run for a long
@@ -250,7 +257,11 @@ time to pick up system level effects.
 This results in very many time steps to calculate in order
 to observe interesting phenomenon in a system, which
 in itself introduces a significant time complexity
-when performing a simulation.
+when performing a simulation
+\cite[p.~403]{schlick2010molecular}.
+%
+This may be addressed with schemes such as multiple time scale MD
+\cite{tuckerman1992reversible}.
 %
 However, the performance of numerical integration schemes is outside
 the scope of this paper.
@@ -261,6 +272,8 @@ the scope of this paper.
 %Q: What is the Lennard-Jones potential?
 In this dissertation, the \twobody{} potential used is
 the \LennardJones{} potential
+\cite{jones1924determination}
+%
 \begin{equation}
     \label{eqn:the_lennard_jones_potential}
     V_{LJ}(r) = 4\epsilon \left[
@@ -292,12 +305,9 @@ is useful for modelling simple particle interactions such as
 Van der Waals interactions.
 %
 Typically, $\epsilon$ and $\delta$ are determined for a system by
-fitting them to experimental data.
-%
-Due to the simplicity of this potential,
-it is well studied and there exists good data on
-reasonable values for $\epsilon$ and $\delta$ for
-different molecular systems.
+fitting them to experimental data
+\cite[p.~250]{schlick2010molecular}.
+
 
 %
 %Q: What are the equations of motion for the LJ potential under VV?
@@ -331,15 +341,11 @@ When interacting under the \LennardJones{} potential,
 when the distance between two bodies is large enough,
 the addition of the potential difference between to their overall
 potential energies them becomes negligible compared
-to the contributions from closer bodies.
+to the contributions from closer bodies
+\cite[p.~35]{frenkel2001understanding}.
 %
 In this case, it may be possible to approximate this potential difference
 to zero, and leave this term out of the calculation entirely.
-%
-Several schemes exist to tailoring a potential to smoothly approach zero at
-cutoff distance exist to avoid discrete jumps to zero at
-the cutoff distance which can cause instabilities
-in the energy of the system.
 %
 By implementing this approximation,
 the time complexity of the simulation may be reduced.
@@ -348,9 +354,12 @@ When this is done, the forces are said to be truncated.
 
 %
 %Q: What is the importance of the effective length of our potentials?
-Truncation is often implemented by
+Truncation can be implemented by
 setting a cutoff distance and only evaluating potentials
 between particles within this distance from each other.
+%
+This is the approach taken in the \verletlist{} and \celllist{} schemes
+\cite[p.~545]{frenkel2001understanding}.
 %
 In this manner, each particle can be described as generating its own
 isolated system of particles within its cutoff distance
@@ -358,7 +367,7 @@ at each time step
 to be solved, without truncations, to step that particle forward in time.
 %
 In this case, it may be interesting to combine a truncation oriented
-scheme such as domain distribution with a scheme designed to integrate
+parallel scheme such as domain distribution with a scheme designed to integrate
 the equations of motion without truncations.
 
 %
@@ -366,7 +375,8 @@ the equations of motion without truncations.
 Truncation may be used to effectively simulate very large systems by using
 a relatively small system with periodic boundary conditions,
 and a potential with a cutoff distance that ensures that
-no particle interacts with the same particle twice.
+no particle interacts with the same particle twice
+\cite[p.~35]{frenkel2001understanding}.
 %
 This can be done by ensuring the cutoff distance is less than half the width
 of the system.
@@ -379,7 +389,8 @@ periodic effects cannot be completely removed or ruled out.
 %
 %Q: When we shrink our system sizes, what are the effects?
 Steps can be taken to minimise them, such as ensuring the boundaries
-of the simulation are large enough to avoid finite size effects.
+of the simulation are large enough to avoid finite size effects
+\cite[p.~220]{frenkel2001understanding}.
 %
 However, a detailed discussion about effects introduced by
 truncation and boundary conditions are outide the scope of
@@ -387,7 +398,8 @@ this dissertation.
 
 %
 %Q: What happens if we have long range potentials?
-Potentials can't be reasonably truncated if they are long ranged.
+Potentials can't be reasonably truncated if they are long ranged
+\cite[p.~291]{frenkel2001understanding}.
 %
 For non-periodic systems, the equations of motion must be solved directly.
 %
@@ -398,7 +410,8 @@ an infinite number of copies of
 every particle in the system in every possible direction.
 %
 The problem of computing these infinite sums can be addressed using
-schemes such as Ewald summation.
+schemes such as Ewald summation
+\cite{ewald1921berechnung}.
 %
 However, the discussion of evaluating long ranged potentials in periodic systems
 is out of the scope of this dissertation.
@@ -407,7 +420,8 @@ is out of the scope of this dissertation.
 \subsection{Approximations and Sensitivity}
 
 Classical MD simulations do not account for quantum effects,
-and as such make some false predictions.
+and as such make some false predictions
+\cite[p.~390]{schlick2010molecular}.
 %
 For example, A quantum approach would yield
 a different distribution of
@@ -423,7 +437,8 @@ There are several potential issues regarding accuracy in MD simulations.
 An $N$ body system is a chaotic one.
 %
 As a result, a small change in accuracy may lead to
-largely different results.
+largely different results
+\cite[p.~81]{frenkel2001understanding}.
 %
 Errors may be introduced by
 the numerical integration scheme used,
@@ -435,7 +450,8 @@ While a final answer may not be accurate,
 the simulation may still be useful.
 %
 The system may be used to derive information on
-thermodynamic variables or to simulate general trends.
+thermodynamic variables or to simulate general trends
+\cite[p.~399]{schlick2010molecular}.
 
 Overzealous truncation may lead to a simulation that supposes to
 model a particular system of particles, but instead overapproximates
@@ -446,6 +462,3 @@ within a reasonable timeframe.
 %
 By increasing this cutoff distance, the accuracy of a simulation may
 by slightly improved.
-%
-However, given the system is chaotic, it will
-still produce an ``incorrect'' answer.

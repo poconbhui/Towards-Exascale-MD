@@ -26,7 +26,8 @@ cutoff distance.
 %
 As a result, the cutoff distance not only reduces the time complexity
 of finding the force term for each particle on each time step,
-but it also reduces the time complexity of communications.
+but it also reduces the time complexity of communications
+\cite{plimpton1995fast}.
 %
 This, however, introduces some difficulty to increasing the number
 of processors beyond the point where the space allocated to
@@ -40,8 +41,10 @@ Processes then gather the positions and charges of these point charges
 created by every other process and incorporate them into the equations
 of motion for their local list of particles.
 %
-This is exemplified by the fast multipole method, which may be used
-to produce $\bigO{N}$ calculation times.
+This is exemplified by the fast multipole method
+\cite{appel1985efficient},
+which may be used to produce $\bigO{N}$
+\cite{esselink1992order} calculation times.
 
 
 Particle domain insensitive approaches tend to ignore the spatial positions
@@ -54,8 +57,9 @@ the entire list as a result.
 It is therefore not necessary to use any approximations to
 implement these schemes.
 %
-They may, however, be combined with approximation schemes to reduce
-time complexity.
+They may, however, be combined in some cases with
+approximation schemes to reduce time complexity
+\cite{smith1994parallel}
 
 %
 %Q: What force parallelization schemes will we be looking at and why?
@@ -65,7 +69,8 @@ later implemented and their performance analysed.
 They are the \replicateddata{} and \systolicloop{} schemes.
 %
 Two further schemes, \sharedandreplicateddata{} and the
-\replicatedsystolicloop{}, will later be implemented and analysed.
+\replicatedsystolicloop{}, will also be discissed here and
+later be implemented and analysed.
 %
 These have been chosen for the relative simplicity of implementation
 and to avoid the need to consider the correctness of any
@@ -198,6 +203,17 @@ subset of cores used due to memory per core considerations in applications.
 %
 Even if all the cores in the node are utilised, frequent global synchronisation
 points may not scale well to large numbers of processes.
+
+The \replicateddata{} scheme can be seen in use in MD packages such as
+AMBER \cite{pearlman1995amber}, CHARMM \cite{brooks1983charmm} and
+DL\_POLY \cite{smith1996dl_poly_2}.
+%
+It is worth noting, however, that these packages are rather old,
+dating before the year 2000.
+%
+Nevertheless, they are still actively used, so the communication
+patterns present are still worth investigating.
+
 
 
 
@@ -349,3 +365,10 @@ in the \replicateddata{} scheme.
 As increasing the number of processes to a large value
 can quickly result in calculations having significant communication overhead,
 this raises an immediate concern for exascale systems.
+
+
+The \systolicloop{} pattern can be seen, to a certain extent, in the
+GROMACS \cite{berendsen1995gromacs} package which uses a ring
+topology for particle list decomposition.
+%
+However, this was removed in GROMACS 4 \cite{hess2008gromacs}.

@@ -14,30 +14,29 @@ of the system such as heat capacity, structure, rigidity and reactivity.
 %
 %Q: Why is modelling molecular systems useful?
 With the ability to study complex molecular systems,
-researchers are able to develop novel drugs,
-create interesting new materials and
-learn ever more about our complex biology.
+researchers are able to develop novel drugs
+\cite{perryman2004hiv},
+create interesting new materials \cite{rao2001science} and
+learn ever more about our complex biology \cite{karplus1990molecular}.
 
 %
 %Q: What modelling methods are there?
 There are many tools to study systems of interacting particles.
-These range from from molecular modelling methods such as performing
-Monte Carlo over solutions to energy minimisation problems,
+These range from from molecular modelling methods such as
+energy minimisation \cite[p.~306]{schlick2010molecular},
 to molecular dynamics methods such as using the \velocityverlet{}
-algorithm to integrate the classical equations of motion of a
+algorithm \cite{swope1982computer}
+to integrate the classical equations of motion of a
 system of particles, or ab initio methods to solve for quantum systems
-using density functional theory.
-%
-Each of these tools is useful for
-deriving some information on the system being modelled and
-each has their difficulties and limitations.
+using density functional theory \cite{parr1995density}.
 
 
 %
 %Q: What is MD?
 Molecular dynamics (MD) aims to
 gather information about a molecular system by
-simulating the time evolution of that system.
+simulating the time evolution of that system
+\cite[p.~63]{frenkel2001understanding}.
 %
 %Q: Why is MD useful?
 By doing this, it is possible to
@@ -49,6 +48,7 @@ the classical equations of motion.
 %
 For the equations of motion of a \twobody{} potential,
 this may require $\bigO{N^2}$ operations per time step
+\cite[p.~67]{frenkel2001understanding}.
 where $N$ is the number of particles in the MD system.
 
 
@@ -59,11 +59,12 @@ One such approach is to truncate the effective length of inter-molecular
 potential and to avoid computing interactions between particles outside of a
 potential-dependant cutoff distance.
 %
-This can be used to produce $\bigO{N}$ algorithms.
+This can be used to produce $\bigO{N^{\frac{3}{2}}}$ algorithms
+\cite[p.~545]{frenkel2001understanding}.
 %
 %Q: Why is truncation bad?
 This truncation, however, can have adverse effects on the accuracy
-of the simulation.
+of the simulation \cite{patra2003molecular}.
 %
 The truncation necessary to achieve an efficient implementation
 for a given molecular system may be
@@ -75,7 +76,8 @@ This dissertation seeks to implement and benchmark two parallel schemes
 that can be used to integrate the equations of motion without
 approximations.
 %
-These are the \replicateddata{} and \systolicloop{} schemes.
+These are the \replicateddata{} and \systolicloop{} schemes
+\cite{smith1991molecular}.
 %
 These schemes present algorithms that would ideally scale as $\bigO{N^2/P}$
 where $P$ is the number of cores used to solve the problem.
@@ -99,8 +101,9 @@ This dissertation will attempt to:
     non-periodic boundary conditions.
 
 \item
-    Study two parallelisation schemes:
-    \replicateddata{} and the \systolicloop{}
+    Study four parallelisation schemes:
+    \replicateddata{}, the \systolicloop{},
+    \sharedandreplicateddata{} and the \replicatedsystolicloop{}.
 
 \item
     Attempt to evaluate the scalability and

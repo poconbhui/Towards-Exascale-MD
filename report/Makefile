@@ -51,6 +51,7 @@ report.tex = \
 	macros.tex \
 	packages.tex \
 	styles.tex \
+	bibliography.bib \
 	$(introduction.tex) \
 	$(background.tex) \
 	$(methodology.tex) \
