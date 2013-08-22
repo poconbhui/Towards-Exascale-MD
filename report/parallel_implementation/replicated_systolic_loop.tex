@@ -1,4 +1,4 @@
-\subsection{Replicated Systolic Loop}
+\section{Replicated Systolic Loop}
 
 The \replicatedsystolicloop{} scheme is intended to directly improve directly
 upon the \systolicloop{} scheme.
@@ -94,7 +94,7 @@ for the \individualoperation{} and \pairoperation{} methods will
 be presented.
 
 
-\subsubsection{\individualoperation{}}
+\subsection{The \individualoperation{} Method}
 
 The \individualoperation{} method is impleemnted by having each process
 update its local list of particles.
@@ -243,7 +243,7 @@ branch evaluations caused by how benchmarking flags have been implemented.
 However, the MPI scaling terms here are approximately constant and negligible.
 
 
-\subsubsection{\pairoperation{}}
+\subsection{The \pairoperation{} Method}
 
 The \pairoperation{} partitions systolic pulses to be performed among
 the replica systolic loops, and has equivalent elements across loops
