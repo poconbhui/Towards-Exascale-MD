@@ -72,8 +72,10 @@ function compile_N() {
     echo '"<'$(compile_N 4096)'" using 1:('$(lowest_time_N 4096)'/($3/$2)) title "N=4096" w lp ls 2, '\\
     echo '"<'$(compile_N 32768)'" using 1:('$(lowest_time_N 32768)'/($3/$2)) title "N=32768" w lp ls 3, '\\
 
-    if [[ $distribution_name == "replicated_systolic" ]] && [[ $bench_name = "individual_operation" ]]; then
-    echo 'sqrt(x) title "f(x) = $\\sqrt{x}$" ls 4'
+    if [[ $distribution_name == "replicated_systolic" ]] && [[ $bench_name == "individual_operation" ]]; then
+        echo 'sqrt(x) title "f(x) = $\\sqrt{x}$" ls 4'
+    elif [[ $distribution_name == "replicated" ]] && [[ $bench_name == "individual_operation" ]]; then
+        echo '1 title "f(x) = 1" ls 4'
     else
         echo 'x title "f(x) = x" ls 4'
     fi

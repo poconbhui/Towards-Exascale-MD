@@ -2,22 +2,6 @@
 \label{sec:replicated_data_implementation}
 
 %
-%Q: What data does the Replicated Data implementation use?
-The \replicateddata{} scheme, as described in
-\SEC{sec:background:subsec:replicated_data},
-allocates a list of particles the size of
-the entire MD system of particles
-on each process.
-%
-It uses this list to keep an up-to-date copy of the system of particles
-on every process.
-
-In this section, the implementation details and performance of
-of the \individualoperation{} and \pairoperation{} methods
-for the \replicateddata{} scheme using MPI will be analysed and discussed.
-
-
-%
 % Replicated individual_operation v0
 %
 
@@ -52,6 +36,7 @@ but it avoids a global synchronization.
         \vZeroSpeedupCaption
             {\replicateddata{}}
             {\individualoperation{}}
+            {$f(x) = 1$}
     }
     \label{fig:v0_replicated_data_individual_operation_speedups}
 \end{figure}
@@ -61,6 +46,7 @@ but it avoids a global synchronization.
     {\FIG{fig:v0_replicated_data_individual_operation_speedups}}
     {\replicateddata{}}
     {\individualoperation{}}
+    {$f(x) = 1$}
 
 As can be seen from 
 \FIG{fig:v0_replicated_data_individual_operation_speedups},
@@ -203,8 +189,8 @@ as predicted in
 
 The \pairoperation{} method as outlined in
 \SEC{sec:the_pair_operation_method}
-is implemented by having each process evaluating the pair
-comparisons for a subset of the particles and sharing the
+is implemented by having each process evaluate the pair
+comparisons for a subset of the particles and then share the
 results with the other processes.
 
 %
@@ -219,6 +205,7 @@ results with the other processes.
         \vZeroSpeedupCaption
             {\replicateddata{}}
             {\pairoperation{}}
+            {$f(x) = x$}
     }
     \label{fig:v0_replicated_data_pair_operation_speedups}
 \end{figure}
@@ -228,6 +215,7 @@ results with the other processes.
     {\FIG{fig:v0_replicated_data_pair_operation_speedups}}
     {\replicateddata{}}
     {\pairoperation{}}
+    {$f(x) = x$}
 
 The speedup shown in 
 \FIG{fig:v0_replicated_data_pair_operation_speedups}

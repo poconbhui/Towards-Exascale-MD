@@ -1,51 +1,5 @@
 \section{Shared and Replicated Data}
 
-The \sharedandreplicateddata{} scheme is implemented in exactly the same
-way as the \replicateddata{} scheme outlined in 
-\SEC{sec:replicated_data_implementation},
-except the update loop in the \pairoperation{} method is further
-parallelised using \openmp{} directives, taking advantage of shared
-memory between cores.
-%
-In fact, this distribution class inherits directly from the
-\replicateddata{} distribution class, and overloads only the
-\pairoperation{} method.
-
-
-The primary motivation for this is to show that mixed mode MPI and \openmp{}
-paralellism is just as viable as MPI only parallelism for a \replicateddata{}
-scheme along with how easily the mixed mode parallelism may be implemented
-on top of an MPI implementation.
-%
-The importance of this is that the maximum system size per core per node
-can be increased in proportion to the number of \openmp{} threads
-created per MPI process, which is of particular importance for nodes with
-particularly high core counts.
-
-%
-%Q: What data does the Shared And Replicated Data implementation use?
-The \sharedandreplicateddata{} distribution is initialised by
-allocating a list of particles the size of the system of particles
-on every MPI process.
-%
-The number of \openmp{} threads used per MPI processes is fixed at 8,
-as this is the suggested number for \hector{} due to the arrangement
-of the \numa{} regions into groups of 8.
-%
-As this is a rather low number compared to the overall number of MPI
-processes, the emphasis here isn't to gain any perticular performance
-improvement using \openmp{} (although some is expected due to reduced
-MPI communications),
-only to show that it is viable.
-%
-Indeed, the mere introduction of 8 threads per MPI process should increase
-the maximum system size that can be run 8 fold.
-
-In this section,
-the implementation details and performance of
-the \individualoperation{} and \pairoperation{} methods
-will be presented and analysed.
-
 
 \subsection{The \individualoperation{} Method}
 
@@ -69,6 +23,7 @@ the implementation outlined in
         \vZeroSpeedupCaption
             {\sharedandreplicateddata{}}
             {\individualoperation{}}
+            {$f(x) = 1$}
     }
     \label{fig:v1_shared_and_replicated_data_individual_operation_speedups}
 \end{figure}
@@ -78,6 +33,7 @@ the implementation outlined in
     {\FIG{fig:v1_shared_and_replicated_data_individual_operation_speedups}}
     {\sharedandreplicateddata{}}
     {\individualoperation{}}
+    {$f(x) = 1$}
 
 Similar to the speedup graph in
 \FIG{fig:v0_replicated_data_individual_operation_speedups}
@@ -201,6 +157,7 @@ force update loop.
         \vZeroSpeedupCaption
             {\sharedandreplicateddata{}}
             {\pairoperation{}}
+            {$f(x) = x$}
     }
     \label{fig:v1_shared_and_replicated_data_pair_operation_speedups}
 \end{figure}
@@ -210,6 +167,7 @@ force update loop.
     {\FIG{fig:v1_shared_and_replicated_data_pair_operation_speedups}}
     {\sharedandreplicateddata{}}
     {\pairoperation{}}
+    {$f(x) = x$}
 
 The speedup displayed by 
 \FIG{fig:v1_shared_and_replicated_data_pair_operation_speedups}

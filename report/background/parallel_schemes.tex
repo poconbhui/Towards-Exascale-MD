@@ -1,4 +1,5 @@
 \section{Parallel Schemes}
+\label{sec:background:subsec:parallel_schemes}
 
 %
 %Q: Can we parallelize the force calculation?
@@ -7,16 +8,14 @@ immediately provides an algorithm for
 performing MD simulations of long ranged forces in isolated systems.
 %
 This dissertation will explore parallel implementations of this algorithm.
-
 %
 %Q: What force parallelization schemes exist?
-Parallelisation schemes can be broadly placed into the two categories
-of particle domain sensitive and particle domain insensitive.
+For the purposes of this text,
+parallelisation schemes can be broadly placed into the two categories
+of particle domain decomposed and particle list decomposed.
 
-The domain decomposed approach is a domain sensitive scheme
-that places particles that are
-close in space onto processors that are close on the machine running
-the simulation.
+Particle domain decomposed schemes tend to place particles that are
+close in space onto the same process.
 %
 In this manner, a process may be considered to represent a region of space.
 %
@@ -30,7 +29,7 @@ but it also reduces the time complexity of communications
 \cite{plimpton1995fast}.
 %
 This, however, introduces some difficulty to increasing the number
-of processors beyond the point where the space allocated to
+of processes used beyond the point where the space allocated to
 each process is smaller than the cutoff distance.
 
 Another suggestion is to have each process approximate, for example,
@@ -44,37 +43,33 @@ of motion for their local list of particles.
 This is exemplified by the fast multipole method
 \cite{appel1985efficient},
 which may be used to produce $\bigO{N}$
-\cite{esselink1992order} calculation times.
+calculation times \cite{esselink1992order}.
 
 
-Particle domain insensitive approaches tend to ignore the spatial positions
+Particle list decomposed approaches tend to ignore the spatial positions
 of the particles.
 %
-The list of particles is distributed to or across  the processes in some manner,
-which then cooperate to update a section of the list and update
-the entire list as a result.
+The list of particles is distributed to or across the processes in some manner,
+which then cooperate to update the list by distributing the update
+operations across the processes.
 %
 It is therefore not necessary to use any approximations to
 implement these schemes.
 %
 They may, however, be combined in some cases with
 approximation schemes to reduce time complexity
-\cite{smith1994parallel}
+\cite{smith1994parallel}.
 
 %
 %Q: What force parallelization schemes will we be looking at and why?
-Two domain insensitive schemes will be discussed in detail here and
+Two particle list decomposed schemes will be discussed in detail here and
 later implemented and their performance analysed.
 %
 They are the \replicateddata{} and \systolicloop{} schemes.
 %
-Two further schemes, \sharedandreplicateddata{} and the
-\replicatedsystolicloop{}, will also be discissed here and
+Two further schemes in spired by these, \sharedandreplicateddata{} and the
+\replicatedsystolicloop{}, will also be discussed here and
 later be implemented and analysed.
-%
-These have been chosen for the relative simplicity of implementation
-and to avoid the need to consider the correctness of any
-approxmations that might be implemented as part of a parallel scheme.
 
 
 
@@ -85,16 +80,16 @@ approxmations that might be implemented as part of a parallel scheme.
 %Q: What is the replicated data scheme?
 In the \replicateddata{} scheme, illustrated in
 \FIG{fig:replicated_data_illustration},
-the entire system of particles is replicated across all processors.
+the entire system of particles is replicated across all processes.
 %
 This is useful for the force update, as each particle must have a view of
 every other particle to determine its instantaneous force.
 %
 Given $P$ replicated processes,
-each process determines the force for $1/P$ of the particles.
+each process determines the force for $N/P$ of the particles.
 %
 The processes then share these newly determined forces with each other
-such that each processor will have a copy of the system where every
+such that each process will have a copy of the system where every
 particle has its force set to the correct value for that time step.
 %
 The processes may then step their system forward in time.
@@ -103,7 +98,7 @@ In this way, the \replicateddata{} scheme may provide
 an $\bigO{N^2/P}$ algorithm.
 
 
-\begin{figure}[!ht]
+\begin{figure}
     \begin{center}
     \begin{tikzpicture}[scale=.5]
         % Draw replicated blocks and force areas
@@ -191,15 +186,13 @@ significant overhead for the calculation.
 %
 %Q: Why are the scaling challenges of replicated data concerning for exascale?
 These drawbacks are particularly important when considering exascale systems
-where systems are expected to have large numbers of cores per node.
+where systems are expected to have large numbers of cores per node
+\cite{dongarra2011international}.
 %
 As memory per node is expected to grow at a much lower rate than
 the number of cores per node,
 a \replicateddata{} scheme may have difficulties
 utilising every core on a node.
-%
-Indeed, even with current machines, nodes are often requested and only a
-subset of cores used due to memory per core considerations in applications.
 %
 Even if all the cores in the node are utilised, frequent global synchronisation
 points may not scale well to large numbers of processes.
@@ -230,7 +223,7 @@ passing packets of particles around a ring in pulses.
 %
 This is illustrated in \FIG{fig:systolic_loop_illustration}.
 
-\begin{figure}[!ht]
+\begin{figure}
     \begin{center}
     \begin{tikzpicture}
         %
@@ -313,9 +306,9 @@ another partial force update on its local list.
 These pulses continue until a process receives its own system again from
 the left process, signifying that it has at some stage received
 a copy of every list on every process.
-%
-At this point, it should have added the force contributions from
-every particle in the system to the particles in its local list.
+
+At this point, it should have added together the force contributions from
+every particle in the system for each particles in its local list.
 %
 From here, a process may update the position and velocity of these local
 particles, thereby stepping the system forward.
@@ -339,15 +332,14 @@ upper limit on the size system being studied as more cores can be introduced
 to reduce the number of particles per core used by the simulation.
 
 Another benefit is that
-communications between processes are more limited than
-the replicated case.
-%
-Here, each process communicates with only two other neighbouring processes
+each process communicates with only two other neighbouring processes
 and sends and receives only $N/P$ particles.
 %
 By this mechanism, volume of data
 being communicated across the machine is limited
-and and there are no strict global synchronisation points.
+and there are no strict global synchronisation points.
+%
+Communications and calculations may be overlapped during a systolic pulse.
 
 When factoring in the number of systolic pulses per time step,
 it becomes clear that the $\bigO{N^2/P}$ scaling will not last indefinitely.
@@ -365,6 +357,8 @@ in the \replicateddata{} scheme.
 As increasing the number of processes to a large value
 can quickly result in calculations having significant communication overhead,
 this raises an immediate concern for exascale systems.
+%
+However, the ability to partition data across processes is valuable.
 
 
 The \systolicloop{} pattern can be seen, to a certain extent, in the
@@ -377,36 +371,34 @@ However, this was removed in GROMACS 4 \cite{hess2008gromacs}.
 
 \subsection{Shared And Replicated Data}
 
-The \sharedandreplicateddata{} scheme is implemented in exactly the same
-way as the \replicateddata{} scheme outlined in 
-\SEC{sec:replicated_data_implementation},
-except the force update loop is further
+The \sharedandreplicateddata{} scheme is intended to be an improvement
+upon the \replicateddata{} scheme.
+It is implemented in exactly the same
+manner except the force update loop is further
 parallelised using \openmp{} directives, taking advantage of shared
 memory between cores.
 
 The primary motivation for this is to show that mixed mode MPI and \openmp{}
-paralellism is just as viable as MPI only parallelism for a \replicateddata{}
-scheme along with how easily the mixed mode parallelism may be implemented
-on top of an MPI implementation.
+paralellism performs just as well as MPI only parallelism for a
+\replicateddata{} and is quite easily implemented.
 %
-The importance of this is that the maximum system size per core per node
+The importance of this is that the maximum system size that can
+be run on a machine
 can be increased in proportion to the number of \openmp{} threads
-created per MPI process, which is of particular importance for nodes with
-particularly high core counts.
+created per MPI process with a relatively small change to the code.
 
 In this scheme, the system of particles is replicated across
-$P_{MPI}$ MPI process.
+$P_{MPI}$ MPI processes.
 %
 Each MPI process then spawns $P_{OMP}$ threads, resulting in a total
 of $P_{MPI}\times{}P_{OMP} = P$ threads.
 %
-This provides a similar calculation time to the \replicateddata{} scheme
-of $N^2/P$.
+This provides a force calculation time of $N^2/P$.
 
 As there are $P_{MPI} = P/P_{OMP}$ processes, communications are
 reduced from $\log{P}$ as in the \replicateddata{} case to
 \begin{equation}
-    \log{P_{MPI}} = \log{P/P_{OMP}} = \log{P} - \log{P_{OMP}}
+    \log{P_{MPI}} = \log{\frac{P}{P_{OMP}}} = \log{P} - \log{P_{OMP}}
 \end{equation}
 %
 It is clear that the introduction of \openmp{} threads should
@@ -422,9 +414,8 @@ of the number of cores per node, here it is the number of MPI processes
 per node.
 %
 By increasing the number of \openmp{} threads per MPI process,
-the maximum system size possible is increased.
-%
-Indeed, the maximum size is increased in proportion with $P_{OMP}$.
+the maximum system size possible is increased
+in proportion with $P_{OMP}$.
 
 
 Where there were concerns for the \replicateddata{} scheme at exascale
@@ -435,6 +426,8 @@ Where more cores per node are introduced,
 more \openmp{} threads per MPI process
 may be introduced with no increase to
 the memory footprint of the program.
+%
+However, this approach does still suffer from global synchronisation issues.
 
 
 
@@ -475,31 +468,26 @@ Each replica systolic loop will have $S$ systolic elements,
 and there will be $R$ replica loops.
 
 
-In this manner, by using $P$ processes, each process should be holdind
+In this manner, by using $P$ processes, each process should be holding
 $N/S$ particles.
 %
-This means that, unlike the \replicateddata{} and \sharedandreplicateddata{}
-cases, the only limit to the number of particles that can be simulated
-is how many cores the machine being used has.
+Similar to the \systolicloop{} case, the maximum system size is a function
+of the number of cores in the machine, rather than the cores per node.
 %
 However, unlike the \systolicloop{} case, particles per core grows as
 $N/S$ rather than $N/P$, which means a greater number of processes
-may be needed to partition a large system enough that it fits in memory.
-%
+may be needed to partition a large system enough to fits in
+a node's memory.
+
 As $S \times{} R = P$,
 if the system of particles must be partitioned into
 smaller chunks per core,
-it is simply a matter of
-increasing the number of systolic elements per loop and
-reducing the number of replicas.
-
-It can be seen that this scheme requires $S \ge{} R$.
+fewer replicas may be made in favour of more systolic elements
+per replica loop.
 %
-Similar to the \systolicloop{} scheme, it also requires $N \ge{} S$.
+This will result in a lower particle per core count.
 %
-As a result, assuming $S = R = \sqrt{P}$, this scheme can be run
-with $P = N^2$, which is a large improvement over the \systolicloop{}
-maximum of $P = N$.
+However, this will have an effect on communication times.
 
 
 A time step for a force comparison proceeds as follows:
@@ -520,7 +508,7 @@ should have only a partial result, having performed only a subset
 of the pulses.
 %
 Equivalent systolic elements are defined as elements whose
-processor coordinates have the same $y$ value but different $x$ values.
+process coordinates have the same $y$ value but different $x$ values.
 %
 Each equivalent systolic element should have performed a different
 subset of the necessary pulses, resulting in each equivalent element
@@ -533,6 +521,26 @@ The resulting reduction should be the result of a full set of systolic pulses
 for that systolic element.
 
 
+
+The computation time for a list comparison during a single pulse
+should be $\bigO{(N/S)^2}$.
+%
+For $S/R$ pulses, this should result in a time $\bigO{N^2/(SR)} = \bigO{N^2/P}$
+which is the familiar \systolicloop{} calculation time.
+%
+It can be seen that this scheme requires $S \ge{} R$.
+%
+Similar to the \systolicloop{} scheme, it also requires $N \ge{} S$.
+%
+As a result, assuming $S = R = \sqrt{P}$, this scheme can be run
+with $P = N^2$, which is a large improvement over the \systolicloop{}
+maximum of $P = N$.
+
+
+
+Communication considerations suggest the $\bigO{N^2/P}$ scaling
+will likely not continue until $P = N^2$.
+%
 Assuming each process is holding $N/S$ particles, then $S/R$
 systolic pulses of $N/S$ particles with a constant latency $l$
 should require a communication time of $\bigO{N/R + S/R}$.
@@ -540,15 +548,33 @@ should require a communication time of $\bigO{N/R + S/R}$.
 Where communication latency in the \systolicloop{} scheme produced
 a $\bigO{P}$ scaling term, if the number of replicas used is
 similar to the number of systolic elements, this $\bigO{P}$ term
-becomes $\bigO{1}$.
-%
+becomes $\bigO{S/R} = \bigO{1}$ here.
+
 Finally, the reduction across equivalent systolic elements of
-$N/S$ particles with a constant latency $l$ results in a
+$N/S$ particles with a constant latency results in a
 $\bigO{N\log{R}/S + \log{R}}$ term.
 %
 This is particularly interesting, as the $N\log{R}/S$ term can
-be made to decrease with larger $P$, as $\log{x}/x$ is a decreasing
-function.
+decrease with larger $P$ by keeping $S \sim{} R$,
+as $\log{x}/x$ is a decreasing function.
 %
 The communication time at large $P$ can therefore be independent
 of the number of particles in the system.
+
+This scheme is well adapted to the low memory per core environment
+envisaged by exascale computing as memory per core can be reduced
+simply be adding more cores to the simulation.
+%
+Similar to the systolic loop, some hard synchronisation points have been
+removed.
+%
+Calculations and communications may be overlapped when performing
+systolic pulses.
+%
+This method does, however, include an \mpiallreduce{} call, which represents
+a synchronisation point between disjoint sets of $\sqrt{P}$ processes,
+each process in a different replica systolic loop.
+%
+So while the interplay of systolic pulses and equivalent element reductions
+suggest some global synchronicity, there are no hard
+global synchronisation points.

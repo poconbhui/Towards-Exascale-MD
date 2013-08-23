@@ -28,7 +28,8 @@ This study will evaluate several parallel force evaluation schemes.
 Of particular interest will be force evaluation schemes based on
 the replicated data and systolic loop patterns.
 %
-The \velocityverlet{} scheme will be used to perform the integration steps.
+The \velocityverlet{} scheme
+\cite{swope1982computer} will be used to perform the integration steps.
 %
 As will be seen, the \velocityverlet{} scheme deviates slightly from
 the loop outlined in \FIG{fig:md_loop_flow_chart} by sandwiching the
@@ -110,7 +111,7 @@ assuming homogeneity of time,
 homogeneity of space and
 isotropy of space
 should conserve energy, linear momentum and angular momentum
-\cite{landau1976mechanics}.
+\cite{noether1918invariante} \cite{landau1976mechanics}.
 %
 %Q: Can we use these to tell anything about our simulation?
 Measurements of these values can be used to
@@ -153,12 +154,12 @@ the force felt by that particle.
 The exact form of the potential depends on the system being studied.
 %
 Systems studied using Coulomb interactions, for example,
-will have potentials that reach a constant value at relatively large distances
-from a particle.
+will have potentials that reach a relatively constant value at
+relatively large distances from a particle.
 %
 Systems studied using Van der Waals interactions will have
-potentials that reach a constant value at relatively short distances from
-a particle.
+potentials that reach a relatively constant value at
+relatively short distances from a particle.
 %
 Several different inter-molecular and intra-molecular potentials may be used
 in a simulation to more accurately model certain underlying behaviours
@@ -414,7 +415,7 @@ schemes such as Ewald summation
 \cite{ewald1921berechnung}.
 %
 However, the discussion of evaluating long ranged potentials in periodic systems
-is out of the scope of this dissertation.
+is outside the scope of this dissertation.
 
 
 \subsection{Approximations and Sensitivity}
@@ -462,3 +463,7 @@ within a reasonable timeframe.
 %
 By increasing this cutoff distance, the accuracy of a simulation may
 by slightly improved.
+%
+This particular issue is avoided in this dissertation by solving the
+equations of motion with no further approximations necessary than
+are needed for their discretisation.

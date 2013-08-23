@@ -12,8 +12,8 @@ might be evaluated.
 %
 %Q: What will we measure?
 As successful MD simulations can be carried out on well defined
-systems sizes, evaluating just how large a simulation can be run
-is not particularly interesting.
+systems sizes, interesting results can be derived with relatively
+small systems.
 %
 As such, several fixed system sizes will be tested, namely
 $N = 2^{9} = 512$,
@@ -24,18 +24,18 @@ particles.
 These are chosen mainly so effects can be studied where the number of cores
 used is small compared to the system, large compared to the system
 and comparable to the system.
-%
-In particular, system sizes were chosen where communication times
+
+The system sizes were also chosen as communication times
 tended to surpass calculation times within $P = 32768$ cores
 being used.
 %
-The minimum system size was chosen to reflect a number of cores
-exceeding the number of cores on a single \hector{} node and yet well
+The minimum system size was chosen to reflect a number of particles
+exceeding the number of cores on a single \hector{} node and yet far
 below the total number of cores on the machine.
 %
 The maximum system size was chosen both for time to completion for
-a single repetition, and for it's large size compared to the number of
-cores on a \hector{} node.
+a single repetition, and for its size being comparable to the number of
+cores on \hector{}.
 
 %
 %Q: How will we measure these?
@@ -50,8 +50,8 @@ pair operation representing the force evaluation section of the scheme.
 The loop will be run several times to extract some statistical significance
 from the timings.
 %
-In particular, loops will be repeated until at least 5 iterations
-have been performed and the overall time is comparable to 1 second.
+In particular, loops will be required to perform at least 5 iterations
+and have a run time comparable to 1 second.
 
 %
 %Q: Will we measure IO?
@@ -72,15 +72,14 @@ processes is not tied to the simulation.
 This means, to accurately measure the run time of the system,
 it is not necessary to perform a physically accurate simulation.
 %
-Indeed, it is not necessary to perform a simulation at all,
-so each method may be run separately.
+As such, each method may be run separately.
 %
 As the \individualoperation{} and \pairoperation{} methods will
 be tested separately, the MD simulation steps outlined in
 \FIG{fig:phases_of_md_simulation}
 will not be followed in full.
 %
-In particular, the initialisation and equilibriation steps may
+In particular, the initialisation and equilibriation steps will
 be skipped.
 %
 The particle distribution may be initialised with arbitrary data.
@@ -121,14 +120,11 @@ performed, measuring the calculation time of the method; and
 the case where calculations are skipped and MPI communications are
 performed, measuring the communication time of the method.
 
-Four schemes will be tested.
+Four distributions will be benchmarked:
 %
-The \replicateddata{} and \systolicloop{} schemes as outlined above
-will be implemented and tested.
-%
-Two methods that build upon these referred to here as
-the \sharedandreplicateddata{} scheme and the \replicatedsystolicloop{} scheme
-will also be implemented and tested.
+the replicated distribution; the systolic distribution;
+the shared and replicated distribution; and
+the replicated systolic distribution.
 
 Each implementation is left relatively unoptimised to ensure
 the clarity of the implementation although

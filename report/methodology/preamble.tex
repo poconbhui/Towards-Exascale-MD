@@ -1,6 +1,18 @@
-An outline of a Fortran program will be introduced capable
-of performing an MD simulation which will be extended as appropriate
-to implement different parallel schemes for this dissertation.
+To evaluate the scaling of the schemes outlined in
+\SEC{sec:background:subsec:parallel_schemes},
+they must be coded and benchmarked.
 %
-An outline of the data to be gathered will also be presented here
-along with the method by which it is gathered.
+%Q: How will the code be implemented?
+A object-oriented Fortran 2003 implementation of
+the necessary schemes will be outlined here.
+%
+To ensure schemes were similarly coded and comparable to each other,
+the abstract distribution class is presented that will represent
+a unified interface to the parallel schemes, which may be used to
+implement an MD simulation.
+%
+The tests required for a parallel implementation to pass will also
+be outlined.
+%
+An evaluation of performance metrics is then presented here along
+with an overview of the benchmarks performed.

@@ -43,7 +43,7 @@
 }
 \newcommand{\mpiallgatherv}{%
     MPI\_\discretionary{-}{}{}%
-    All\_\discretionary{-}{}{}%
+    All\discretionary{-}{}{}%
     gatherv%
 }
 \newcommand{\mpisendrecv}{%
@@ -75,14 +75,14 @@
 \newcommand{\SEC}[1]{Section~\ref{#1}}
 
 
-\newcommand{\vZeroSpeedupCaption}[2]{
+\newcommand{\vZeroSpeedupCaption}[3]{
     {\bf Speedup vs. Cores} for the {\bf #1} implementation of the
     {\bf #2} method for systems of particles of size
     $N=512$ (red), $N=4096$ (green) and $N=32768$ (blue) and the
-    function $f(x) = x$ (light red).
+    function #3 (light red).
 }
 
-\newcommand{\vZeroSpeedupExplanation}[3]{
+\newcommand{\vZeroSpeedupExplanation}[4]{
     #1 shows how the speedup of the #2 implementation of the
     #3 method scales with the number of cores available to the
     implementation.
@@ -90,7 +90,7 @@
     This is presented for systems of particles of size
     $N=512$ shown in red, $N=4096$ shown in green
     and $N=32769$ shown in blue along with the function
-    $f(x) = x$ shown in light red.
+    #4 shown in light red.
 }
 
 \newcommand{\vZeroTimeCaption}[3]{

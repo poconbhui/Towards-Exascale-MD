@@ -1,26 +1,18 @@
-Parallel implementations are required to be functionally equivalent
-to the example serial implementations outlined in
+Implementations of the four parallel schemes
+will be analysed and discussed here by focusing on
+the scaling results of
+the \individualoperation{} and \pairoperation{} methods.
+
+For each of the \individualoperation{} and \pairoperation{} methods,
+a speedup graph will be presented to evaluate the overall scalability
+of the method when run with 512, 4096 and 32768 particles.
+%
+An expected time complexity of the method will be derived based on
+the implementation outlined in
 \SEC{sec:methodology:subsec:implementation}.
-%
-Tests may then be implemented straightforwardly for the serial implementation,
-and are then easily extended to the parallel implementations.
 
-The prescribed interface discourages the use of optimisations which make
-assumptions about the MD algorithm being implemented.
+A detailed breakdown of the times for the total runtime, the MPI time
+and the calculation time for each system size will be presented.
 %
-If it were known ahead of time, for example, that
-only forces would be updated during a \pairoperation{},
-as is the case in the \velocityverlet{} algorithm,
-or that inter-atomic forces dropped to zero after a given distance,
-the implementation may be able to use this information to improve
-performance through specialized data layouts or communications patterns.
-
-Optimizations for particular algorithms and MD systems are
-beyond the scope of this dissertation.
-%
-The focus here is on general communication patterns rather than
-the optimization of particular MD algorithms.
-
-Implementations of several parallel schemes
-will be analysed and discussed by focusing on
-the scaling results of the \individualoperation{} and \pairoperation{} methods.
+An attempt will then be made to explain these results in terms of the
+derived time complexity will be made, if possible.

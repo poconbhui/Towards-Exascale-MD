@@ -18,6 +18,7 @@ update its local list of particles.
         \vZeroSpeedupCaption
             {\replicatedsystolicloop{}}
             {\individualoperation{}}
+            {$f(x) = \sqrt{x}$}
     }
     \label{fig:v1_replicated_systolic_loop_individual_operation_speedups}
 \end{figure}
@@ -27,6 +28,7 @@ update its local list of particles.
     {\FIG{fig:v1_replicated_systolic_loop_individual_operation_speedups}}
     {\replicatedsystolicloop{}}
     {\individualoperation{}}
+    {$f(x) = \sqrt{x}$}
 
 %
 %Q: What is the speedup of the Replicated Systolic Loop individual_operation method?
@@ -169,6 +171,7 @@ systolic element for that time step.
         \vZeroSpeedupCaption
             {\replicatedsystolicloop{}}
             {\pairoperation{}}
+            {$f(x) = x$}
     }
     \label{fig:v1_replicated_systolic_pair_operation_speedups}
 \end{figure}
@@ -178,6 +181,7 @@ systolic element for that time step.
     {\FIG{fig:v1_replicated_systolic_pair_operation_speedups}}
     {\replicatedsystolicloop{}}
     {\pairoperation{}}
+    {$f(x) = x$}
 
 
 %
@@ -437,10 +441,25 @@ increase while $N = 32768$ appears to remain remarkably flat.
     \label{fig:replicated_systolic_communication_fits}
 \end{figure}
 
-The communication times for the three system sizes are plotted in
+The communication times for the three system sizes and a
+system of size $N = 262144$ are plotted in
 \FIG{fig:replicated_systolic_communication_fits}
 along with fittings to the suggested trends.
 %
+An interesting note is that the suggested communications complexity
+appears to fit well to the graph, however, appears to be
+missing some parameters.
+%
+In particular, the cofactor of the latency term appears to grow
+with the number of particles communicated.
+%
+As the latency term should be independent of the number of particles,
+this should remain a constant value.
+%
+This plot would suggest the communications scaling looks closer to
+$\sqrt{N}\log{\sqrt{P}}$.
+
+
 An interesting note is that the communication time at $P = 32768$ cores
 appears to increase by only one order of magnitude over two orders
 of magnitude in the number of particles in the system.

@@ -1,17 +1,16 @@
-\section{The Abstract Distribution}
+\section{Implementation}
 \label{sec:methodology:subsec:implementation}
 
-%
-%Q: How will the code be implemented?
-The code for this dissertation is implemented in
-object-oriented Fortran 2003.
+
+\subsection{The Abstract Distribution}
+
 %
 %Q: How will we handle changing the underlying parallel pattern?
 To allow for arbitrary \twobody{} potentials and integration schemes
 to be used with arbitrary parallel schemes,
 the routines calculating how an individual particle is stepped forward
 in time and the routine determining when and where that stepping is applied
-are separated.
+are separated in this implementation.
 %
 Similarly, the routines calculating the force between two particles
 are separated from the routine for combining all of these
@@ -80,7 +79,7 @@ suggests a set of interfaces to be implemented.
 Namely, one for capable of performing force updates and another
 capable of performing an integration step.
 %
-Integration step can be implemented with a method that can update particles
+The integration step can be implemented with a method that can update particles
 in place.
 %
 The force update can be implemented with a method that can
@@ -169,7 +168,9 @@ particles is given in
             type(particle), intent(in) :: p_i
             integer, intent(in) :: i
 
-            return particle(pos=i, vel=0, force=0, mass=1)
+            init_particles = particle(        &
+                pos=i, vel=0, force=0, mass=1 &
+            )
         end function init_particles
     end program ExampleIndividualOperation
 \end{lstlisting}
@@ -196,21 +197,21 @@ and an initial value to use for reductions.
 This can be considered a map/reduce operation where $f$ is the map operation
 and $r$ is the reduce operation.
 %
-The value $iv$ is used as the initial value used in the reduce operation.
+The value $iv$ is used as the initial value in the reduce operation.
 %
-The function $s$ can then be used to set some value of a particle with
+The function $s$ is then be used to set some value of a particle with
 the results of this map/reduce operation.
 
-The intention is that the implementation use $s$ to set the value
-of particle $i$ to the value given by $iv$.
+The intention is that $f$ is used to compare particle $i$ with
+a particle $j \ne{} i$.
 %
-It will then use $f$ to compare particle
-$i$ with a particle $j$, where $i \ne{} j$, and use $r$ to
-reduce this new value with the current result being held for
-particle $i$.
+It then uses $r$ to reduce all comparisons of particle $i$ with
+every other particle $j\ne{}i$  in the list with
+$iv$ as the initial reduction value.
 %
-Performing this for every particle $j$ and reducing the results together,
-the implementation should detmine the correct result for the operation.
+It then uses $s$ to set this final value on particle $i$.
+%
+This is then repeated for every particle.
 
 An example serial implementation is in
 \LST{lst:serial_pair_operation_implementation}.
@@ -268,8 +269,9 @@ user defined operations.
 %
 These are primarily due to language restrictions.
 %
-However, the minimum requirement is for the distribution to be able
-to implement the \velocityverlet{} algorithm,
+The minimum requirement is for the method to be able
+to implement the force evaluation section of the \velocityverlet{} algorithm,
+which it is capable of implementing,
 so these problems are not a major concern.
 
 
@@ -280,76 +282,82 @@ An example of an MD simulation using this model is provided in
 %
 Presented is an example of creating a distribution,
 initialising the particles in the simulation,
-an MD update loop and
-printing the list of particles out to disk.
+and perfrming an MD update loop.
 
 
 \begin{lstlisting}[
     caption=An example MD simulation,
     label=lst:distribution_operation,
+    gobble=3
 ]
-program MD
-    ...
+    program MD
+        ...
 
-    dist = new_distribution(...)
+        dist = new_distribution(...)
 
-    call dist%individual_operation(init_particles)
+        call dist%individual_operation(init_particles)
 
-    do while(time < end_time)
-        ! Perform first half of velocity Verlet scheme
-        call dist%individual_operation(VV_scheme_part_1)
+        do while(time < end_time)
+            ! Perform first half of velocity Verlet scheme
+            call dist%individual_operation(VV_scheme_part_1)
 
-        ! Find forces between particles due to
-        ! LJ potential
-        call dist%pair_operation(                      &
-            map_force, unmap_force, dist%sum, zero_arr &
+            ! Find forces between particles due to
+            ! LJ potential
+            call dist%pair_operation(                      &
+                map_force, unmap_force, dist%sum, zero_arr &
+            )
+
+            ! Perform second half of velocity Verlet scheme
+            call dist%individual_operation(VV_scheme_part_2)
+
+            ! Step time forward
+            time = time + time_step
+        end do
+
+
+    contains
+
+        ! An overly simplistic initialisation scheme
+        PURE function init_particles(particle_i, i)
+            type(particle) :: init_particles
+
+            type(particle), intent(in) :: particle_i
+            integer, intent(in) :: i
+
+
+            init_particles = Particle(        &
+                pos=i, vel=0, mass=1, force=0 &
+            )
+        end function init_particles
+
+        ! Find the force on particle1 due to particle2
+        PURE subroutine map_force(        &
+            particle_i, particle_j, force &
         )
-
-        ! Perform second half of velocity Verlet scheme
-        call dist%individual_operation(VV_scheme_part_2)
-
-        ! Step time forward
-        time = update_time(time)
-    end do
+            type(particle), intent(in) :: particle_i
+            type(particle), intent(in) :: particle_j
+            double precision, intent(in) :: force(:)
 
 
-contains
-    ! An overly simplistic initialisation scheme
-    PURE function init_particles(particle_i, i)
-        ...
-        init_particles = Particle(        &
-            pos=i, vel=0, mass=1, force=0 &
-        )
-    end function init_particles
+            call find_LJ_force_between(        &
+                particle_i, particle_j, force  &
+            )
+        end subroutine map_force
 
-    ! Find the force on particle1 due to particle2
-    PURE subroutine map_force(        &
-        particle_i, particle_j, force &
-    )
-        ...
-        call find_LJ_force_between(        &
-            particle_i, particle_j, force  &
-        )
-    end subroutine map_force
+        ! Expect all the forces to have been summed together
+        ! in the "total_force" parameter.
+        ! Apply force to the particle and return it.
+        PURE function unmap_force(particle_i, total_force)
+            type(particle) :: unmap_force
 
-    ! Expect all the forces to have been summed together
-    ! in the "total_force" parameter.
-    ! Apply force to the particle and return it.
-    PURE function unmap_force(particle_i, total_force)
-        ...
-        unmap_force = particle_i
-        unmap_force%force = total_force
-    end function unmap_force
+            type(particle), intent(in) :: particle_i
+            double precision, intent(in) :: total_force(:)
 
-    ! Accept a particle and return a string
-    ! that can be printed.
-    PURE subroutine particle_to_string( &
-        particle_i, i, output_string    &
-    )
-        ...
-        write(output_string, *) particle_i%pos
-    end subroutine particle_to_string
-end program MD
+
+            unmap_force = particle_i
+            unmap_force%force = total_force
+        end function unmap_force
+    end program MD
 \end{lstlisting}
 
 
@@ -360,28 +368,30 @@ out to disk and for performing some map/reduce operations over
 the particles and returning a result are also provided.
 %
 These are used only for testing and debugging, as they are entirely
-unoptimised, and indeed, very slow.
+unoptimised.
 
-The \individualoperation{} is tested by having each particle set
-its position vector to $(i, i, i)$ where $i$ is its position in the
+The \individualoperation{} is tested by using it to set each particle's
+position vector to $(i, i, i)$ where $i$ is its position in the
 particle list.
 %
 A map/reduce operation is then performed over the particles to
 sum all the positions.
 %
-The result is then compared to $\sum_n=1^N (n, n, n)$.
+The result is then compared to $\sum_{n=1}^N (n, n, n)$.
 %
 The test is then repeated where particles have their positions set to
-$(di, di, di)$ where $d$ is an arbitrary multiplier and $i$ is their
-position in the particle list, and the map/reduce result i
-compared to the result of $d\sum_n=1^N (n, n, n)$.
+$(d\times{}i, d\times{}i, d\times{}i)$
+where $d$ is an arbitrary multiplier and $i$ is their
+position in the particle list, and the map/reduce result is
+compared to the result of $\sum_{n=1}^N (d\times{}n, d\times{}n, d\times{}n)$.
 %
 This is performed for several $d$.
 
 The \pairoperation{} is tested by having each particle's position set
 to $(i, i, i)$.
 %
-A \pairoperation{} is performed where $f$ performed for particles $i$ and
+A \pairoperation{} is performed where the pair\_to\_value function
+performed on input particles $i$ and
 $j$ returns the position of particle $j$.
 %
 The reduction operation is the element-wise summation of these results.
@@ -773,7 +783,7 @@ The \pairoperation{} method, outlined in
 is implemented by having each ring
 determine the chunk of $S/R$ pulses it should be performing.
 %
-For replica $i$, for example, it should be performing pulses
+Replica $i$, for example, should be performing pulses
 $iS/R$ to $(i+1)S/R$.
 %
 This is realised by having each element in the ring copy its local

@@ -16,5 +16,11 @@ set yrange [-1.5:2]
 set ylabel 'V(r)/$\epsilon$'
 set xlabel 'r/$\delta$'
 
-set arrow from 1,-1.5 to 1,2 nohead
-plot V(x) title '$V_{LJ}(r)/\epsilon$' ls 1, 0 notitle ls 2, -epsilon notitle ls 3
+plot \
+        0 notitle ls 2, \
+        -epsilon notitle ls 3, \
+        '-' ls 4 noti with lines, \
+        V(x) title '$V_{LJ}(r)/\epsilon$' ls 1 
+1 -1.5
+1 2
+e

@@ -1,24 +1,6 @@
 \section{Systolic Loop}
 
 %
-%Q: What data does the Systolic Loop implementation use?
-The \systolicloop{} scheme, as described in
-\SEC{sec:background:subsec:systolic_loop},
-is initialised by allocating 3 arrays of particles of
-size $N/P$ on every process for storing and transferring particles
-along with an array of double precision values of size $3*N/P$ for
-partial results for reduction operations.
-%
-The full system of particles is then
-split roughly evenly across all the processes
-and is held, updated and shared using these three lists.
-
-In this section, the implementation details and performance of
-of the \individualoperation{} and \pairoperation{} methods
-for the \systolicloop{} scheme using MPI will be analysed and discussed.
-
-
-%
 % Systolic individual_operation v0
 %
 
@@ -42,6 +24,7 @@ is implemented by having each process update its local list of particles.
         \vZeroSpeedupCaption
             {\systolicloop{}}
             {\individualoperation{}}
+            {$f(x) = x$}
     }
     \label{fig:v0_systolic_individual_operation_speedups}
 \end{figure}
@@ -51,6 +34,7 @@ is implemented by having each process update its local list of particles.
     {\FIG{fig:v0_systolic_individual_operation_speedups}}
     {\systolicloop{}}
     {\individualoperation{}}
+    {$f(x) = x$}
 
 
 %
@@ -192,6 +176,7 @@ partial updates to their local particles using these packages.
         \vZeroSpeedupCaption
             {\systolicloop{}}
             {\pairoperation{}}
+            {$f(x) = x$}
     }
     \label{fig:v0_systolic_pair_operation_speedups}
 \end{figure}
@@ -201,6 +186,7 @@ partial updates to their local particles using these packages.
     {\FIG{fig:v0_systolic_pair_operation_speedups}}
     {\systolicloop{}}
     {\pairoperation{}}
+    {$f(x) = x$}
 
 The speedup for each system size in 
 \FIG{fig:v0_systolic_pair_operation_speedups}
