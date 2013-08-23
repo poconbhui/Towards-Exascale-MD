@@ -34,7 +34,7 @@ As will be seen, the \velocityverlet{} scheme deviates slightly from
 the loop outlined in \FIG{fig:md_loop_flow_chart} by sandwiching the
 force finding step with two partial integration steps.
 
-\begin{figure}[!h]
+\begin{figure}
     \begin{center}
         \begin{tikzpicture}[node distance = 3.5cm, auto]
             % Place nodes
@@ -84,7 +84,7 @@ temperature and energy
 taken at this stage will not be
 representative of the system being studied.
 
-\begin{figure}[!h]
+\begin{figure}
     \begin{center}
         \begin{tikzpicture}[node distance = 4cm, auto]
             % Place nodes
@@ -139,7 +139,7 @@ the potentials and the physics involved
 
 %
 %Q: What is a potential?
-In a molecular system, each particle generates a potential field
+In an MD system, each particle generates a potential field
 which is present throughout the system.
 %
 A particle has a potential energy determined by the sum
@@ -162,7 +162,7 @@ a particle.
 %
 Several different inter-molecular and intra-molecular potentials may be used
 in a simulation to more accurately model certain underlying behaviours
-\cite{smith1996dl_poly_2}.
+\cite{smith1996dlpoly2}.
 
 
 %
@@ -185,7 +185,7 @@ This equation assumes a scalar potential which is
 a function of the distance between the particles.
 %
 This may be easily extended include terms involving charges.
-%
+
 The equations of motion may then be written
 \begin{equation}
     m_i \vec{a}_i = -\sum_{\substack{j=1\\j\ne{}i}}^N
@@ -195,7 +195,7 @@ The equations of motion may then be written
 
 %
 %Q: What is the Velocity Verlet integration scheme?
-The equations of motion may be discretise and solved numerically
+The equations of motion may be discretised and solved numerically
 by using an appropriate integration scheme.
 %
 Using the \velocityverlet{} integration scheme,

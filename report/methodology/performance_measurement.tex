@@ -65,21 +65,25 @@ I/O is implemented primarily for testing and debugging purposes.
 
 %
 %Q: How accurate will the benchmarked simulations be?
-There is no pretence made of performing accurate simulations in
-the benchmarks performed,
-only that the scheme benchmarked performs calculations and
-communications that may be used to perform an accurate MD simulation.
+As the implementations use particle list decomposition rather
+than domain decomposition, the placement of particles on
+processes is not tied to the simulation.
 %
-The entire step of allowing the system to come to
-thermal equilibrium will therefore be ignored.
+This means, to accurately measure the run time of the system,
+it is not necessary to perform a physically accurate simulation.
 %
-This is primarily to reduce the time required to perform a benchmark.
+Indeed, it is not necessary to perform a simulation at all,
+so each method may be run separately.
 %
-This is not expected to have a significant impact on performance metrics
-as no particle domain specific distributions are dealt with here,
-so the particles having improper positions or velocities is of
-little consequence to the number of operations and communications
-performed on each process.
+As the \individualoperation{} and \pairoperation{} methods will
+be tested separately, the MD simulation steps outlined in
+\FIG{fig:phases_of_md_simulation}
+will not be followed in full.
+%
+In particular, the initialisation and equilibriation steps may
+be skipped.
+%
+The particle distribution may be initialised with arbitrary data.
 
 
 \subsection{Benchmarking Plan}
@@ -95,6 +99,13 @@ $1$, $2$, $4$, $8$, $\dots{}$, $32768$ cores.
 %
 Measurements will be made of the time taken for $n$ repetitions of a given
 method where $n \ge{} 5$ and the time $t \sim{} 1$~second.
+%
+This is performed by timing 5 repetitions of the code.
+%
+If this time is less than 0.1~seconds, the repetition count is
+multiplied by ten, and the code timed again.
+%
+This is repeated until until the time measured is greater than 0.1~seconds.
 %
 These measurements will be taken several times, at different times of
 day and the lowest recorded time used here.
@@ -143,6 +154,7 @@ case communication time.
         Methods Tested & \individualoperation{}, \pairoperation{} \\
         Regimes Tested & Total Time, MPI Only, Calculation Only \\
         Core Range Tested & 1-32768 \\
+        Minimum Measurements & 5 repetitions and 0.1 seconds \\
         \hline
     \end{tabular}
     \caption{

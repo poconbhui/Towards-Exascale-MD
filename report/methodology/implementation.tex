@@ -570,11 +570,11 @@ implementation, and overloads the initialisation and pair operation
 methods.
 
 The initialisation routine is overloaded to ensure that
-$P_{MPI}*P_{OMP} \le{} N$, where $P_{MPI}$ is the number of MPI
-processes the simulation is running on and $P){OMP}$ is the
+$P_{MPI}\times{}P_{OMP} \le{} N$, where $P_{MPI}$ is the number of MPI
+processes the simulation is running on and $P_{OMP}$ is the
 number of requested \openmp{} threads per MPI process.
 %
-If $P_{MPI}*P_{OMP} > N$, the implementation will output an error message
+If $P_{MPI}\times{}P_{OMP} > N$, the implementation will output an error message
 and exit the simulation.
 %
 The implementation then calls the initialisation method of the

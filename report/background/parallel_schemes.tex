@@ -206,7 +206,7 @@ points may not scale well to large numbers of processes.
 
 The \replicateddata{} scheme can be seen in use in MD packages such as
 AMBER \cite{pearlman1995amber}, CHARMM \cite{brooks1983charmm} and
-DL\_POLY \cite{smith1996dl_poly_2}.
+DL\_POLY \cite{smith1996dlpoly2}.
 %
 It is worth noting, however, that these packages are rather old,
 dating before the year 2000.
@@ -372,3 +372,183 @@ GROMACS \cite{berendsen1995gromacs} package which uses a ring
 topology for particle list decomposition.
 %
 However, this was removed in GROMACS 4 \cite{hess2008gromacs}.
+
+
+
+\subsection{Shared And Replicated Data}
+
+The \sharedandreplicateddata{} scheme is implemented in exactly the same
+way as the \replicateddata{} scheme outlined in 
+\SEC{sec:replicated_data_implementation},
+except the force update loop is further
+parallelised using \openmp{} directives, taking advantage of shared
+memory between cores.
+
+The primary motivation for this is to show that mixed mode MPI and \openmp{}
+paralellism is just as viable as MPI only parallelism for a \replicateddata{}
+scheme along with how easily the mixed mode parallelism may be implemented
+on top of an MPI implementation.
+%
+The importance of this is that the maximum system size per core per node
+can be increased in proportion to the number of \openmp{} threads
+created per MPI process, which is of particular importance for nodes with
+particularly high core counts.
+
+In this scheme, the system of particles is replicated across
+$P_{MPI}$ MPI process.
+%
+Each MPI process then spawns $P_{OMP}$ threads, resulting in a total
+of $P_{MPI}\times{}P_{OMP} = P$ threads.
+%
+This provides a similar calculation time to the \replicateddata{} scheme
+of $N^2/P$.
+
+As there are $P_{MPI} = P/P_{OMP}$ processes, communications are
+reduced from $\log{P}$ as in the \replicateddata{} case to
+\begin{equation}
+    \log{P_{MPI}} = \log{P/P_{OMP}} = \log{P} - \log{P_{OMP}}
+\end{equation}
+%
+It is clear that the introduction of \openmp{} threads should
+bring a slight reduction to computation time, albeit a limited one.
+%
+To achieve a reasonable improvement in communications from this method,
+a large number of \openmp{} threads per MPI process would be needed.
+
+Where this scheme provides the most benefit is in data storage considerations.
+%
+Where in the \replicateddata{} case, the maximum system size was a function
+of the number of cores per node, here it is the number of MPI processes
+per node.
+%
+By increasing the number of \openmp{} threads per MPI process,
+the maximum system size possible is increased.
+%
+Indeed, the maximum size is increased in proportion with $P_{OMP}$.
+
+
+Where there were concerns for the \replicateddata{} scheme at exascale
+due to cores per node increasing faster than memory per node,
+this scheme has no such qualms.
+%
+Where more cores per node are introduced,
+more \openmp{} threads per MPI process
+may be introduced with no increase to
+the memory footprint of the program.
+
+
+
+\subsection{Replicated Systolic Loop}
+
+%
+%Q: What is the replicated systolic loop scheme?
+The \replicatedsystolicloop{} scheme is intended to directly improve directly
+upon the \systolicloop{} scheme.
+%
+It takes some inspiration from the \replicateddata{} scheme's approach
+to partitioning workloads.
+%
+However, instead of assigning subsets of the particle list to replicas
+to update, subsets of systolic pulses are assigned.
+
+Given $P$ processes, they are arranged in a cartesian topology of
+approximate size $\sqrt{P} \times{} \sqrt{P}$.
+%
+A systolic loop is then created with the processes
+$(0,0) \rightarrow{} (\sqrt{P}, 0)$
+resulting in a systolic loop with $\sqrt{P}$ systolic elements.
+%
+The system of particles is partitioned across these systolic elements.
+%
+This systolic loop is then replicated on processes
+$(0,1) \rightarrow{} (\sqrt{P}, 1)$.
+%
+It is similarly replicated on processes $(0,y) \rightarrow{} (\sqrt{P},y)$.
+
+The topology may not necessarily be split perfectly into a
+$\sqrt{P} \times{} \sqrt{P}$ grid.
+%
+As such, it will instead be said that the processes are split into a
+$S \times{} R$ grid.
+%
+Each replica systolic loop will have $S$ systolic elements,
+and there will be $R$ replica loops.
+
+
+In this manner, by using $P$ processes, each process should be holdind
+$N/S$ particles.
+%
+This means that, unlike the \replicateddata{} and \sharedandreplicateddata{}
+cases, the only limit to the number of particles that can be simulated
+is how many cores the machine being used has.
+%
+However, unlike the \systolicloop{} case, particles per core grows as
+$N/S$ rather than $N/P$, which means a greater number of processes
+may be needed to partition a large system enough that it fits in memory.
+%
+As $S \times{} R = P$,
+if the system of particles must be partitioned into
+smaller chunks per core,
+it is simply a matter of
+increasing the number of systolic elements per loop and
+reducing the number of replicas.
+
+It can be seen that this scheme requires $S \ge{} R$.
+%
+Similar to the \systolicloop{} scheme, it also requires $N \ge{} S$.
+%
+As a result, assuming $S = R = \sqrt{P}$, this scheme can be run
+with $P = N^2$, which is a large improvement over the \systolicloop{}
+maximum of $P = N$.
+
+
+A time step for a force comparison proceeds as follows:
+each replica is assigned $S/R$ of the $S$ systolic pulses to
+perform.
+%
+Replica $x$, for example, will be assigned the pulses
+$xS/R \rightarrow{} (x+1)S/R$.
+%
+This is performed by having each element of loop $x$ perform an initial
+swap, sending its local list of particles to
+the element $xS/R$ to the ``right'',
+and receiving a list from the element $xS/R$ to the ``left'',
+and then performing $S/R$ pulses.
+
+When each replica performs its $S/R$ pulses, each element
+should have only a partial result, having performed only a subset
+of the pulses.
+%
+Equivalent systolic elements are defined as elements whose
+processor coordinates have the same $y$ value but different $x$ values.
+%
+Each equivalent systolic element should have performed a different
+subset of the necessary pulses, resulting in each equivalent element
+having a different piece of the overall result.
+%
+Equivalent systolic elements communicate to
+reduce these partial results together.
+%
+The resulting reduction should be the result of a full set of systolic pulses
+for that systolic element.
+
+
+Assuming each process is holding $N/S$ particles, then $S/R$
+systolic pulses of $N/S$ particles with a constant latency $l$
+should require a communication time of $\bigO{N/R + S/R}$.
+%
+Where communication latency in the \systolicloop{} scheme produced
+a $\bigO{P}$ scaling term, if the number of replicas used is
+similar to the number of systolic elements, this $\bigO{P}$ term
+becomes $\bigO{1}$.
+%
+Finally, the reduction across equivalent systolic elements of
+$N/S$ particles with a constant latency $l$ results in a
+$\bigO{N\log{R}/S + \log{R}}$ term.
+%
+This is particularly interesting, as the $N\log{R}/S$ term can
+be made to decrease with larger $P$, as $\log{x}/x$ is a decreasing
+function.
+%
+The communication time at large $P$ can therefore be independent
+of the number of particles in the system.

@@ -173,6 +173,26 @@ decrease.
 The decrease in this dominant term may result in an improved
 communication time.
 
+The implementation presented here is used to evaluate direct
+solutions to the equations of motion.
+%
+It would be interesting to see how it fares when it is used in
+conjunction with a truncation scheme.
+%
+Using the $S/R$ ratio considered here, each process could
+keep a verlet list for $2N/\sqrt{P}$ particles, as only one
+or two systolic pulses should be occuring.
+%
+The reduction in calculation time as a result of this may
+provide some more interesting results for the interplay
+of communications and computations.
+%
+It is expected, however, for this scheme to perform better than
+an equivalent \replicateddata{} and \verletlist{} scheme as
+the communication bottleneck here does not appear to grow linearly
+with $N$ and the number of particles to be stored in the \verletlist{}
+should reduce with the number of processes used.
+
 
 \section{Evaluation}
 
@@ -184,6 +204,12 @@ to place the overall performance of these codes.
 %
 This presents a difficulty when attempting to place the timings
 made in terms of realistic values.
+%
+A further problem with placing timings is that timings presented
+are often for schemes including truncation.
+%
+Some information is lost in this dissertation due to the computationally
+intensive calculation performed.
 
 What it does present, however, is how the implementations assembled here
 compare to each other in terms of calculation times and communication times.
@@ -215,31 +241,6 @@ by this scheme.
 %
 However, it is difficult to make any solid conclusions on this based
 on the data presented.
-
-As different simulations may require different functions to be
-performed, resulting in calculations that take different amounts
-of time, taking synchronisation effects as a result of these calculations
-into account in the communication timing may not be
-representitive of the general communication complexity.
-%
-It may therefore be more informative to present the communication
-times neglecting synchronisation times, as has been done here,
-remarking that situations where the total time is greater than
-the sum of the calculation times and the communication times
-that it may be due to synchronisation effects.
-%
-A similar argument can be made for particle sizes, where an implementation
-may use a particle containing more information than the ones used here.
-%
-As MPI will be simply sending $x$ bytes of data representing an
-array of particles, the issue of larger particle data types can be addressed,
-to a certain extent, by looking at how
-communication times vary for different numbers of the particle types used here.
-%
-Communication times for, say $4096$ of the 80~B particles presented here
-may be equivalent to communication times for $512$ 640~B particles.
-%
-Of course, the scope of this application is rather limited.
 
 This dissertation presented the \replicatedsystolicloop{} which is,
 to the best of the author's knowledge, a new approach to the problem.
