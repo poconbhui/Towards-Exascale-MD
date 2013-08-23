@@ -126,3 +126,21 @@ for testing.
 Benchmarks can be run using `scripts/run_benchs.rb`.
 Running `./scripts/run_benchs.rb` should provide a list of allowed
 options.
+
+
+### Structure ###
+
+Parallel schemes are called distributions.
+The replicated data scheme, for example, is implemented in
+the `replicated_distribution` type, which can be found in the
+`replicated_distribution_type` module, available in the file
+`src/replicated_distribution_type.mod.f90`.
+
+Distributions are defined by inheriting from the `abstract_distribution`
+type.
+This provides the `individual_operation` and `pair_operation`
+interfaces which are used to implement an MD simulation.
+
+An example MD application making use of these can be found in
+`src/md.f90`.
+The `bench/bench.f90` is also useful for seeing how these interfaces are used.
