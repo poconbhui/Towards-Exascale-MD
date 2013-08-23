@@ -64,7 +64,7 @@ function compile_N() {
 
         $(compile_N $N) \
             | head -n 1 \
-            | awk '{print $1*$3/$2}'
+            | awk '{print $3/$2}'
     }
 
 
@@ -75,6 +75,8 @@ function compile_N() {
     if [[ $distribution_name == "replicated_systolic" ]] && [[ $bench_name == "individual_operation" ]]; then
         echo 'sqrt(x) title "f(x) = $\\sqrt{x}$" ls 4'
     elif [[ $distribution_name == "replicated" ]] && [[ $bench_name == "individual_operation" ]]; then
+        echo '1 title "f(x) = 1" ls 4'
+    elif [[ $distribution_name == "shared_and_replicated" ]] && [[ $bench_name == "individual_operation" ]]; then
         echo '1 title "f(x) = 1" ls 4'
     else
         echo 'x title "f(x) = x" ls 4'

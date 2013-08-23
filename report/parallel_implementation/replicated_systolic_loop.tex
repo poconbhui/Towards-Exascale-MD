@@ -24,20 +24,14 @@ update its local list of particles.
 \end{figure}
 
 
+%
+%Q: What is the speedup of the Replicated Systolic Loop individual_operation method?
+
 \vZeroSpeedupExplanation
     {\FIG{fig:v1_replicated_systolic_loop_individual_operation_speedups}}
     {\replicatedsystolicloop{}}
     {\individualoperation{}}
     {$f(x) = \sqrt{x}$}
-
-%
-%Q: What is the speedup of the Replicated Systolic Loop individual_operation method?
-
-The speedup in
-\FIG{fig:v1_replicated_systolic_loop_individual_operation_speedups}
-is sublinear by a constant factor.
-%
-The graph suggests the method scales as $\sqrt{P}$.
 
 %
 %Q: What is the expected calculation time of the Replicated Systolic Loop individual_operation method?
@@ -149,7 +143,8 @@ As in the \systolicloop{} case, the MPI scaling terms are nonzero.
 This is could, again, becaused by function call overhead and
 branch evaluations caused by how benchmarking flags have been implemented.
 %
-However, the MPI scaling terms here are approximately constant and negligible.
+Regardless,
+the MPI scaling terms here are approximately constant and negligible.
 
 
 \subsection{The \pairoperation{} Method}
@@ -196,12 +191,13 @@ until $P = N$.
 The most remarkable aspect of this data is that the $N = 512$ system can
 be run up to $4096$ cores while still producing some
 improvement in performance,
-and actually run on $32768$ cores, albeit with a drop
+and actually run on $32768$ cores, albeit with a significant drop
 in performance.
 %
 It appears that the speedup is improved for each system size over all of
-the other parallelisation schemes presented in this dissertation
-and can be run well on an order of magnitude more cores.
+the other parallelisation schemes previously presented
+and can also be run well on an order of magnitude more cores than
+there are particles.
 
 %
 %Q: What is the expected calculation time of the Replicated Systolic Loop pair_operation method?
@@ -255,13 +251,13 @@ After the pulses have been performed, each set of equivalent systolic
 elements reduces their partial results using an \mpiallreduce{}.
 %
 Assuming a tree-like algorithm, this should perform $\log{R}$ communications
-of $N/S$ particles with a constant latency $l$ introducint a time
+of $N/S$ particles with a constant latency $l$ introducing a time
 \begin{equation}
     \label{eqn:replicated_systolic_pair_operation_reduce_time}
     \begin{split}
         \log{(R)}\,\bigO{\frac{N}{S} + l}
             &= \bigO{\log{(R)}\, \left(\frac{N}{S} + l\right)} \\
-            &\approx{} \bigO{\frac{N}{S}\log{R} + \log{R}}
+            &= \bigO{\frac{N}{S}\log{R} + \log{R}}
     \end{split}
 \end{equation}
 %
@@ -272,7 +268,7 @@ the overall communication time is
 \begin{equation}
     \label{eqn:replicated_systolic_pair_operation_communication_time}
     \bigO{\frac{N}{R} + \frac{S}{R}} + \bigO{\frac{N}{S}\log{R}}
-        \approx{}
+        =
         \bigO{\frac{N}{R} + \frac{S}{R} + \frac{N}{S}\log{R} + \log{R}}
 \end{equation}
 
@@ -287,7 +283,7 @@ the overall time for this method to complete a time step should be
     \begin{split}
     \bigO{\frac{N^2}{SR}}
         + \bigO{\frac{N}{R} + \frac{S}{R} + \frac{N}{S}\log{R} + \log{R}} \\
-        \approx{} \bigO{\frac{N^2}{SR}
+        = \bigO{\frac{N^2}{SR}
         + \frac{N}{R} + \frac{S}{R} + \frac{N}{S}\log{R} + \log{R}}
     \end{split}
 \end{equation}
@@ -298,7 +294,8 @@ to the overall time predicted by the \systolicloop{} implementation.
 It can be seen that the $S/R$ term is equivalent to the communication
 term proportional to $P$ in the \systolicloop{} case.
 %
-Replication here tackles this communication term, replacing a term
+Replication here tackles this communication term, previously identified as
+the bottleneck of the \systolicloop{} scheme, replacing the term
 proportional to $P$ with one proportional to $S/R$ and another
 proportional to $(N/S)\log{R}$.
 
@@ -351,14 +348,18 @@ proportional to $(N/S)\log{R}$.
 %Q: Where and why does scaling stop for the Replicated Systolic Loop pair_operation method?
 \FIG{fig:v1_replicated_systolic_pair_operation_512_logtime} shows that
 communications begin to approach calculation times around $N/P = 2$
-and dominate around $N/P = 0.5$,
+and dominate around $N/P = 0.5$.
+%
 \FIG{fig:v1_replicated_systolic_pair_operation_4096_logtime} shows
 communications approaching calculation times around $N/P = 1$ and
-dominating around $N/P = 0.25$ and
+dominating around $N/P = 0.25$.
+%
 \FIG{fig:v1_replicated_systolic_pair_operation_32768_logtime} shows
 communications don't appear to intersect with calculations at all,
 although some small deviation of the total run time from the calculation
 time can be seen starting around $N/P = 2$.
+%
+This may be due to synchronisation issues at such a large core count.
 
 The implementation uses the \mpidimscreate{} function to generate
 the $S\times{}R$ decomposition of $P$.
@@ -403,34 +404,6 @@ appear to support this.
 
 
 \begin{figure}
-    \input{parallel_implementation/log_vs_log_sqrt_p.plt}
-    \caption{
-        Upper plot: The relative scaling of
-        $1/\sqrt{P}\log{\sqrt{P}}$ (red) and
-        $\log{\sqrt{P}}$ (green)
-        over the interval $[1,32768]$.
-        %
-        Lower plot: The relative scaling of
-        $0.1/\sqrt{P}\log{\sqrt{P}} + \log{P}$ (red),
-        $1/\sqrt{P}\log{\sqrt{P}} + \log{P}$ (green) and
-        $10/\sqrt{P}\log{\sqrt{P}} + \log{P}$ (blue)
-        over the interval $[1,32768]$.
-    }
-    \label{fig:log_vs_log_sqrt_p}
-\end{figure}
-
-\FIG{fig:log_vs_log_sqrt_p} presents how the scaling of this term compares
-to the $\log{\sqrt{P}}$ term, and how different sums of the two scale.
-%
-The upper graph suggests that the eventual increase in communication time is
-due to the $\log{\sqrt{P}}$ term, which originates from the latency
-of the communications.
-%
-The lower graph suggests
-how the communication terms for $N = 512$ and $N = 4096$ can
-increase while $N = 32768$ appears to remain remarkably flat.
-
-\begin{figure}
     \input{parallel_implementation/replicated_systolic_comm_fits.plt}
     \caption{
         Communication times for systems of particles of size
@@ -441,7 +414,7 @@ increase while $N = 32768$ appears to remain remarkably flat.
     \label{fig:replicated_systolic_communication_fits}
 \end{figure}
 
-The communication times for the three system sizes and a
+The communication times for the three system sizes along with a
 system of size $N = 262144$ are plotted in
 \FIG{fig:replicated_systolic_communication_fits}
 along with fittings to the suggested trends.
@@ -449,29 +422,25 @@ along with fittings to the suggested trends.
 An interesting note is that the suggested communications complexity
 appears to fit well to the graph, however, appears to be
 missing some parameters.
-%
+
 In particular, the cofactor of the latency term appears to grow
 with the number of particles communicated.
+%
+The communication time at $P = 32768$ cores
+appears to increase by only one order of magnitude across an
+increase of two orders of magnitude in the number of particles in the system
+from $N = 512$ to $N = 32768$.
+%
+However, the change does appear to increase by an order of magnitude between
+$N = 32768$ and $N = 262144$.
 %
 As the latency term should be independent of the number of particles,
 this should remain a constant value.
 %
 This plot would suggest the communications scaling looks closer to
 $\sqrt{N}\log{\sqrt{P}}$.
+%
+There is, however, not enough data present to draw any
+conclusions here.
 
 
-An interesting note is that the communication time at $P = 32768$ cores
-appears to increase by only one order of magnitude over two orders
-of magnitude in the number of particles in the system.
-%
-The cofactor for the $(N/P) (\log{\sqrt{P}}+1)$ for
-$N = 512$ and $N = 4096$ remain within error of each other, although
-there is a jump in the cofactor for $N = 32768$.
-%
-All cofactors, however, are within the same order of magnitude.
-%
-The latency over the three cases appears to be slowly increasing.
-%
-This could signify the use of different communication protocols
-over different message sizes, or extra communication terms that
-have been left out here.

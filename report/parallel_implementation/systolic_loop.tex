@@ -144,7 +144,7 @@ evaluate a flag.
 %
 As previously suggested, this could have the potential to impact on
 operations occuring at scales of $10^{-7}$~s, so it is plausible
-that these effects may occur around $10^-{8}$~s for a much simplified
+that these effects may occur around $10^{-8}$~s for a much simplified
 function body.
 
 
@@ -272,8 +272,8 @@ With $P-1$ pulses on each time step, the communication per timestep should be
         (P-1)\bigO{N/P + l}
             &= \bigO{(N/P + l)(P-1)} \\
             &= \bigO{(N + lP - N/P - l} \\
-            &\approx{} \bigO{N + lP} \\
-            &\approx{} \bigO{N + P}
+            &= \bigO{N + lP} \\
+            &= \bigO{N + P}
     \end{split}
 \end{equation}
 
@@ -284,7 +284,7 @@ should run in a time
 \begin{equation}
     \begin{split}
         \bigO{\frac{N^2}{P}} + \bigO{N + P - N/P}
-            &\approx{} \bigO{\frac{N^2}{P} + N + P - N/P} \\
+            &= \bigO{\frac{N^2}{P} + N + P - N/P} \\
             &= \bigO{\frac{N^2}{P} + P}
     \end{split}
 \end{equation}
@@ -363,6 +363,8 @@ when $N/P = 8$.
 The implimentation ultimately becomes slowed due to
 communication latency caused by a large number
 of systolic pulses per time step.
+%
+It is the major bottlenexk of the scheme.
 %
 When going to much larger numbers of processes
 this implementation may suffer from extra slow down due to

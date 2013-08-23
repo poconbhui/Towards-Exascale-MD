@@ -191,7 +191,7 @@ to determine forces for.
 %
 Given that list of $N/P_{MPI}$ particles,
 an MPI process spawns $P_{OMP}$ threads
-and assigns $1/(P_{MPI} P_{OMP})$ particles to each thread.
+and assigns $N/(P_{MPI} P_{OMP})$ particles to each thread.
 
 Writing
 \begin{equation}
@@ -235,7 +235,7 @@ with a constant latency $l$, resulting in a communication time
     \begin{split}
         \log{(P_{MPI})}\,\bigO{N + l} 
             &= \bigO{\log{(P_{MPI})}\,(N+l)} \\
-            &\approx{} \bigO{N\log{P_{MPI}}}
+            &= \bigO{N\log{P_{MPI}}}
     \end{split}
 \end{equation}
 
@@ -245,7 +245,7 @@ here they grow as $\log{P_{MPI}}$.
 Using the definition of $P$ in \EQN{eqn:p_eq_pmpi_pomp} for the
 \sharedandreplicateddata{} scheme, it can be seen that
 \begin{equation}
-    \log{P} = \log{P_{MPI}P_{OMP}} = \log{P_{MPI}} + \log{P_{OMP}}
+    \log{P_{MPI}} = \log{P/P_{OMP}} = \log{P} - \log{P_{OMP}}
 \end{equation}
 %
 As a result, using $P_{OMP}$ threads per MPI process should provide
@@ -345,11 +345,9 @@ angle here than in the \replicateddata{} case.
 This results in a very slightly improved speedup.
 
 What is worth noting, however, is that this implementation performs
-at least as well as the \replicateddata{} implementation, required
-the inclusion of just one default \openmp{} directive and
-is now capable of holding an order of magnitude more particles on
-a compute node.
+at least as well as the \replicateddata{} implementation.
 %
-The scaling results here suggest that with more cores available to the
-implementation, running system sizes at the limit of what can fit on
+It required the inclusion of just one default \openmp{} directive and
+is now capable of holding an order of magnitude more particles on
+a compute node by simply assigning 10 \openmp{} threads per MPI process.
 a node may be feasible to run.

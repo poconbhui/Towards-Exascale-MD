@@ -261,7 +261,7 @@ resulting in a communication time of
     \begin{split}
         \log{(P)}\,\bigO{N + l}
             &= \bigO{(N+l)\log{P}} \\
-            &\approx{} \bigO{N\log{P}}
+            &= \bigO{N\log{P}}
     \end{split}
 \end{equation}
 
@@ -270,7 +270,7 @@ resulting in a communication time of
 The overall execution time of this method should therefore be
 \begin{equation}
     \bigO{\frac{N^2}{P}} + \bigO{N\log{P}}
-        \approx{} \bigO{\frac{N^2}{P} + N\log{P}}
+        = \bigO{\frac{N^2}{P} + N\log{P}}
         \label{eqn:v0_replicated_pair_operation_overall_time}
 \end{equation}
 

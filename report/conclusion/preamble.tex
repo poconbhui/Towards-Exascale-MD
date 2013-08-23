@@ -48,58 +48,15 @@ The steps taken to determine the bottlenecks were:
 \end{itemize}
 
 
-\section{Findings}
-
-It was found for the \replicateddata{} and the \sharedandreplicateddata{}
-implementations that
-data transfer between MPI processes was the greatest bottleneck.
-%
-It was found for the \systolicloop{} and the \replicatedsystolicloop{}
-implementations that
-communication latency between MPI processes was the greatest bottleneck.
-%
-The \replicatedsystolicloop{} also noticed some overhead in the total
-calculation time at core counts
-nearing $P = 32768$ that could not be explained by the calculation time
-and the MPI communications time on their own, suggesting potential
-synchronisation effects.
-
-The proposed \sharedandreplicateddata{} scheme was found to perform at
-least as well as the \replicateddata{} scheme.
-%
-It was  shown to require
-an amount of memory inversely proportional to the number of
-\openmp{} threads per MPI process used.
-%
-It also displayed a small improvement in performance due to
-reduced MPI communications for similar total core counts.
-
-The proposed \replicatedsystolicloop{} scheme was found to directly
-improve upon both the \replicateddata{} and \systolicloop{} schemes.
-%
-It was shown that the memory requirements were comparable to
-the \systolicloop{} scheme, with memory per core as $N/\sqrt{P}$,
-meaning it was suitable for running data sets that are to large to
-fit on any one node.
-%
-It also displayed a marked improvement in communication times,
-approaching $\log{\sqrt{P}}$ at large $P$.
-
-
-\section{Recommendations}
-
 This dissertation presents a very simple improvement that can be
 made to an MPI implementation of the \replicateddata{} scheme to 
 immediately reduce the overheads of data storage and MPI
 communications.
 %
-It would be surprising to find any reasonable implementation of the
-\replicateddata{} scheme without this optimisation in place.
-%
 Considering only one unoptimised \openmp{} directive was added to
-one loop, it is a very minimal improvement to make.
+one loop, it is a very minimal change to make.
 
-The dissertation also proposes the \replicatedsystolicloop{}.
+The dissertation proposes the \replicatedsystolicloop{}.
 %
 Given the $\log{\sqrt{P}}$ scaling of this implementation, and the
 improvement on memory requirements per node over the \replicateddata{}
@@ -114,9 +71,6 @@ reduction is performed across distinct sets of communicators.
 %
 It may be possible to take advantage of this topology to gain
 improvements in communication times.
-%
-However, given the relative conceptual complexity over the \replicateddata{}
-scheme, implementation is less obvious.
 
 Where a \systolicloop{} implementation exists, much of the code can
 be reused, requiring only minor changes.
@@ -133,6 +87,46 @@ fewer pulses.
 %
 The \replicatedsystolicloop{} then includes an \mpiallreduce{} to determine
 the final value.
+
+
+
+\section{Findings}
+
+It was found for the \replicateddata{} and the \sharedandreplicateddata{}
+implementations that
+data transfer between MPI processes was the greatest bottleneck.
+%
+It was found for the \systolicloop{} and the \replicatedsystolicloop{}
+implementations that
+communication latency between MPI processes was the greatest bottleneck.
+%
+The bottleneck presented by the \systolicloop{} scheme was in
+the number of pulses performed per time step.
+%
+For the \replicatedsystolicloop{}, this was in the reduction across
+equivalent systolic elements.
+
+The proposed \sharedandreplicateddata{} scheme was found to perform at
+least as well as the \replicateddata{} scheme.
+%
+It was  shown to require
+an amount of memory inversely proportional to the number of
+\openmp{} threads per MPI process used.
+%
+It also displayed a small improvement in performance due to
+reduced MPI communications for similar total core counts.
+
+The proposed \replicatedsystolicloop{} scheme was found to directly
+improve upon both the \replicateddata{} and \systolicloop{} schemes.
+%
+It was shown that the memory requirement scaling was similar to
+the \systolicloop{} scheme, with memory per core as $N/\sqrt{P}$,
+meaning it was suitable for running data sets that are to large to
+fit on any one node.
+%
+It also displayed a marked improvement in communication times,
+approaching $\log{\sqrt{P}}$ at large $P$.
+
 
 
 \section{Future Work}
@@ -205,19 +199,12 @@ to place the overall performance of these codes.
 This presents a difficulty when attempting to place the timings
 made in terms of realistic values.
 %
-A further problem with placing timings is that timings presented
-are often for schemes including truncation.
+A further problem with placing these timings is that timings presented
+for real-world code are often for schemes including truncation.
 %
-Some information is lost in this dissertation due to the computationally
-intensive calculation performed.
+As a result some information is lost in this dissertation due to
+the computationally intensive calculation performed.
 
-What it does present, however, is how the implementations assembled here
-compare to each other in terms of calculation times and communication times.
-%
-In particular, it identified that the scaling of a similarly implemented
-\systolicloop{} scheme will be worse than that of a \replicateddata{}
-scheme at large core counts.
-%
 As the focus here was not on implementing particularly performant
 MD simulations, but rather evaluating the bottlenecks of particular
 parallel schemes, any comparison to the times of real-world code
@@ -225,6 +212,9 @@ would not be interesting.
 %
 As a result, the overall time of the code is less interesting than
 the trends produced by the timings.
+%
+Here, these trends have been presented in a way that the
+implementations may be directly compared to one another.
 
 The communication times presented here take only data transfer and
 latency times into account.
@@ -233,7 +223,7 @@ Indeed, in the strong scaling graphs for the \replicatedsystolicloop{}
 scheme, it was seen that the total time began to deviate from the
 calculation time for large $P$, dispite the fact that the measured
 communication times were almost an order of magnitude lower than
-either time.
+either the total or the calculation times.
 %
 It was suggested that this may be due to processes waiting at
 synchronisation barriers, namely at the \mpiallreduce{} used
@@ -252,5 +242,6 @@ It also proposes a communications scheme that improve upon that
 of the \replicateddata{} scheme.
 %
 The data gathered suggests that the communication time at high core
-counts is not directly proportional to the number of particles in
+counts scale as $\log{\sqrt{P}}$ and scales sublinearly with the
+number of particles.
 the system, and may be mostly latency based.

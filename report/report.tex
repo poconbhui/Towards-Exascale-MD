@@ -56,7 +56,64 @@
 %
 
 \begin{abstract}
-Nothing so far.
+Computer experiments are becoming increasingly important in
+scientific research.
+%
+In fields such as material science and biophysics, computer models
+of atomic and molecular systems present a rich source of
+information.
+%
+Molecular Dynamics (MD) is one tool for generating these computer models.
+
+There is a constant strive to simulate ever larger molecular systems
+using MD.
+%
+Given a simple formulation of an atomic system suggests a
+$\bigO{N^2}$ algorithm, increasing simulation sizes is not
+a straightforward task.
+%
+To this end, many approximations of they physics involved exist that
+can dramatically reduce the time complexity of these simulations.
+%
+However, these approximations represent potential sources of error
+in the already chaotic equations of motion for these systems.
+
+This work attempts to determine just how far parallelisation alone
+can improve an MD application.
+%
+In particular, it strives to find where the bottlenecks exist for
+four parallel schemes which integrate the equations of motion for
+an MD simulation without approximations.
+%
+Two of these schemes are the familiar \replicateddata{} and
+\systolicloop{} schemes.
+%
+The third is referred to in this work as the \sharedandreplicateddata{}
+scheme, representing a hybrid replicated and shared memory scheme.
+%
+The fourth, presented here, is referred to as the \replicatedsystolicloop{},
+which is based on the \systolicloop{} scheme, taking inspiration from
+the \replicateddata{} scheme by using replica systolic loops to
+reduce the number of pulses any one systolic loop performs.
+
+The bottleneck in the \replicateddata{} scheme was found to be
+the amount of data being transferred and the number of MPI processes
+being communicated to.
+%
+This was addressed by the \sharedandreplicateddata{} scheme by
+using shared memory to reduce the number of MPI communications
+necesary.
+%
+This scheme also addressed some of the memory usage issues involved
+with the \replicateddata{} scheme.
+
+The bottleneck in the \systolicloop{} scheme was found to be the
+number of pulses performed, as a result of communication latency.
+%
+This was addressed by the \replicatedsystolicloop{} scheme by
+using replica loops to reduce the number of systolic pulses each
+loop performed.
+
 \end{abstract}
 
 
@@ -69,7 +126,7 @@ Nothing so far.
 %
 
 \tableofcontents
-%\listoftables
+\listoftables
 \listoffigures
 
 
@@ -89,7 +146,20 @@ Nothing so far.
 
 \section*{Acknowledgements}
 
-Nothing so far.
+I would like to thank my supervisor, Dr. Antonia Collis, without whom
+I would still be completely incapable of writing a reasonable scientific
+document.
+%
+Her guidance throughout the project, steering me back on track when I
+needed steering, and giving me the advice I needed when I needed it,
+were instrumental to the existance of this document.
+
+Thanks go out to friends and family for their love and support
+over the last 12 months. 
+
+I must also thank my parents, in particular,
+for bankrolling me all the way here.
+
 
 
 \end{titlepage}
