@@ -6,7 +6,7 @@
 #
 
 # Set up pdflatex command
-pdflatex=./latexmk.pl -pdf -g \
+pdflatex=./latexmk.pl -pdf $(LATEX_FLAGS)\
     -latexoption=-file-line-error \
     -latexoption=-halt-on-error \
     -latexoption=-interaction=nonstopmode
