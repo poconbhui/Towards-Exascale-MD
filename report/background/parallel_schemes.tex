@@ -34,7 +34,7 @@ each process is smaller than the cutoff distance.
 
 Another suggestion is to have each process approximate, for example,
 the charges of all the particles local to it as a single point charge
-at the center of its region of space.
+at the centre of its region of space.
 %
 Processes then gather the positions and charges of these point charges
 created by every other process and incorporate them into the equations
@@ -67,7 +67,7 @@ later implemented and their performance analysed.
 %
 They are the \replicateddata{} and \systolicloop{} schemes.
 %
-Two further schemes in spired by these, \sharedandreplicateddata{} and the
+Two further schemes inspired by these, \sharedandreplicateddata{} and the
 \replicatedsystolicloop{}, will also be discussed here and
 later be implemented and analysed.
 
@@ -379,7 +379,7 @@ parallelised using \openmp{} directives, taking advantage of shared
 memory between cores.
 
 The primary motivation for this is to show that mixed mode MPI and \openmp{}
-paralellism performs just as well as MPI only parallelism for a
+parallelism performs just as well as MPI only parallelism for a
 \replicateddata{} and is quite easily implemented.
 %
 The importance of this is that the maximum system size that can
@@ -444,7 +444,7 @@ to partitioning workloads.
 However, instead of assigning subsets of the particle list to replicas
 to update, subsets of systolic pulses are assigned.
 
-Given $P$ processes, they are arranged in a cartesian topology of
+Given $P$ processes, they are arranged in a Cartesian topology of
 approximate size $\sqrt{P} \times{} \sqrt{P}$.
 %
 A systolic loop is then created with the processes

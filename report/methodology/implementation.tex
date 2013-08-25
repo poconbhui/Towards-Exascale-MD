@@ -48,7 +48,7 @@ are separated from the routine for combining all of these
     \end{tikzpicture}
     \end{center}
     \caption{
-        Overview of the \abstractdistribution{} class and inheritence tree.
+        Overview of the \abstractdistribution{} class and inheritance tree.
     }
 \end{figure}
 
@@ -282,7 +282,7 @@ An example of an MD simulation using this model is provided in
 %
 Presented is an example of creating a distribution,
 initialising the particles in the simulation,
-and perfrming an MD update loop.
+and performing an MD update loop.
 
 
 \begin{lstlisting}[
@@ -433,7 +433,7 @@ and exit the simulation.
 Each process will allocate a list of $N$ particles here.
 
 The \individualoperation{} method is implemented by having each process update
-its local list of particles wth the input function.
+its local list of particles with the input function.
 %
 No communications are performed in this method.
 
@@ -573,7 +573,7 @@ its list of local particles with these fully reduced values.
 %
 %Q: How is the shared and replicated data scheme implemented?
 The shared and replicated distribution is an implementation of the
-shared and replcated data scheme.
+shared and replicated data scheme.
 %
 This implementation inherits directly from the replicated data
 implementation, and overloads the initialisation and pair operation
@@ -657,14 +657,14 @@ dimension.
 These dimensions will correspond to the sizes of $S$ and $R$ for
 the replicated systolic scheme.
 %
-This communicator is used to create a 2d cartesian communicator whose
+This communicator is used to create a 2d Cartesian communicator whose
 dimensions are derived from the 2d decomposition that has been generated.
 
-This cartesian communicator is then queried to find the coordinates of
+This Cartesian communicator is then queried to find the coordinates of
 the process.
 %
-Processes will then use \mpicommsplit{} on the cartesian communicator
-to create a new communicator using their $x$ coordinate as the color.
+Processes will then use \mpicommsplit{} on the Cartesian communicator
+to create a new communicator using their $x$ coordinate as the colour.
 %
 This new communicator should be of size $S$ and
 is stored in an instance variable as the local ring communicator.
@@ -672,9 +672,9 @@ is stored in an instance variable as the local ring communicator.
 Properties of the local ring communicator such as the processes rank
 and the number of processes are stored as instance variables.
 
-Processes will then use \mpicommsplit{} on the cartesian communicator
+Processes will then use \mpicommsplit{} on the Cartesian communicator
 again, but this time use their rank in the local ring communicator as
-the color.
+the colour.
 %
 In this manner, each process representing systolic element $i$ should
 be represented by this communicator.

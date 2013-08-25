@@ -18,7 +18,7 @@ As such, it closely resembles the example serial implementation.
 This unparallelised approach involves more computation than
 having each process evaluate a subsection of the list and
 share the result with the other processes,
-but it avoids a global synchronization.
+but it avoids a global synchronisation.
 
 
 %
@@ -73,7 +73,7 @@ branch evaluations as a result of evaluating benchmarking flags
 within the code.
 %
 %Q:What is the expected overall time of the Replicated Data individual_operation method?
-As a result, the overall time is ecpexted to take a time
+As a result, the overall time is expected to take a time
 \begin{equation}
     \bigO{N} + \bigO{1} = \bigO{N}
 \end{equation}
@@ -157,7 +157,7 @@ The jumps occur at the same numbers of processes in
 and after 8 processes, the time remains roughly constant.
 %
 This suggests either a latency effect with processes accessing memory
-in other \numa{} regions or a memory bandwith effect.
+in other \numa{} regions or a memory bandwidth effect.
 %
 Given that the effect scales roughly with the number of particles
 in the system, at fixed core counts, it is most likely due to
@@ -255,7 +255,7 @@ After the each process finishes updating it's section of the list,
 the updated sections of lists are shared across processes using
 an \mpiallgatherv{}.
 Assuming this uses a tree-like algorithm, this should perform
-$\log{P}$ communications of $N$ particles with a constant latancy $l$
+$\log{P}$ communications of $N$ particles with a constant latency $l$
 resulting in a communication time of
 \begin{equation}
     \begin{split}

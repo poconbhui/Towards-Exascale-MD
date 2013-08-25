@@ -90,13 +90,13 @@ representative of the system being studied.
         \begin{tikzpicture}[node distance = 4cm, auto]
             % Place nodes
             \node [block] (init) {Initialise simulation};
-            \node [block, right of=init] (equilibriate) {Equilibriate system};
-            \node [block, right of=equilibriate] (perform) {
+            \node [block, right of=init] (equilibrate) {Equilibrate system};
+            \node [block, right of=equilibrate] (perform) {
                 Simulate and measure system
             };
             % Place paths
-            \path [line] (init) -- (equilibriate);
-            \path [line] (equilibriate) -- (perform);
+            \path [line] (init) -- (equilibrate);
+            \path [line] (equilibrate) -- (perform);
         \end{tikzpicture}
     \end{center}
     \caption{The phases of a classical MD simulation}
@@ -243,7 +243,7 @@ As can be seen from
 this produces an $\bigO{N^2}$ algorithm per time step
 when used with a \twobody{} potential as
 determining each of the $N$ accelerations $\vec{a}_i$ involves
-perforing a summation over $N-1$ positions $\vec{x}_j$.
+performing a summation over $N-1$ positions $\vec{x}_j$.
 
 %
 %Q: What time step do we need for the VV scheme?
@@ -394,7 +394,7 @@ of the simulation are large enough to avoid finite size effects
 \cite[p.~220]{frenkel2001understanding}.
 %
 However, a detailed discussion about effects introduced by
-truncation and boundary conditions are outide the scope of
+truncation and boundary conditions are outside the scope of
 this dissertation.
 
 %
@@ -455,11 +455,11 @@ thermodynamic variables or to simulate general trends
 \cite[p.~399]{schlick2010molecular}.
 
 Overzealous truncation may lead to a simulation that supposes to
-model a particular system of particles, but instead overapproximates
+model a particular system of particles, but instead over-approximates
 the physics involved and produces incorrect results.
 %
 However, overzealous truncation may be necessary to run a simulation
-within a reasonable timeframe.
+within a reasonable time frame.
 %
 By increasing this cutoff distance, the accuracy of a simulation may
 by slightly improved.

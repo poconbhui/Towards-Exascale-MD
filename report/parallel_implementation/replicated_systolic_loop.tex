@@ -3,7 +3,7 @@
 
 \subsection{The \individualoperation{} Method}
 
-The \individualoperation{} method is impleemnted by having each process
+The \individualoperation{} method is implemented by having each process
 update its local list of particles.
 
 %
@@ -124,7 +124,7 @@ Along with
 they also show polynomial scaling, consistent with a $\sqrt{P}$ scaling.
 
 The implementation uses the \mpidimscreate{} function to generate a
-cartesian topology.
+Cartesian topology.
 %
 This function attempts to create a 2d decomposition to $S \times{} R$
 processes from the supplied $P$ processes where $S$ and $R$ are roughly
@@ -140,7 +140,7 @@ explains why the general scaling trend follows $\sqrt{P}$.
 
 As in the \systolicloop{} case, the MPI scaling terms are nonzero.
 %
-This is could, again, becaused by function call overhead and
+This is could, again, be caused by function call overhead and
 branch evaluations caused by how benchmarking flags have been implemented.
 %
 Regardless,

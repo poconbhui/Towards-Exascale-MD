@@ -131,7 +131,7 @@ approaching $\log{\sqrt{P}}$ at large $P$.
 
 \section{Future Work}
 
-The \replicatedsystolicloop{} presented here may be of perticular
+The \replicatedsystolicloop{} presented here may be of particular
 interest for future work.
 %
 In this dissertation, the placement of processes to take advantage
@@ -174,8 +174,8 @@ It would be interesting to see how it fares when it is used in
 conjunction with a truncation scheme.
 %
 Using the $S/R$ ratio considered here, each process could
-keep a verlet list for $2N/\sqrt{P}$ particles, as only one
-or two systolic pulses should be occuring.
+keep a \verletlist{} for $2N/\sqrt{P}$ particles, as only one
+or two systolic pulses should be occurring.
 %
 The reduction in calculation time as a result of this may
 provide some more interesting results for the interplay
@@ -221,7 +221,7 @@ latency times into account.
 %
 Indeed, in the strong scaling graphs for the \replicatedsystolicloop{}
 scheme, it was seen that the total time began to deviate from the
-calculation time for large $P$, dispite the fact that the measured
+calculation time for large $P$, despite the fact that the measured
 communication times were almost an order of magnitude lower than
 either the total or the calculation times.
 %

@@ -115,7 +115,7 @@ As can be seen from
 \FIG{fig:v0_replicated_individual_operation_512_time},
 \FIG{fig:v0_replicated_individual_operation_4096_time} and
 \FIG{fig:v0_replicated_individual_operation_32768_time}
-the performace scaling does indeed scale as $\bigO{N}$, as expected
+the performance scaling does indeed scale as $\bigO{N}$, as expected
 and exactly in line with the performance scaling results of the
 \individualoperation{} method in the \replicateddata{} scheme.
 
@@ -231,7 +231,7 @@ gathering and distributing the data, this should perform
 $\log{P_{MPI}}$ communications of approximately $N$ particles
 with a constant latency $l$, resulting in a communication time
 \begin{equation}
-    \label{eqn:shared_andreplicated_communication_time}
+    \label{eqn:shared_and_replicated_communication_time}
     \begin{split}
         \log{(P_{MPI})}\,\bigO{N + l} 
             &= \bigO{\log{(P_{MPI})}\,(N+l)} \\
@@ -262,7 +262,7 @@ but noticeable improvement.
 %Q: What is the expected overall time of the Shared And Replicated Data pair_operation method?
 Combining
 \EQN{eqn:shared_and_replicated_calculation_time} and
-\EQN{eqn:shared_andreplicated_communication_time},
+\EQN{eqn:shared_and_replicated_communication_time},
 the overall execution time is expected to be
 \begin{equation}
     \label{eqn:shared_and_replicated_data_overall_time}
@@ -337,7 +337,7 @@ This is in a similar place to
 \FIG{fig:v0_replicated_pair_operation_512_logtime},
 \FIG{fig:v0_replicated_pair_operation_4096_logtime} and
 \FIG{fig:v0_replicated_pair_operation_32768_logtime}
-representing this method for the \replicateddata{} implementaiton.
+representing this method for the \replicateddata{} implementation.
 %
 However, the communications tend to pass slightly later and at a shallower
 angle here than in the \replicateddata{} case.
