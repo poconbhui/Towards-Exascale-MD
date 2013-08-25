@@ -14,7 +14,10 @@ make_subdirs = parallel_implementation
 #
 # Compile subdirs and the report
 #
-all: $(make_subdirs) report.pdf
+all: $(make_subdirs) report presentation
+
+report: report.pdf
+presentation: presentation.pdf
 
 
 
@@ -63,6 +66,14 @@ report.tex = \
 # Compile report
 report.pdf: $(report.tex)
 	$(pdflatex) report.tex
+
+
+presentation.tex = \
+	presentation.tex
+
+# Compile presentation
+presentation.pdf: $(presentation.tex)
+	$(pdflatex) presentation.tex
 
 
 # Compile data in subdirs

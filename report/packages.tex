@@ -7,9 +7,13 @@
 \usepackage{graphics}
 \usepackage{graphicx}
 
-\usepackage{epcc}
+\ifx\noepcc\undefined
+    \usepackage{epcc}
+\fi
 
-\usepackage[usenames, svgnames]{xcolor}
+\ifx\noxcolor\undefined
+    \usepackage[usenames, svgnames]{xcolor}
+\fi
 \usepackage{listings}
 
 \usepackage{enumitem}
