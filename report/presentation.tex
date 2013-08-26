@@ -6,6 +6,8 @@
 \input{packages}
 \input{styles}
 
+\usepackage{rotating}
+
 \title[Exascale MD]{Towards Exascale Molecular Dynamics}
 \author[P. O Conbhui]{P\'{a}draig \'{O} Conbhu\'{\i}}
 \date[August 2013]{August 27, 2013}
@@ -15,6 +17,10 @@
 \begin{frame}[plain]
     \titlepage
 \end{frame}
+
+%\begin{frame}
+%    \tableofcontents
+%\end{frame}
 
 % Introduction to MD
 % Introduction to Truncation, Chaos
@@ -26,44 +32,27 @@
 
 \section{Introduction to MD}
 
-\begin{frame}{The Hamiltonian}
-    Hamiltonian for twobody potential:
-    \begin{equation}
-        H = \sum_{i=1}^N \frac{\vec{p}_i^{,2}}{2 m}
-            + \sum_{i=1}^N \sum_{j<i}^N V(\vec{x}_i, \vec{x}_j)
-    \end{equation}
-    
-    Equations of Motion:
-    \begin{equation}
-        m_i \vec{a}_i = -\sum_{\substack{j=1\\j\ne{}i}}^N
-                        \vec{\nabla}_i V(\vec{x}_i, \vec{x}_j)
-    \end{equation}
-\end{frame}
-
 
 \begin{frame}{The Velocity Verlet Algorithm}
+    System of particles interacting under \twobody{} potential.
+
     Discretisation using the \velocityverlet{} scheme:
-    \begin{subequations}
-    \label{eqn:velocity_verlet_scheme}
-    \begin{align}
-        \vec{v}_i(t + \tfrac{1}{2} h) &=
-            \vec{v}_i(t) + \tfrac{1}{2}\vec{a}_i h
-        \label{eqn:velocity_verlet_v1_update}
-        \\
-        \vec{x}_i(t + h) &=
-            \vec{x}_i(t) + \vec{v}_i(t + \tfrac{1}{2} h) h
-        \label{eqn:velocity_verlet_position_update}
-        \\
-        m_i \vec{a}_i(t + h) &=
-            - \sum_{\substack{j=1\\j\ne{}i}}^N
-                \vec{\nabla}_i V(\vec{x}_i(t+h), \vec{x}_j(t+h))
-        \label{eqn:velocity_verlet_force_eval}
-        \\
-        \vec{v}_i(t+h) &=
-            \vec{v}_i(t + \tfrac{1}{2} h) + \tfrac{1}{2} \vec{a}_i(t + h) h
-        \label{eqn:velocity_verlet_v2_update}
-    \end{align}
-    \end{subequations}
+    \begin{equation*}
+        \begin{split}
+            \vec{v}_i(t + \tfrac{1}{2} h) &=
+                \vec{v}_i(t) + \tfrac{1}{2}\vec{a}_i h
+            \\
+            \vec{x}_i(t + h) &=
+                \vec{x}_i(t) + \vec{v}_i(t + \tfrac{1}{2} h) h
+            \\
+            m_i \vec{a}_i(t + h) &=
+                - \sum_{\substack{j=1\\j\ne{}i}}^N
+                    \vec{\nabla}_i V(\vec{x}_i(t+h), \vec{x}_j(t+h))
+            \\
+            \vec{v}_i(t+h) &=
+                \vec{v}_i(t + \tfrac{1}{2} h) + \tfrac{1}{2} \vec{a}_i(t + h) h
+        \end{split}
+    \end{equation*}
 
     Force evaluation $\rightarrow{}$ $\bigO{N^2}$ per time step.
 \end{frame}
@@ -266,6 +255,220 @@
             $\bigO{(S/R)(N/S)^2} = \bigO{N^2/(SR)} = \bigO{N^2/P}$
         \item Communications: $\bigO{N/R + S/R + (N/S)\log{R} + \log{R}}$
     \end{itemize}
+\end{frame}
+
+
+\section{Implementation}
+
+\newcommand{\ADuml}{
+    \begin{tikzpicture}[node distance=3.5cm]
+        \umlclass{particle}
+            {
+                double precision :: pos(Ndim) \\
+                double precision :: vel(Ndim) \\
+                double precision :: force(Ndim) \\
+                double precision :: mass
+            }{}
+        \umlclass[y=-5, type=abstract]{abstract\_distribution}
+            {
+                type(particle), allocatable :: particles(:)
+            }{
+                individual\_operation \\
+                pair\_operation
+            }
+        \umlaggreg[mult2=1..N, mult1=1]
+            {abstract\_distribution}{particle}
+        \umlemptyclass[y=-8.9, x=-3]{replicated\_distribution}
+        \umlemptyclass[y=-12.5, x=-3]{shared\_and\_replicated\_distribution}
+        \umlemptyclass[y=-8.9, x=4.05]{systolic\_distribution}
+        \umlemptyclass[y=-11, x=4.1]{replicated\_systolic\_distribution}
+        \umlreal[geometry=-|]{replicated\_distribution}{abstract\_distribution}
+        \umlreal[geometry=-|]{systolic\_distribution}{abstract\_distribution}
+        \umlinherit[geometry=-|]
+            {shared\_and\_replicated\_distribution}{replicated\_distribution}
+        \umlreal[geometry=-|]
+            {replicated\_systolic\_distribution}{abstract\_distribution}
+    \end{tikzpicture}
+}
+
+\begin{frame}{The Abstract Distribution}
+    \begin{center}
+        \scalebox{0.5}{
+            \ADuml{}
+        }
+    \end{center}
+\end{frame}
+
+
+\section{Analysis}
+
+\begin{frame}{Speedup Comparisons}
+    \def\graphwidth{0.44\textwidth}
+    %
+    \begin{tabular}{c | c}
+        \begin{minipage}{\graphwidth}
+            \begin{center}
+                Replicated Data \\
+                %
+                \resizebox{\textwidth}{!}{
+                    \input{%
+                        parallel_implementation/v0/%
+                        replicated.pair_operation.logspeedup.plt%
+                    }
+                }
+            \end{center}
+        \end{minipage}
+        &
+        \begin{minipage}{\graphwidth}
+            \begin{center}
+                Systolic Loop \\
+                %
+                \resizebox{\textwidth}{!}{
+                    \input{%
+                        parallel_implementation/v0/%
+                        systolic.pair_operation.logspeedup.plt%
+                    }
+                }
+            \end{center}
+        \end{minipage}
+        \\
+        \hline
+        \\
+        \begin{minipage}{\graphwidth}
+            \begin{center}
+                Shared And Replicated Data \\
+                %
+                \resizebox{\textwidth}{!}{
+                    \input{%
+                        parallel_implementation/v1/%
+                        shared_and_replicated.pair_operation.logspeedup.plt%
+                    }
+                }
+            \end{center}
+        \end{minipage}
+        &
+        \begin{minipage}{\graphwidth}
+            \begin{center}
+                Replicated Systolic Loop \\
+                %
+                \resizebox{\textwidth}{!}{
+                    \input{%
+                        parallel_implementation/v1/%
+                        replicated_systolic.pair_operation.logspeedup.plt%
+                    }
+                }
+            \end{center}
+        \end{minipage}
+    \end{tabular}
+\end{frame}
+
+
+\newcommand{\graphslides}[5]{
+%    \begin{frame}{#1 - Speedup Vs. Cores}
+%        \resizebox{\textwidth}{!}{
+%            \input{%
+%                parallel_implementation/#2/%
+%                #3.pair_operation.logspeedup.plt%
+%            }
+%        }
+%    \end{frame}
+
+    \begin{frame}{#1 - Time Vs. Cores}
+        \def\graphwidth{0.28\textwidth}
+        \def\opnameheight{2cm}
+        %
+        \begin{tabular}{ l | c | c | c}
+            & $N = 512$ & $N = 4096$ & $N = 32768$ \\
+            \hline
+                \begin{sideways}
+                    \parbox{\opnameheight}{
+                        Individual\\Operation
+                    }
+                \end{sideways}
+                &
+                \resizebox{\graphwidth}{!}{
+                    \input{%
+                        parallel_implementation/#2/%
+                        #3.individual_operation.512.#4.plt%
+                    }
+                }
+                &
+                \resizebox{\graphwidth}{!}{
+                    \input{%
+                        parallel_implementation/#2/%
+                        #3.individual_operation.4096.#4.plt%
+                    }
+                }
+                &
+                \resizebox{\graphwidth}{!}{
+                    \input{%
+                        parallel_implementation/#2/%
+                        #3.individual_operation.32768.#4.plt%
+                    }
+                }
+                \\
+            \hline
+                \begin{sideways}
+                    \parbox{\opnameheight}{
+                        Pair\\Operation
+                    }
+                \end{sideways}
+                &
+                \resizebox{\graphwidth}{!}{
+                    \input{%
+                        parallel_implementation/#2/%
+                        #3.pair_operation.512.#5.plt%
+                    }
+                }
+                &
+                \resizebox{\graphwidth}{!}{
+                    \input{%
+                        parallel_implementation/#2/%
+                        #3.pair_operation.4096.#5.plt%
+                    }
+                }
+                &
+                \resizebox{\graphwidth}{!}{
+                    \input{%
+                        parallel_implementation/#2/%
+                        #3.pair_operation.32768.#5.plt%
+                    }
+                }
+        \end{tabular}
+    \end{frame}
+}
+
+\graphslides
+    {Replicated Data}
+    {v0}{replicated}
+    {time}{logtime}
+
+\graphslides
+    {Shared And Replicated Data}
+    {v1}{shared_and_replicated}
+    {time}{logtime}
+
+\graphslides
+    {Systolic Loop}
+    {v0}{systolic}
+    {logtime}{logtime}
+
+\graphslides
+    {Replicated Systolic Loop}
+    {v1}{replicated_systolic}
+    {logtime}{logtime}
+
+\begin{frame}{Replicated Systolic Loop - Communications Vs. Cores}
+    \begin{center}
+        \resizebox{0.7\textwidth}{!}{
+            \input{parallel_implementation/replicated_systolic_comm_fits.plt}
+        }
+    \end{center}
+
+    Plots fitted to
+    \begin{equation*}
+        a\times{}\frac{N}{\sqrt{P}}\log{\sqrt{P}} + b\times{}\log{\sqrt{P}}
+    \end{equation*}
 \end{frame}
 
 \end{document}
